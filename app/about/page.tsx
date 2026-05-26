@@ -62,26 +62,33 @@ export default function AboutPage() {
 
       {/* Story */}
       <section className="max-w-3xl mx-auto px-4 sm:px-6 py-20">
-        <h2 className="text-2xl font-bold text-stone-900 mb-6">Our Story</h2>
-        <div className="prose prose-stone max-w-none text-stone-600 leading-relaxed space-y-4">
+        <div className="prose prose-stone max-w-none text-stone-600 leading-relaxed space-y-5">
           <p>
-            JALAD started from a simple frustration: every time we tried to find a genuine Konkan homestay,
-            we ended up on a platform that showed hotel-style rooms, charged a 15–20% service fee, and had
-            no way to speak to the actual host before booking.
+            JALAD didn't start as a business plan; it started as a realization that modern tourism is leaving
+            the most genuine people behind.
           </p>
           <p>
-            The families running the best stays — the ones with hornbill sightings at dawn, wood-fire cooking,
-            and three generations under one roof — were either invisible online or buried under algorithm-optimised
-            competitors who had nothing to do with the Konkan.
+            While traveling, we noticed a painful divide: major booking platforms are crowded with commercialized,
+            hotel-style spaces optimized by algorithms. Meanwhile, the real families — the ones living deep in
+            jungles, remote mountain tracks, or isolated rural villages — remain completely invisible. These are
+            families who offer unmatched, deeply loving hospitality but cannot navigate the internet, manage
+            digital dashboards, or afford online marketing.
           </p>
           <p>
-            So we built JALAD: a lean directory where every listing is personally verified, contact details are
-            shared directly (after a community code of conduct), and the platform takes nothing from the transaction.
-            The name comes from the Marathi word for a type of swift water — fast, clean, and local.
+            We built JALAD to act as their bridge to the conscious world.
           </p>
           <p>
-            JALAD is operated by <strong>Sustainic Technologies</strong>, a small team based in Maharashtra
-            committed to building tools that keep value inside local communities.
+            Our mission is to connect urban travelers directly with hosts who live a simple life. When you stay
+            here, you are not buying a curated luxury package. You might sleep in a single rustic room or pitch
+            a tent in a host's backyard. You won't get a designed menu; you will share whatever wholesome,
+            region-specific meal the family is eating that day.
+          </p>
+          <p>
+            This is an economy of empathy — a pure give-and-take opportunity to share thoughts, respect
+            lifestyles, and become family. Because we believe in true community empowerment, JALAD charges
+            zero fees to travelers and takes zero commission from hosts. <strong>100% of your money goes
+            straight into the hands of families who preserve our lands and traditions</strong>, creating an
+            equal ground where city and village meet.
           </p>
         </div>
       </section>
