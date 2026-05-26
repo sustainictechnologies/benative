@@ -1,18 +1,19 @@
 'use client'
 
 import 'leaflet/dist/leaflet.css'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { useEffect } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, Rectangle, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import Link from 'next/link'
 import type { HomestayWithCategories } from '@/types/blocks.types'
+import type { NominatimPlace } from './FilterSidebar'
 import { ShieldCheck } from 'lucide-react'
 
-// Custom teal dot marker — avoids the webpack/PNG icon path issue
 const dotIcon = L.divIcon({
   className: '',
   html: `<div style="
     width:14px;height:14px;
-    background:#0d9488;
+    background:#1e6b1e;
     border-radius:50%;
     border:2px solid white;
     box-shadow:0 1px 4px rgba(0,0,0,0.25)
@@ -22,16 +23,40 @@ const dotIcon = L.divIcon({
 })
 
 const KONKAN_CENTER: [number, number] = [16.8, 73.5]
+const DEFAULT_ZOOM = 9
 
 interface Props {
   homestays: HomestayWithCategories[]
+  selectedPlace?: NominatimPlace | null
 }
 
-export default function MapView({ homestays }: Props) {
+function MapController({ selectedPlace }: { selectedPlace: NominatimPlace | null }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!selectedPlace) {
+      map.setView(KONKAN_CENTER, DEFAULT_ZOOM, { animate: true })
+      return
+    }
+    // bbox = [south, north, west, east]
+    const { bbox } = selectedPlace
+    const bounds = L.latLngBounds([[bbox[0], bbox[2]], [bbox[1], bbox[3]]])
+    map.fitBounds(bounds, { padding: [48, 48], animate: true })
+  }, [selectedPlace, map])
+
+  return null
+}
+
+export default function MapView({ homestays, selectedPlace = null }: Props) {
+  // Leaflet bounds: [[south, west], [north, east]]
+  const highlightBounds = selectedPlace
+    ? ([[selectedPlace.bbox[0], selectedPlace.bbox[2]], [selectedPlace.bbox[1], selectedPlace.bbox[3]]] as [[number, number], [number, number]])
+    : null
+
   return (
     <MapContainer
       center={KONKAN_CENTER}
-      zoom={9}
+      zoom={DEFAULT_ZOOM}
       className="w-full h-full"
       scrollWheelZoom
     >
@@ -39,6 +64,22 @@ export default function MapView({ homestays }: Props) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+
+      <MapController selectedPlace={selectedPlace} />
+
+      {highlightBounds && (
+        <Rectangle
+          bounds={highlightBounds}
+          pathOptions={{
+            color: '#1e6b1e',
+            weight: 2,
+            fillColor: '#1e6b1e',
+            fillOpacity: 0.08,
+            dashArray: '6 4',
+          }}
+        />
+      )}
+
       {homestays.map((h) => (
         <Marker key={h.id} position={[h.latitude, h.longitude]} icon={dotIcon}>
           <Popup className="jalad-popup">

@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
 import { Home, Search, Menu } from 'lucide-react'
+import NavLinks from '@/components/NavLinks'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -41,17 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
 
             {/* Nav links */}
-            <nav className="hidden lg:flex items-center gap-5 ml-2">
-              <Link href="/explore" className="text-sm font-medium text-stone-600 hover:text-brand-600 transition-colors border-b-2 border-brand-600 pb-0.5">
-                Explore Stays
-              </Link>
-              <Link href="/explore" className="text-sm font-medium text-stone-500 hover:text-brand-600 transition-colors">
-                Map
-              </Link>
-              <Link href="/about" className="text-sm font-medium text-stone-500 hover:text-brand-600 transition-colors">
-                About Us
-              </Link>
-            </nav>
+            <NavLinks />
 
             {/* CTA button */}
             <div className="ml-auto flex items-center gap-3 shrink-0">
@@ -90,7 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <h4 className="text-white text-sm font-semibold mb-3">Discover</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/explore" className="hover:text-white transition-colors">Explore Stays</Link></li>
-                <li><Link href="/explore" className="hover:text-white transition-colors">Map View</Link></li>
+                <li><Link href="/map" className="hover:text-white transition-colors">Map View</Link></li>
                 <li><Link href="/about" className="hover:text-white transition-colors">About JALAD</Link></li>
               </ul>
             </div>

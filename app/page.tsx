@@ -87,90 +87,87 @@ export default async function HomePage() {
     <div className="bg-white">
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+      <section className="relative min-h-screen flex overflow-hidden">
         {/* BG image */}
         <div className="absolute inset-0 z-0">
           <Image
             src="/hero.jpg"
             alt="Konkan coast"
             fill
-            className="object-cover"
+            className="object-cover object-center"
             priority
           />
-          {/* Left fade for text readability, right stays clear */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/60 to-transparent" style={{backgroundSize: '60% 100%', backgroundRepeat: 'no-repeat'}} />
-          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent" style={{backgroundSize: '55% 100%', backgroundRepeat: 'no-repeat'}} />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full py-20">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full grid lg:grid-cols-2 gap-0">
 
-            {/* Left: text */}
-            <div>
-              <div className="inline-flex items-center gap-2 bg-brand-50 border border-brand-100 text-brand-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
-                <MapPin size={11} /> Konkan Coast · Ratnagiri · Sindhudurg · Raigad
-              </div>
-
-              <h1 className="text-6xl sm:text-7xl font-black text-stone-900 leading-[1.05] mb-5">
-                Stay With<br />
-                <span className="text-brand-600">Real Konkan</span><br />
-                Families
-              </h1>
-
-              <p className="text-lg text-stone-500 leading-relaxed mb-8 max-w-md">
-                Authentic homestays, direct host connections, and
-                community-driven travel experiences across coastal Konkan.
-              </p>
-
-              <div className="flex flex-wrap gap-3 mb-12">
-                <Link
-                  href="/explore"
-                  className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-3 rounded-full transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                >
-                  <MapPin size={15} /> Explore Homestays
-                </Link>
-                <Link
-                  href="/about"
-                  className="inline-flex items-center gap-2 border-2 border-brand-600 text-brand-700 hover:bg-brand-50 font-semibold px-6 py-3 rounded-full transition-all"
-                >
-                  <Users size={15} /> Become a Host
-                </Link>
-              </div>
-
-              {/* Trust row */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {trustMetrics.map(({ icon: Icon, label, sub }) => (
-                  <div key={label} className="flex flex-col items-start gap-1">
-                    <Icon size={18} className="text-brand-600 mb-0.5" />
-                    <span className="text-stone-800 text-xs font-semibold leading-tight">{label}</span>
-                    <span className="text-stone-400 text-[10px]">{sub}</span>
-                  </div>
-                ))}
-              </div>
+          {/* Left: text — full height flex column */}
+          <div className="flex flex-col justify-center py-24 pr-8">
+            <div className="inline-flex items-center gap-2 bg-stone-100 border border-stone-200 text-stone-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-8 w-fit">
+              <MapPin size={11} /> Konkan Coast · Ratnagiri · Sindhudurg · Raigad
             </div>
 
-            {/* Right: category cards */}
-            <div className="hidden lg:grid grid-cols-2 gap-5">
+            <h1 className="text-[72px] font-black text-stone-900 leading-[1.0] mb-6 tracking-tight">
+              Stay With<br />
+              <span className="text-brand-600">Real Konkan</span><br />
+              Families
+            </h1>
+
+            <p className="text-lg text-stone-500 leading-relaxed mb-10 max-w-sm">
+              Authentic homestays, direct host connections, and
+              community-driven travel experiences across coastal Konkan.
+            </p>
+
+            <div className="flex flex-wrap gap-3 mb-14">
+              <Link
+                href="/explore"
+                className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold px-7 py-3.5 rounded-full transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-sm"
+              >
+                <MapPin size={15} /> Explore Homestays
+              </Link>
+              <Link
+                href="/about"
+                className="inline-flex items-center gap-2 border-2 border-stone-300 text-stone-700 hover:border-brand-600 hover:text-brand-700 font-semibold px-7 py-3.5 rounded-full transition-all text-sm"
+              >
+                <Users size={15} /> Become a Host
+              </Link>
+            </div>
+
+            {/* Trust row */}
+            <div className="flex items-start gap-8">
+              {trustMetrics.map(({ icon: Icon, label, sub }) => (
+                <div key={label} className="flex flex-col items-start gap-1">
+                  <Icon size={20} className="text-brand-600 mb-1" />
+                  <span className="text-stone-900 text-sm font-bold">{label}</span>
+                  <span className="text-stone-900 text-xs font-semibold">{sub}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: 4 category cards pinned to bottom-right */}
+          <div className="hidden lg:flex flex-col justify-end pb-14 pl-4">
+            <div className="flex gap-3">
               {categories.map(({ icon: Icon, label, desc, bg, border, iconColor, textColor }) => (
                 <Link
                   key={label}
                   href="/explore"
-                  className={`group ${bg} ${border} border rounded-3xl p-7 flex flex-col justify-between min-h-[160px] hover:scale-[1.03] transition-all duration-300 shadow-md hover:shadow-xl`}
+                  className={`group w-36 h-36 shrink-0 ${bg} border ${border} rounded-2xl p-4 flex flex-col justify-between hover:scale-[1.03] transition-all duration-300 shadow-md hover:shadow-xl`}
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <Icon size={30} className={iconColor} />
-                    <div className={`w-8 h-8 rounded-full border-2 ${border} flex items-center justify-center group-hover:bg-white/60 transition-colors`}>
-                      <ArrowRight size={14} className={iconColor} />
-                    </div>
-                  </div>
                   <div>
-                    <div className={`font-bold text-[15px] mb-1.5 ${textColor}`}>{label}</div>
-                    <div className="text-xs text-stone-500 leading-relaxed">{desc}</div>
+                    <Icon size={22} className={`${iconColor} mb-3`} />
+                    <div className={`font-bold text-[13px] leading-snug mb-1 ${textColor}`}>{label}</div>
+                    <div className="text-[10px] text-stone-500 leading-relaxed">{desc}</div>
+                  </div>
+                  <div className={`w-6 h-6 rounded-full border-2 ${border} flex items-center justify-center mt-3 bg-white/50`}>
+                    <ArrowRight size={11} className={iconColor} />
                   </div>
                 </Link>
               ))}
             </div>
           </div>
+
         </div>
       </section>
 
@@ -280,7 +277,7 @@ export default async function HomePage() {
               <p className="text-xs font-bold text-stone-800 mb-0.5">Explore on Map</p>
               <p className="text-xs text-stone-400 mb-3 leading-relaxed">See all stays across the Konkan coast</p>
               <Link
-                href="/explore"
+                href="/map"
                 className="flex items-center justify-center gap-2 w-full bg-stone-50 hover:bg-brand-50 border border-stone-200 hover:border-brand-200 text-stone-700 hover:text-brand-700 text-xs font-semibold py-2.5 rounded-xl transition-all"
               >
                 <Map size={13} /> Open Full Map
@@ -317,7 +314,7 @@ export default async function HomePage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Ready to experience real Konkan?</h2>
             <p className="text-white/70 mb-8 max-w-md mx-auto text-lg">Browse verified homestays, call the host directly, pay zero fees.</p>
             <Link
-              href="/explore"
+              href="/map"
               className="inline-flex items-center gap-2 bg-white text-brand-700 font-bold px-8 py-3.5 rounded-full hover:bg-cream-100 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             >
               <MapPin size={16} /> Browse the Map

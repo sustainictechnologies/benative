@@ -1,10 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
-import ExploreListClient from '@/components/ExploreListClient'
+import ExploreClient from '@/components/ExploreClient'
 import type { HomestayWithCategories } from '@/types/blocks.types'
 
 export const revalidate = 60
 
-export default async function ExplorePage() {
+export default async function MapPage() {
   const supabase = createClient()
 
   const { data: rawHomestays } = await supabase
@@ -39,7 +39,7 @@ export default async function ExplorePage() {
   }))
 
   return (
-    <ExploreListClient
+    <ExploreClient
       homestays={homestays}
     />
   )

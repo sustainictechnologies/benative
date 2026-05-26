@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import type { HomestayWithCategories } from '@/types/blocks.types'
-import FilterBar from './FilterSidebar'
+import FilterBar, { type NominatimPlace } from './FilterSidebar'
 import HomestayCard from './HomestayCard'
 
 const MapView = dynamic(() => import('./MapView'), {
@@ -17,52 +17,49 @@ const MapView = dynamic(() => import('./MapView'), {
 
 interface Props {
   homestays: HomestayWithCategories[]
-  districts: string[]
 }
 
-export default function ExploreClient({ homestays, districts }: Props) {
-  const [selectedDistricts, setSelectedDistricts] = useState<string[]>([])
+export default function ExploreClient({ homestays }: Props) {
+  const [selectedPlace, setSelectedPlace] = useState<NominatimPlace | null>(null)
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [verifiedOnly, setVerifiedOnly] = useState(false)
 
   const filtered = useMemo(() => {
     return homestays.filter((h) => {
-      if (selectedDistricts.length > 0 && !selectedDistricts.includes(h.location_district)) return false
+      if (selectedPlace) {
+        const [south, north, west, east] = selectedPlace.bbox
+        if (h.latitude < south || h.latitude > north || h.longitude < west || h.longitude > east) return false
+      }
       if (selectedCategories.length > 0 && !h.categories.some((c) => selectedCategories.includes(c.slug))) return false
       if (verifiedOnly && !h.is_verified) return false
       return true
     })
-  }, [homestays, selectedDistricts, selectedCategories, verifiedOnly])
+  }, [homestays, selectedPlace, selectedCategories, verifiedOnly])
 
   function clearFilters() {
-    setSelectedDistricts([])
+    setSelectedPlace(null)
     setSelectedCategories([])
     setVerifiedOnly(false)
   }
 
   return (
     <div className="flex flex-col h-[calc(100vh-56px)]">
-      {/* Horizontal filter bar */}
       <FilterBar
-        districts={districts}
-        selectedDistricts={selectedDistricts}
+        selectedPlace={selectedPlace}
         selectedCategories={selectedCategories}
         verifiedOnly={verifiedOnly}
-        onDistrictChange={setSelectedDistricts}
+        onPlaceSelect={setSelectedPlace}
         onCategoryChange={setSelectedCategories}
         onVerifiedChange={setVerifiedOnly}
         resultCount={filtered.length}
         onClear={clearFilters}
       />
 
-      {/* Map + card list */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Map */}
         <div className="flex-1 relative">
-          <MapView homestays={filtered} />
+          <MapView homestays={filtered} selectedPlace={selectedPlace} />
         </div>
 
-        {/* Card list — desktop */}
         <div className="hidden lg:flex flex-col w-80 xl:w-96 border-l border-stone-200 bg-white overflow-y-auto">
           <div className="divide-y divide-stone-100">
             {filtered.length === 0 ? (
@@ -76,7 +73,6 @@ export default function ExploreClient({ homestays, districts }: Props) {
         </div>
       </div>
 
-      {/* Card list — mobile */}
       <div className="lg:hidden h-52 overflow-y-auto border-t border-stone-200 bg-white">
         <div className="divide-y divide-stone-100">
           {filtered.length === 0 ? (
