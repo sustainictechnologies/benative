@@ -2,33 +2,24 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import {
-  MapPin, ShieldCheck, Leaf, Mountain, Bike, Phone, Star,
+  MapPin, ShieldCheck, Leaf, Bird, Bike, Phone, Star,
   ArrowRight, Users, Heart, Sprout, Map
 } from 'lucide-react'
 
 const categories = [
   {
-    icon: Mountain,
-    label: 'Himalayan Stays',
-    desc: 'Sleep under stars in remote mountain villages',
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    iconColor: 'text-blue-500',
-    textColor: 'text-blue-700',
-  },
-  {
-    icon: Leaf,
-    label: 'Forest Retreats',
-    desc: 'Immerse in lush wilderness and wildlife',
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    iconColor: 'text-green-600',
-    textColor: 'text-green-700',
+    icon: Bird,
+    label: 'Bird Watching',
+    desc: 'Spot rare birds in their natural habitat',
+    bg: 'bg-teal-50',
+    border: 'border-teal-200',
+    iconColor: 'text-teal-500',
+    textColor: 'text-teal-700',
   },
   {
     icon: Bike,
     label: 'Rider Friendly',
-    desc: 'Perfect stays for road trippers',
+    desc: 'Perfect stays for solo riders',
     bg: 'bg-orange-50',
     border: 'border-orange-200',
     iconColor: 'text-orange-500',
@@ -37,11 +28,20 @@ const categories = [
   {
     icon: ShieldCheck,
     label: 'Solo Female Safe',
-    desc: 'Safe, welcoming and verified',
+    desc: 'Safe, comfortable and welcoming',
     bg: 'bg-rose-50',
     border: 'border-rose-200',
     iconColor: 'text-rose-500',
     textColor: 'text-rose-700',
+  },
+  {
+    icon: Leaf,
+    label: 'Agriculture Immersion',
+    desc: 'Live the village life and connect deeper',
+    bg: 'bg-green-50',
+    border: 'border-green-200',
+    iconColor: 'text-green-600',
+    textColor: 'text-green-700',
   },
 ]
 
