@@ -16,7 +16,7 @@ export default async function ReviewSection({ homestayId, slug }: Props) {
     supabase.auth.getUser(),
     supabase
       .from('reviews')
-      .select('id, rating, comment, created_at, profiles ( full_name, avatar_url )')
+      .select('id, rating, comment, created_at, profiles ( full_name )')
       .eq('homestay_id', homestayId)
       .order('created_at', { ascending: false }),
   ])

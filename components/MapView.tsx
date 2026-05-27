@@ -2,12 +2,19 @@
 
 import 'leaflet/dist/leaflet.css'
 import { useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, Rectangle, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Rectangle, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import Link from 'next/link'
 import type { HomestayWithCategories } from '@/types/blocks.types'
 import type { NominatimPlace } from './FilterSidebar'
 import { ShieldCheck } from 'lucide-react'
+
+export interface MapBounds {
+  south: number
+  north: number
+  west: number
+  east: number
+}
 
 const dotIcon = L.divIcon({
   className: '',
@@ -22,12 +29,13 @@ const dotIcon = L.divIcon({
   iconAnchor: [7, 7],
 })
 
-const KONKAN_CENTER: [number, number] = [16.8, 73.5]
-const DEFAULT_ZOOM = 9
+const INDIA_CENTER: [number, number] = [22.5, 80.5]
+const DEFAULT_ZOOM = 5
 
 interface Props {
   homestays: HomestayWithCategories[]
   selectedPlace?: NominatimPlace | null
+  onBoundsChange?: (bounds: MapBounds) => void
 }
 
 function MapController({ selectedPlace }: { selectedPlace: NominatimPlace | null }) {
@@ -35,10 +43,9 @@ function MapController({ selectedPlace }: { selectedPlace: NominatimPlace | null
 
   useEffect(() => {
     if (!selectedPlace) {
-      map.setView(KONKAN_CENTER, DEFAULT_ZOOM, { animate: true })
+      map.setView(INDIA_CENTER, DEFAULT_ZOOM, { animate: true })
       return
     }
-    // bbox = [south, north, west, east]
     const { bbox } = selectedPlace
     const bounds = L.latLngBounds([[bbox[0], bbox[2]], [bbox[1], bbox[3]]])
     map.fitBounds(bounds, { padding: [48, 48], animate: true })
@@ -47,15 +54,28 @@ function MapController({ selectedPlace }: { selectedPlace: NominatimPlace | null
   return null
 }
 
-export default function MapView({ homestays, selectedPlace = null }: Props) {
-  // Leaflet bounds: [[south, west], [north, east]]
+function BoundsTracker({ onBoundsChange }: { onBoundsChange: (b: MapBounds) => void }) {
+  const map = useMapEvents({
+    moveend: () => {
+      const b = map.getBounds()
+      onBoundsChange({ south: b.getSouth(), north: b.getNorth(), west: b.getWest(), east: b.getEast() })
+    },
+    zoomend: () => {
+      const b = map.getBounds()
+      onBoundsChange({ south: b.getSouth(), north: b.getNorth(), west: b.getWest(), east: b.getEast() })
+    },
+  })
+  return null
+}
+
+export default function MapView({ homestays, selectedPlace = null, onBoundsChange }: Props) {
   const highlightBounds = selectedPlace
     ? ([[selectedPlace.bbox[0], selectedPlace.bbox[2]], [selectedPlace.bbox[1], selectedPlace.bbox[3]]] as [[number, number], [number, number]])
     : null
 
   return (
     <MapContainer
-      center={KONKAN_CENTER}
+      center={INDIA_CENTER}
       zoom={DEFAULT_ZOOM}
       className="w-full h-full"
       scrollWheelZoom
@@ -66,6 +86,7 @@ export default function MapView({ homestays, selectedPlace = null }: Props) {
       />
 
       <MapController selectedPlace={selectedPlace} />
+      {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
 
       {highlightBounds && (
         <Rectangle

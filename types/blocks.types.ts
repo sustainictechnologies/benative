@@ -64,6 +64,5 @@ export interface ReviewWithProfile {
   created_at: string
   profiles: {
     full_name: string
-    avatar_url: string | null
   } | null
 }

@@ -11,21 +11,21 @@ export default function HomestayCard({ homestay: h }: Props) {
   return (
     <Link
       href={`/homestays/${h.slug}`}
-      className="block hover:bg-stone-50 transition-colors"
+      className="block rounded-xl border border-stone-200 overflow-hidden bg-white hover:shadow-md hover:border-brand-200 transition-all duration-200"
     >
-      {/* Cover image */}
-      <div className="relative w-full h-40 bg-stone-100 overflow-hidden">
+      {/* Cover image — fixed 3:2 aspect ratio */}
+      <div className="relative w-full aspect-[3/2] bg-stone-100 overflow-hidden">
         {h.cover_image_url ? (
           <Image
             src={h.cover_image_url}
             alt={h.title}
             fill
             className="object-cover transition-transform duration-300 hover:scale-105"
-            sizes="(max-width: 1024px) 100vw, 384px"
+            sizes="(max-width: 640px) 50vw, (max-width: 1280px) 30vw, 20vw"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-brand-100 to-stone-200 flex items-center justify-center">
-            <MapPin size={28} className="text-brand-300" />
+            <MapPin size={24} className="text-brand-300" />
           </div>
         )}
         {h.is_verified && (
@@ -36,33 +36,33 @@ export default function HomestayCard({ homestay: h }: Props) {
       </div>
 
       {/* Info */}
-      <div className="px-4 py-3">
-        <h3 className="text-sm font-semibold text-stone-900 leading-snug mb-1">{h.title}</h3>
+      <div className="p-3">
+        <h3 className="text-sm font-semibold text-stone-900 leading-snug mb-1 line-clamp-2">{h.title}</h3>
 
         <div className="flex items-center gap-1 text-xs text-stone-500 mb-2">
-          <MapPin size={11} />
-          <span>{h.village_name}, {h.location_district}</span>
+          <MapPin size={10} className="shrink-0" />
+          <span className="truncate">{h.village_name}, {h.location_district}</span>
         </div>
 
         {h.categories.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
-            {h.categories.slice(0, 3).map((c) => (
+            {h.categories.slice(0, 2).map((c) => (
               <span
                 key={c.id}
-                className="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full"
+                className="text-xs bg-brand-50 text-brand-700 px-1.5 py-0.5 rounded-full"
               >
                 {c.name}
               </span>
             ))}
-            {h.categories.length > 3 && (
-              <span className="text-xs text-stone-400">+{h.categories.length - 3} more</span>
+            {h.categories.length > 2 && (
+              <span className="text-xs text-stone-400">+{h.categories.length - 2}</span>
             )}
           </div>
         )}
 
         <div className="flex items-center gap-1 text-xs text-stone-400">
-          <Phone size={10} />
-          <span>Call {h.calling_window}</span>
+          <Phone size={9} className="shrink-0" />
+          <span className="truncate">Call {h.calling_window}</span>
         </div>
       </div>
     </Link>
