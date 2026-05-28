@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
@@ -9,9 +9,9 @@ import UserButton from '@/components/UserButton'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'JALAD Homestays | Community Travel Across India',
+  title: 'Be Native | Community Travel Across India',
   description:
-    'Discover verified homestays from conscious local families across India — mountains, forests, villages, coastlines, and deserts. Direct host contact. Zero fees.',
+    'Discover verified homestays from conscious local families across India â€” mountains, forests, villages, coastlines, and deserts. Direct host contact. Zero fees.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Home size={17} className="text-white" />
               </div>
               <div className="leading-tight">
-                <div className="text-base font-bold text-stone-900 tracking-tight">JALAD</div>
+                <div className="text-base font-bold text-stone-900 tracking-tight">Be Native</div>
                 <div className="text-[9px] text-brand-600 font-semibold tracking-widest uppercase -mt-0.5">Community Homestays</div>
               </div>
             </Link>
@@ -73,7 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Home size={15} className="text-white" />
                 </div>
                 <div>
-                  <div className="text-white font-bold text-sm">JALAD</div>
+                  <div className="text-white font-bold text-sm">Be Native</div>
                   <div className="text-[9px] text-brand-400 font-medium tracking-widest uppercase">Community Homestays</div>
                 </div>
               </div>
@@ -84,7 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <ul className="space-y-2 text-sm">
                 <li><Link href="/explore" className="hover:text-white transition-colors">Explore Stays</Link></li>
                 <li><Link href="/map" className="hover:text-white transition-colors">Map View</Link></li>
-                <li><Link href="/about" className="hover:text-white transition-colors">About JALAD</Link></li>
+                <li><Link href="/about" className="hover:text-white transition-colors">About Be Native</Link></li>
               </ul>
             </div>
             <div>
@@ -97,7 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div>
               <h4 className="text-white text-sm font-semibold mb-3">Contact</h4>
               <p className="text-sm">sustainic.technologies@gmail.com</p>
-              <p className="text-xs mt-6 text-stone-600">© 2026 JALAD Homestays · Sustainic Technologies</p>
+              <p className="text-xs mt-6 text-stone-600">Â© 2026 Be Native Â· Sustainic Technologies</p>
             </div>
           </div>
         </footer>

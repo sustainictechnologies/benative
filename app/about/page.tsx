@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { Leaf, ShieldCheck, Phone, MapPin, Heart, Users } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'About Us · JALAD Homestays',
-  description: 'Learn about JALAD Homestays — India\'s slow-travel community network connecting conscious travelers directly with local families across mountains, forests, villages, and coastlines.',
+  title: 'About Us · Be Native',
+  description: 'Learn about Be Native — India\'s slow-travel community network connecting conscious travelers directly with local families across mountains, forests, villages, and coastlines.',
 }
 
 const values = [
@@ -15,12 +15,12 @@ const values = [
   {
     icon: Leaf,
     title: 'Zero Fees — Always',
-    body: 'JALAD does not charge travelers or hosts a booking fee. Every rupee you pay goes directly to the family hosting you.',
+    body: 'Be Native does not charge travelers or hosts a booking fee. Every rupee you pay goes directly to the family hosting you.',
   },
   {
     icon: ShieldCheck,
     title: 'Personally Verified',
-    body: 'Every host on JALAD is personally visited and verified. Solo female travelers get an explicit safety badge backed by real checks.',
+    body: 'Every host on Be Native is personally visited and verified. Solo female travelers get an explicit safety badge backed by real checks.',
   },
   {
     icon: Heart,
@@ -49,11 +49,11 @@ export default function AboutPage() {
             <MapPin size={12} /> Himalayas · Forests · Villages · Coastlines · Deserts
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold text-stone-900 leading-tight mb-6">
-            We believe travel should<br />
-            <span className="text-brand-600">benefit the people it touches.</span>
+            Shed the tourist mindset.<br />
+            <span className="text-brand-600">Blend into the local ecosystem with respect.</span>
           </h1>
           <p className="text-lg text-stone-500 leading-relaxed max-w-2xl mx-auto">
-            JALAD is India's slow-travel community network — a directory of verified rural stays connecting
+            Be Native is India's slow-travel community network — a directory of verified rural stays connecting
             conscious travelers directly with local families across mountains, forests, coastlines, deserts,
             and culturally rich villages. We exist to keep tourism money inside the communities that make
             India worth exploring.
@@ -65,7 +65,7 @@ export default function AboutPage() {
       <section className="max-w-3xl mx-auto px-4 sm:px-6 py-20">
         <div className="prose prose-stone max-w-none text-stone-600 leading-relaxed space-y-5">
           <p>
-            JALAD didn't start as a business plan; it started as a realization that modern tourism is leaving
+            Be Native didn't start as a business plan; it started as a realization that modern tourism is leaving
             the most genuine people behind.
           </p>
           <p>
@@ -76,7 +76,7 @@ export default function AboutPage() {
             digital dashboards, or afford online marketing.
           </p>
           <p>
-            We built JALAD to act as their bridge to the conscious world.
+            We built Be Native to act as their bridge to the conscious world.
           </p>
           <p>
             Our mission is to connect urban travelers directly with hosts who live a simple life. When you stay
@@ -86,7 +86,7 @@ export default function AboutPage() {
           </p>
           <p>
             This is an economy of empathy — a pure give-and-take opportunity to share thoughts, respect
-            lifestyles, and become family. Because we believe in true community empowerment, JALAD charges
+            lifestyles, and become family. Because we believe in true community empowerment, Be Native charges
             zero fees to travelers and takes zero commission from hosts. <strong>100% of your money goes
             straight into the hands of families who preserve our lands and traditions</strong>, creating an
             equal ground where city and village meet.

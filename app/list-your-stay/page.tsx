@@ -3,8 +3,8 @@ import HostRegistrationForm from './HostRegistrationForm'
 import { Home, ShieldCheck, Phone, Leaf } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'List Your Homestay · JALAD',
-  description: 'Register your homestay on JALAD. Connect with conscious travelers across India. Zero commission, direct contact.',
+  title: 'List Your Homestay · Be Native',
+  description: 'Register your homestay on Be Native. Connect with conscious travelers across India. Zero commission, direct contact.',
 }
 
 const perks = [
