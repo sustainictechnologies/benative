@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import {
   DndContext,
   DragEndEvent,
@@ -54,8 +56,93 @@ export default function BuilderClient() {
   const [savedAt, setSavedAt]               = useState<Date | null>(null)
   const [showPublish, setShowPublish]       = useState(false)
 
+  const searchParams  = useSearchParams()
+  const editSlug      = searchParams.get('slug')
+  const loadedRef     = useRef(false)
+
+  /* ── Load existing homestay when slug is in URL ─────────── */
+  useEffect(() => {
+    if (!editSlug || loadedRef.current) return
+    loadedRef.current = true
+
+    const supabase = createClient()
+    supabase
+      .from('homestays')
+      .select(`*, homestay_blocks ( id, block_type, sort_order, content_data )`)
+      .eq('slug', editSlug)
+      .single()
+      .then(({ data: h }) => {
+        if (!h) return
+
+        setPageName(h.title ?? '')
+        setPageLanguages(h.languages_spoken ?? [])
+        setPageAddress(h.address ?? `${h.village_name ?? ''}, ${h.location_district ?? ''}`)
+
+        const raw = (h.homestay_blocks ?? [])
+          .sort((a: any, b: any) => a.sort_order - b.sort_order)
+
+        const loaded: CanvasBlock[] = raw.map((block: any, i: number) => {
+          const d    = block.content_data ?? {}
+          const type = block.block_type as BlockType
+          const images: Record<string, string> = {}
+          const texts:  Record<string, string> = {}
+
+          switch (type) {
+            case 'hero':
+              if (d.cover_image_url)   images['cover']            = d.cover_image_url
+              if (d.tagline)           texts['tagline']            = d.tagline
+              if (h.host_name)         texts['contact-name']      = h.host_name
+              if (h.contact_phone)     texts['contact-phone']     = h.contact_phone
+              if (h.whatsapp_number)   texts['contact-whatsapp']  = h.whatsapp_number
+              if (h.email)             texts['contact-email']     = h.email
+              if (h.address)           texts['contact-address']   = h.address
+              break
+            case 'host-story':
+              if (d.host_image_url)    images['host-photo']       = d.host_image_url
+              if (d.story_title)       texts['story-title']       = d.story_title
+              if (d.story_text)        texts['story-body']        = d.story_text
+              if (d.host_photo_shape)  texts['host-shape']        = d.host_photo_shape
+              if (d.host_photo_position) texts['host-position']   = d.host_photo_position
+              if (d.host_photo_zoom != null) texts['host-zoom']   = String(d.host_photo_zoom)
+              break
+            case 'activity-log':
+              texts['activities'] = JSON.stringify(d.highlight_species ?? [])
+              break
+            case 'rules-block':
+              texts['policies']   = JSON.stringify(d.house_policies   ?? [])
+              texts['prohibited'] = JSON.stringify(d.prohibited_items ?? [])
+              break
+            case 'video':
+              if (d.youtube_video_id)  texts['youtube-url'] = d.youtube_video_id
+              break
+            case 'gallery': {
+              const items = (d.items ?? []) as Array<{ url: string; ratio: string }>
+              const meta  = items.map((item, idx) => {
+                const key = `gallery-${idx}`
+                if (item.url) images[key] = item.url
+                return { key, ratio: item.ratio ?? 'square' }
+              })
+              texts['gallery-meta'] = JSON.stringify(meta)
+              break
+            }
+            default: break
+          }
+
+          return {
+            id:    `loaded-${type}-${i}`,
+            type,
+            props: { ...DEFAULT_PROPS, images, texts },
+          }
+        })
+
+        if (loaded.length > 0) setBlocks(loaded)
+        setSelectedId(null)
+      })
+  }, [editSlug])
+
   /* ── Load draft from localStorage on mount ───────────────── */
   useEffect(() => {
+    if (editSlug) return // skip localStorage when editing existing homestay
     try {
       const raw = localStorage.getItem('benative-builder-draft')
       if (!raw) return

@@ -193,7 +193,7 @@ export default function HomestaysClient({ homestays }: { homestays: Homestay[] }
 
                       {/* Edit in builder */}
                       <Link
-                        href="/admin/builder"
+                        href={`/admin/builder?slug=${h.slug}`}
                         title="Edit in Builder"
                         className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
                       >
