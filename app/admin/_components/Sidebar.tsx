@@ -57,7 +57,7 @@ export default function Sidebar() {
               transition={{ duration: 0.18 }}
               className="overflow-hidden"
             >
-              <p className="text-sm font-bold text-stone-900 leading-none tracking-tight">JALAD</p>
+              <p className="text-sm font-bold text-stone-900 leading-none tracking-tight">Be Native</p>
               <p className="text-[10px] text-brand-600 font-semibold tracking-widest uppercase mt-0.5">Admin Panel</p>
             </motion.div>
           )}

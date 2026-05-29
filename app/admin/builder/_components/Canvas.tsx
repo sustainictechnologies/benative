@@ -1,9 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Layers, MapPin } from 'lucide-react'
+import { Layers, MapPin, Globe2, X, Plus } from 'lucide-react'
 import CanvasBlockItem from './CanvasBlock'
 import type { CanvasBlock } from './BuilderTypes'
 
@@ -17,6 +18,14 @@ interface Props {
   onMoveUp: (id: string) => void
   onMoveDown: (id: string) => void
   onDuplicate: (id: string) => void
+  pageName: string
+  onNameChange: (v: string) => void
+  pageHighlights: string[]
+  pageLanguages: string[]
+  onHighlightsChange: (v: string[]) => void
+  onLanguagesChange: (v: string[]) => void
+  pageAddress: string
+  onAddressChange: (v: string) => void
 }
 
 function EmptyState({ isOver }: { isOver: boolean }) {
@@ -39,9 +48,46 @@ function EmptyState({ isOver }: { isOver: boolean }) {
   )
 }
 
+/* ─── Inline add-tag input ──────────────────────────────── */
+function AddTagInput({ onAdd, placeholder }: { onAdd: (v: string) => void; placeholder: string }) {
+  const [open, setOpen] = useState(false)
+  const [val, setVal]   = useState('')
+
+  const commit = () => {
+    if (val.trim()) { onAdd(val.trim()); setVal('') }
+    setOpen(false)
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-0.5 text-[10px] text-stone-400 hover:text-brand-600 border border-dashed border-stone-300 hover:border-brand-400 px-2 py-0.5 rounded-full transition-colors"
+      >
+        <Plus size={10} /> Add
+      </button>
+    )
+  }
+
+  return (
+    <input
+      autoFocus
+      value={val}
+      onChange={e => setVal(e.target.value)}
+      onBlur={commit}
+      onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setOpen(false) }}
+      placeholder={placeholder}
+      className="text-[11px] border border-brand-400 rounded-full px-2.5 py-0.5 outline-none w-28 bg-brand-50 placeholder:text-stone-300"
+    />
+  )
+}
+
 export default function Canvas({
   blocks, selectedId, previewMode, viewport,
   onSelect, onRemove, onMoveUp, onMoveDown, onDuplicate,
+  pageName, onNameChange,
+  pageHighlights, pageLanguages, onHighlightsChange, onLanguagesChange,
+  pageAddress, onAddressChange,
 }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: 'canvas-drop' })
 
@@ -66,7 +112,7 @@ export default function Canvas({
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
             </div>
             <div className="flex-1 bg-stone-600 rounded-md px-3 py-1 text-center">
-              <span className="text-[10px] text-stone-300 font-mono">jalad.in/stays/meenas-homestay</span>
+              <span className="text-[10px] text-stone-300 font-mono">benative.in/stays/your-homestay</span>
             </div>
           </div>
         )}
@@ -76,22 +122,84 @@ export default function Canvas({
           ref={setNodeRef}
           className={`bg-white shadow-2xl overflow-hidden ${previewMode ? 'rounded-xl' : 'rounded-b-xl'} min-h-[400px]`}
         >
-          {/* Page header — mirrors real homestay page */}
-          <div className="px-4 sm:px-6 pt-6 pb-4 space-y-2">
-            <div className="flex flex-wrap gap-1.5">
+          {/* Page header */}
+          <div className="px-4 sm:px-6 pt-4 pb-1 space-y-1.5">
+
+            {/* Highlights row */}
+            <div className="flex flex-wrap gap-1.5 items-center">
               <span className="text-[11px] font-semibold bg-brand-100 text-brand-700 px-2.5 py-1 rounded-full">✓ Verified Host</span>
-              <span className="text-[11px] text-stone-500 bg-stone-100 px-2.5 py-1 rounded-full">Bird Watching</span>
-              <span className="text-[11px] text-stone-500 bg-stone-100 px-2.5 py-1 rounded-full">Long Stays Welcome</span>
+
+              {pageHighlights.map((tag, i) => (
+                <span key={i} className="group/tag relative flex items-center gap-1 text-[11px] text-stone-500 bg-stone-100 px-2.5 py-1 rounded-full">
+                  {tag}
+                  {!previewMode && (
+                    <button
+                      onClick={() => onHighlightsChange(pageHighlights.filter((_, idx) => idx !== i))}
+                      className="opacity-0 group-hover/tag:opacity-100 text-stone-400 hover:text-rose-500 transition-opacity ml-0.5"
+                    >
+                      <X size={10} />
+                    </button>
+                  )}
+                </span>
+              ))}
+
+              {!previewMode && (
+                <AddTagInput
+                  placeholder="e.g. Solo Friendly"
+                  onAdd={tag => onHighlightsChange([...pageHighlights, tag])}
+                />
+              )}
             </div>
-            <h1 className="text-2xl font-bold text-stone-900">Hornbill Haven Homestay</h1>
-            <div className="flex items-center gap-4 text-sm text-stone-500">
-              <div className="flex items-center gap-1.5">
+
+            {previewMode ? (
+              <h1 className="text-2xl font-bold text-stone-900">{pageName}</h1>
+            ) : (
+              <input
+                value={pageName}
+                onChange={e => onNameChange(e.target.value)}
+                placeholder="Homestay name"
+                className="text-2xl font-bold text-stone-900 bg-transparent outline-none border-b-2 border-dashed border-stone-200 focus:border-brand-400 w-full transition-colors"
+              />
+            )}
+
+            {/* Location + Languages row */}
+            <div className="flex items-center gap-4 text-sm text-stone-500 flex-wrap">
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
                 <MapPin size={14} className="text-stone-400 shrink-0" />
-                <span>Khed, Ratnagiri</span>
+                {previewMode ? (
+                  <span className="truncate">{pageAddress}</span>
+                ) : (
+                  <input
+                    value={pageAddress}
+                    onChange={e => onAddressChange(e.target.value)}
+                    placeholder="e.g. Khed, Ratnagiri, Maharashtra"
+                    className="text-xs text-stone-600 bg-stone-50 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-brand-400 w-full max-w-xs"
+                  />
+                )}
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-stone-400">🌐</span>
-                <span>Marathi, Hindi, English</span>
+
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Globe2 size={14} className="text-stone-400 shrink-0" />
+                {pageLanguages.map((lang, i) => (
+                  <span key={i} className="group/lang relative flex items-center gap-0.5">
+                    {i > 0 && <span className="text-stone-300 mr-0.5">·</span>}
+                    {lang}
+                    {!previewMode && (
+                      <button
+                        onClick={() => onLanguagesChange(pageLanguages.filter((_, idx) => idx !== i))}
+                        className="opacity-0 group-hover/lang:opacity-100 text-stone-300 hover:text-rose-500 transition-opacity"
+                      >
+                        <X size={9} />
+                      </button>
+                    )}
+                  </span>
+                ))}
+                {!previewMode && (
+                  <AddTagInput
+                    placeholder="e.g. Kannada"
+                    onAdd={lang => onLanguagesChange([...pageLanguages, lang])}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -103,7 +211,7 @@ export default function Canvas({
               items={blocks.map(b => b.id)}
               strategy={verticalListSortingStrategy}
             >
-              <div className="px-4 sm:px-6 pt-4 pb-8 space-y-4">
+              <div className="px-4 sm:px-6 pt-1 pb-8 space-y-4">
                 <AnimatePresence>
                   {blocks.map(block => (
                     <CanvasBlockItem

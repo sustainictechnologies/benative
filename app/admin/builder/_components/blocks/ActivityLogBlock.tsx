@@ -3,21 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Plus, X, Check } from 'lucide-react'
 import { useBuilder } from '../BuilderContext'
-
-const ALL_ACTIVITIES = [
-  { id: 'birding',    label: 'Bird Watching',       emoji: '🦜', desc: 'Dawn trails · Endemic species' },
-  { id: 'farm',       label: 'Farm Life',            emoji: '🌾', desc: 'Harvest season · Organic farming' },
-  { id: 'cooking',    label: 'Traditional Cooking',  emoji: '🍛', desc: 'Wood-fire recipes · Local flavours' },
-  { id: 'monsoon',    label: 'Monsoon Trails',       emoji: '🌧️',  desc: 'Forest walks · Waterfall hikes' },
-  { id: 'festivals',  label: 'Local Festivals',      emoji: '🎊', desc: 'Seasonal rituals · Cultural events' },
-  { id: 'trekking',   label: 'Trekking & Hiking',    emoji: '🥾', desc: 'Ghats trails · Sunrise walks' },
-  { id: 'fishing',    label: 'River Fishing',        emoji: '🎣', desc: 'Traditional methods · Calm riverbanks' },
-  { id: 'stargazing', label: 'Star Gazing',          emoji: '🌟', desc: 'Zero light pollution · Night sky' },
-  { id: 'pottery',    label: 'Pottery & Crafts',     emoji: '🏺', desc: 'Local artisans · Hands-on workshops' },
-  { id: 'yoga',       label: 'Yoga & Meditation',    emoji: '🧘', desc: 'Sunrise sessions · Nature backdrop' },
-  { id: 'herbs',      label: 'Herb Garden Walk',     emoji: '🌿', desc: 'Medicinal plants · Forest pharmacy' },
-  { id: 'cricket',    label: 'Village Cricket',      emoji: '🏏', desc: 'Play with locals · Evening matches' },
-]
+import { ALL_ACTIVITIES } from '@/lib/activities'
 
 const DEFAULT_IDS = ['birding', 'farm', 'monsoon']
 
@@ -62,9 +48,6 @@ export default function ActivityLogBlock({ blockId }: Props) {
         <div className="flex items-center gap-2">
           <span className="text-lg">🧭</span>
           <h2 className="font-semibold text-stone-900 text-sm">Activity Log</h2>
-          <span className="text-[10px] bg-brand-100 text-brand-700 font-semibold px-2 py-0.5 rounded-full">
-            {selected.length} selected
-          </span>
         </div>
 
         {/* + Add button */}
@@ -123,7 +106,6 @@ export default function ActivityLogBlock({ blockId }: Props) {
                 </div>
 
                 <div className="px-3 py-2 border-t border-stone-100 bg-stone-50 flex items-center justify-between">
-                  <span className="text-[10px] text-stone-400">{selectedIds.length} of {ALL_ACTIVITIES.length} selected</span>
                   <button
                     onClick={() => setShowPicker(false)}
                     className="text-[11px] font-semibold text-brand-600 hover:text-brand-800 transition-colors"

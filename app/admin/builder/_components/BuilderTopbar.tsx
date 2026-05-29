@@ -1,7 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { Eye, EyeOff, Undo2, Redo2, MonitorSmartphone, Smartphone, Monitor, Save, Leaf } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Eye, EyeOff, Undo2, Redo2, Smartphone, Monitor, Save, Leaf, Check } from 'lucide-react'
 import Link from 'next/link'
 
 interface Props {
@@ -11,12 +11,22 @@ interface Props {
   onTogglePreview: () => void
   onViewportChange: (v: 'desktop' | 'mobile') => void
   onSave?: () => void
+  savedAt?: Date | null
+  onPublish?: () => void
 }
 
 export default function BuilderTopbar({
   previewMode, viewport, blockCount,
-  onTogglePreview, onViewportChange, onSave,
+  onTogglePreview, onViewportChange, onSave, savedAt, onPublish,
 }: Props) {
+  const [justSaved, setJustSaved] = useState(false)
+
+  useEffect(() => {
+    if (!savedAt) return
+    setJustSaved(true)
+    const t = setTimeout(() => setJustSaved(false), 2000)
+    return () => clearTimeout(t)
+  }, [savedAt])
   return (
     <header className="h-12 bg-stone-900 border-b border-stone-700 flex items-center gap-4 px-4 shrink-0 z-10">
 
@@ -33,7 +43,7 @@ export default function BuilderTopbar({
       {/* Page name */}
       <div className="flex items-center gap-2">
         <div className="bg-stone-800 border border-stone-600 rounded-lg px-3 py-1 flex items-center gap-2">
-          <span className="text-xs text-stone-300 font-medium">Meena's Homestay</span>
+          <span className="text-xs text-stone-300 font-medium">Your Homestay</span>
           <span className="text-[10px] text-stone-500 bg-stone-700 px-1.5 py-0.5 rounded-md">{blockCount} sections</span>
         </div>
       </div>
@@ -84,13 +94,20 @@ export default function BuilderTopbar({
       {/* Save / Publish */}
       <button
         onClick={onSave}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white transition-colors shadow-sm"
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-sm ${
+          justSaved
+            ? 'bg-emerald-600 text-white'
+            : 'bg-brand-600 hover:bg-brand-500 text-white'
+        }`}
       >
-        <Save size={12} />
-        Save Draft
+        {justSaved ? <Check size={12} /> : <Save size={12} />}
+        {justSaved ? 'Saved!' : 'Save Draft'}
       </button>
 
-      <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-white transition-colors shadow-sm">
+      <button
+        onClick={onPublish}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-white transition-colors shadow-sm"
+      >
         Publish
       </button>
     </header>

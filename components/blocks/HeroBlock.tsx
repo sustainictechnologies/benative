@@ -79,7 +79,7 @@ export default function HeroBlock({ data, hostName, phone, callingWindow, isLogg
                 className="mt-0.5 w-4 h-4 rounded border-amber-400 text-brand-600 focus:ring-brand-500"
               />
               <span className="text-xs text-amber-900 font-medium">
-                I have read and agree to the JALAD community code of conduct.
+                I have read and agree to the Be Native community code of conduct.
               </span>
             </label>
           </div>

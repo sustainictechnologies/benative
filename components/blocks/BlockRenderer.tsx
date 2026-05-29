@@ -4,6 +4,7 @@ import HostStoryBlock from './HostStoryBlock'
 import BirdingLogBlock from './BirdingLogBlock'
 import RulesBlock from './RulesBlock'
 import VideoBlock from './VideoBlock'
+import GalleryBlock from './GalleryBlock'
 
 interface HomestayMeta {
   host_name: string
@@ -34,7 +35,7 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Pro
       )
     case 'host-story':
       return <HostStoryBlock data={block.content_data as any} />
-    case 'birding-log':
+    case 'activity-log':
       return <BirdingLogBlock data={block.content_data as any} />
     case 'rules-block':
       return <RulesBlock data={block.content_data as any} />
@@ -45,6 +46,8 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Pro
           caption={(block.content_data as any).caption}
         />
       )
+    case 'gallery':
+      return <GalleryBlock data={block.content_data as any} />
     default:
       return null
   }

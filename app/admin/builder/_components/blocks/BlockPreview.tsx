@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import type { CanvasBlock } from '../BuilderTypes'
-import { ShieldCheck, MapPin, Ban, ScrollText, Globe2, X } from 'lucide-react'
+import { ShieldCheck, MapPin, Ban, ScrollText, Globe2, X, Plus } from 'lucide-react'
 import EditableImage from '../EditableImage'
 import EditableText from '../EditableText'
 import ActivityLogBlock from './ActivityLogBlock'
@@ -10,14 +10,14 @@ import { useBuilder } from '../BuilderContext'
 
 /* ─── 1. HERO BLOCK ─────────────────────────────────────── */
 function HeroPreview({ id }: { id: string }) {
-  const { previewMode, getText } = useBuilder()
+  const { previewMode } = useBuilder()
   return (
     <div className="rounded-2xl overflow-hidden border border-stone-200 bg-white">
-      <div className="relative w-full aspect-[16/9] overflow-hidden">
+      <div className="w-full aspect-[16/9] overflow-hidden">
         <EditableImage
           blockId={id} imageKey="cover"
           defaultUrl="https://images.unsplash.com/photo-1586348943529-beaae6c28db9?w=600&q=70"
-          wrapperClassName="absolute inset-0"
+          wrapperClassName="w-full h-full"
           className="w-full h-full object-cover"
         />
       </div>
@@ -29,23 +29,23 @@ function HeroPreview({ id }: { id: string }) {
           as="p"
         />
         {previewMode ? (
-          /* Preview mode — show contact details directly */
-          <div className="bg-brand-50 border border-brand-200 rounded-xl overflow-hidden">
-            <div className="divide-y divide-brand-100">
-              {[
-                { key: 'contact-name',     label: 'Host Name', emoji: '👤', placeholder: 'e.g. Meena Patil' },
-                { key: 'contact-phone',    label: 'Phone',     emoji: '📞', placeholder: 'e.g. +91 98765 43210' },
-                { key: 'contact-whatsapp', label: 'WhatsApp',  emoji: '💬', placeholder: 'e.g. +91 98765 43210' },
-                { key: 'contact-email',    label: 'Email',     emoji: '✉️', placeholder: 'e.g. meena@example.com' },
-                { key: 'contact-address',  label: 'Address',   emoji: '📍', placeholder: 'e.g. Dodamarg, Sindhudurg' },
-              ].map(({ key, label, emoji, placeholder }) => (
-                <div key={key} className="flex items-center gap-2.5 px-4 py-2.5">
-                  <span className="text-sm shrink-0">{emoji}</span>
-                  <span className="text-[10px] font-semibold text-brand-700 w-16 shrink-0">{label}</span>
-                  <span className="flex-1 text-sm text-stone-800">{getText(id, key, placeholder)}</span>
-                </div>
-              ))}
+          /* Preview mode — show WhatsApp button as guest would see it */
+          <div className="rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 p-5 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck size={15} className="text-green-600" />
+                <span className="text-sm font-semibold text-green-800">Verified Host</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-stone-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
+                Usually responds within 2 hrs
+              </div>
             </div>
+            <div className="flex items-center gap-3 w-full bg-green-500 text-white font-semibold py-3 px-5 rounded-xl shadow-md shadow-green-200/60">
+              <WAIcon size={20} />
+              <span className="flex-1 text-sm">Chat with Host on WhatsApp</span>
+            </div>
+            <p className="text-[10px] text-stone-400 text-center">Opens WhatsApp with a friendly pre-filled message</p>
           </div>
         ) : (
           /* Builder mode — editable contact fields */
@@ -81,17 +81,152 @@ function HeroPreview({ id }: { id: string }) {
 }
 
 /* ─── 2. HOST STORY ──────────────────────────────────────── */
+const SHAPE_OPTIONS   = [
+  { value: 'circle',  label: '●', title: 'Circle'  },
+  { value: 'rounded', label: '▢', title: 'Rounded' },
+  { value: 'square',  label: '■', title: 'Square'  },
+] as const
+
+const POSITION_GRID = [
+  ['top-left',    'top',    'top-right'   ],
+  ['left',        'center', 'right'       ],
+  ['bottom-left', 'bottom', 'bottom-right'],
+]
+
+const SHAPE_CLASS: Record<string, string> = {
+  circle:  'rounded-full',
+  rounded: 'rounded-2xl',
+  square:  'rounded-none',
+}
+
+const POSITION_CLASS: Record<string, string> = {
+  'top-left':    'object-left-top',
+  'top':         'object-top',
+  'top-right':   'object-right-top',
+  'left':        'object-left',
+  'center':      'object-center',
+  'right':       'object-right',
+  'bottom-left': 'object-left-bottom',
+  'bottom':      'object-bottom',
+  'bottom-right':'object-right-bottom',
+}
+
+// Transform origin so zoom expands from the crop point
+const ORIGIN_MAP: Record<string, string> = {
+  'top-left':    '0% 0%',
+  'top':         '50% 0%',
+  'top-right':   '100% 0%',
+  'left':        '0% 50%',
+  'center':      '50% 50%',
+  'right':       '100% 50%',
+  'bottom-left': '0% 100%',
+  'bottom':      '50% 100%',
+  'bottom-right':'100% 100%',
+}
+
+function HostPhotoEditor({ id }: { id: string }) {
+  const { getText, updateText, previewMode } = useBuilder()
+  const [hovered, setHovered] = useState(false)
+
+  const shape    = getText(id, 'host-shape',    'circle')
+  const position = getText(id, 'host-position', 'center')
+  const zoom     = parseFloat(getText(id, 'host-zoom', '1'))
+
+  return (
+    <div
+      className="relative shrink-0"
+      onMouseEnter={() => { if (!previewMode) setHovered(true)  }}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Photo */}
+      <div className={`w-20 h-20 border-2 border-stone-200 overflow-hidden ${SHAPE_CLASS[shape] ?? 'rounded-full'}`}>
+        <div
+          className="w-full h-full"
+          style={{ transform: zoom !== 1 ? `scale(${zoom})` : undefined, transformOrigin: ORIGIN_MAP[position] ?? '50% 50%' }}
+        >
+          <EditableImage
+            blockId={id} imageKey="host-photo"
+            defaultUrl="https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=120&q=70"
+            wrapperClassName="w-full h-full"
+            className={`w-full h-full object-cover ${POSITION_CLASS[position] ?? 'object-center'}`}
+          />
+        </div>
+      </div>
+
+      {/* Controls panel */}
+      {hovered && (
+        <div
+          className="absolute left-full top-0 ml-2.5 z-30 bg-white border border-stone-200 rounded-xl shadow-xl p-3 space-y-2.5 w-28"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          {/* Shape */}
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1.5">Shape</p>
+            <div className="flex gap-1">
+              {SHAPE_OPTIONS.map(s => (
+                <button
+                  key={s.value}
+                  title={s.title}
+                  onClick={() => updateText(id, 'host-shape', s.value)}
+                  className={`flex-1 py-1 text-sm rounded-lg font-bold transition-colors ${
+                    shape === s.value
+                      ? 'bg-brand-100 text-brand-700'
+                      : 'bg-stone-50 text-stone-400 hover:bg-stone-100'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Crop position */}
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1.5">Crop area</p>
+            <div className="grid grid-cols-3 gap-0.5">
+              {POSITION_GRID.flat().map(pos => (
+                <button
+                  key={pos}
+                  title={pos}
+                  onClick={() => updateText(id, 'host-position', pos)}
+                  className={`h-6 rounded flex items-center justify-center transition-colors ${
+                    position === pos ? 'bg-brand-500' : 'bg-stone-100 hover:bg-stone-200'
+                  }`}
+                >
+                  <div className={`w-1.5 h-1.5 rounded-full ${position === pos ? 'bg-white' : 'bg-stone-400'}`} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Zoom */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400">Zoom</p>
+              <span className="text-[9px] font-semibold text-brand-600">{zoom.toFixed(1)}×</span>
+            </div>
+            <input
+              type="range"
+              min="1" max="3" step="0.1"
+              value={zoom}
+              onChange={e => updateText(id, 'host-zoom', e.target.value)}
+              className="w-full h-1.5 rounded-full accent-brand-600 cursor-pointer"
+            />
+            <div className="flex justify-between text-[8px] text-stone-300 mt-0.5">
+              <span>1×</span><span>3×</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function HostStoryPreview({ id }: { id: string }) {
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-6 flex flex-col sm:flex-row gap-6">
-      <div className="shrink-0">
-        <EditableImage
-          blockId={id} imageKey="host-photo"
-          defaultUrl="https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=120&q=70"
-          wrapperClassName="w-20 h-20 rounded-full border-2 border-stone-200 overflow-hidden"
-          className="w-full h-full object-cover"
-        />
-      </div>
+      <HostPhotoEditor id={id} />
       <div className="space-y-2">
         <EditableText
           blockId={id} textKey="story-title"
@@ -204,8 +339,15 @@ function RulesBlockPreview({ id }: { id: string }) {
   const policies   = getPolicies()
   const prohibited = getProhibited()
 
-  const savePolicies  = (next: string[]) => updateText(id, 'policies',   JSON.stringify(next))
+  const savePolicies   = (next: string[]) => updateText(id, 'policies',   JSON.stringify(next))
   const saveProhibited = (next: string[]) => updateText(id, 'prohibited', JSON.stringify(next))
+
+  // Persist defaults on first mount so publish always has data
+  useEffect(() => {
+    if (!getText(id, 'policies',   '')) updateText(id, 'policies',   JSON.stringify(DEFAULT_POLICIES))
+    if (!getText(id, 'prohibited', '')) updateText(id, 'prohibited', JSON.stringify(DEFAULT_PROHIBITED))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-5">
@@ -307,28 +449,126 @@ function VideoPreview({ id }: { id: string }) {
 }
 
 /* ─── 6. GALLERY ─────────────────────────────────────────── */
-const GALLERY_DEFAULTS = [
-  'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=300&q=60',
-  'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=300&q=60',
-  'https://images.unsplash.com/photo-1604537529428-15bcbeecfe4d?w=300&q=60',
-  'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=300&q=60',
-  'https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?w=300&q=60',
-  'https://images.unsplash.com/photo-1586348943529-beaae6c28db9?w=300&q=60',
+type GalleryRatio = 'square' | 'landscape' | 'portrait'
+type GalleryItem  = { key: string; ratio: GalleryRatio }
+
+const RATIO_OPTIONS: { value: GalleryRatio; label: string }[] = [
+  { value: 'square',    label: '1:1'  },
+  { value: 'landscape', label: '16:9' },
+  { value: 'portrait',  label: '3:4'  },
 ]
 
+const RATIO_CLASS: Record<GalleryRatio, string> = {
+  square:    'aspect-square',
+  landscape: 'aspect-video',
+  portrait:  'aspect-[3/4]',
+}
+
+const DEFAULT_META: GalleryItem[] = [
+  { key: 'gallery-0', ratio: 'square'    },
+  { key: 'gallery-1', ratio: 'landscape' },
+  { key: 'gallery-2', ratio: 'square'    },
+  { key: 'gallery-3', ratio: 'portrait'  },
+  { key: 'gallery-4', ratio: 'square'    },
+  { key: 'gallery-5', ratio: 'square'    },
+]
+
+const GALLERY_PLACEHOLDER = 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=300&q=60'
+
 function GalleryPreview({ id }: { id: string }) {
+  const { getText, updateText, updateImage, previewMode } = useBuilder()
+
+  const getMeta = (): GalleryItem[] => {
+    try {
+      const raw = getText(id, 'gallery-meta', '')
+      if (raw) return JSON.parse(raw)
+    } catch {}
+    return DEFAULT_META
+  }
+
+  const meta = getMeta()
+
+  const saveMeta = (items: GalleryItem[]) =>
+    updateText(id, 'gallery-meta', JSON.stringify(items))
+
+  // Persist DEFAULT_META immediately so publish always has keys to map
+  useEffect(() => {
+    const raw = getText(id, 'gallery-meta', '')
+    if (!raw) saveMeta(DEFAULT_META)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  const addSlot = () => {
+    const key = `gallery-${Date.now()}`
+    saveMeta([...meta, { key, ratio: 'square' }])
+  }
+
+  const deleteSlot = (key: string) => {
+    saveMeta(meta.filter(m => m.key !== key))
+    updateImage(id, key, null)
+  }
+
+  const setRatio = (key: string, ratio: GalleryRatio) =>
+    saveMeta(meta.map(m => m.key === key ? { ...m, ratio } : m))
+
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-6">
-      <h2 className="text-base font-semibold text-stone-900 mb-4">Photo Gallery</h2>
-      <div className="grid grid-cols-3 gap-1.5">
-        {GALLERY_DEFAULTS.map((src, i) => (
-          <EditableImage
-            key={i}
-            blockId={id} imageKey={`gallery-${i}`}
-            defaultUrl={src}
-            wrapperClassName="aspect-square overflow-hidden rounded-lg"
-            className="w-full h-full object-cover"
-          />
+    <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold text-stone-900">Photo Gallery</h2>
+        {!previewMode && (
+          <button
+            onClick={addSlot}
+            className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-full transition-colors"
+          >
+            <Plus size={12} /> Add Photo
+          </button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 gap-1.5 items-start grid-flow-row-dense">
+        {meta.map(item => (
+          <div
+            key={item.key}
+            className={`relative group/slot overflow-hidden rounded-lg ${RATIO_CLASS[item.ratio]} ${
+              item.ratio === 'landscape' ? 'col-span-3' : 'col-span-1'
+            }`}
+          >
+            <EditableImage
+              blockId={id} imageKey={item.key}
+              defaultUrl={GALLERY_PLACEHOLDER}
+              wrapperClassName="w-full h-full"
+              className="w-full h-full object-cover"
+            />
+
+            {!previewMode && (
+              <>
+                {/* Delete slot */}
+                <button
+                  onClick={e => { e.stopPropagation(); deleteSlot(item.key) }}
+                  className="absolute top-1 right-1 z-30 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/slot:opacity-100 transition-opacity shadow"
+                >
+                  <X size={9} />
+                </button>
+
+                {/* Ratio selector */}
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 z-30 flex gap-0.5 opacity-0 group-hover/slot:opacity-100 transition-opacity">
+                  {RATIO_OPTIONS.map(r => (
+                    <button
+                      key={r.value}
+                      onClick={e => { e.stopPropagation(); setRatio(item.key, r.value) }}
+                      className={`text-[9px] px-1.5 py-0.5 rounded font-bold transition-colors ${
+                        item.ratio === r.value
+                          ? 'bg-white text-stone-900 shadow'
+                          : 'bg-black/50 text-white hover:bg-black/70'
+                      }`}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         ))}
       </div>
     </div>
@@ -455,17 +695,36 @@ function FoodPreview({ id }: { id: string }) {
   )
 }
 
+/* ─── WhatsApp SVG icon ──────────────────────────────────── */
+function WAIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    </svg>
+  )
+}
+
 /* ─── 11. WHATSAPP CTA ───────────────────────────────────── */
 function WhatsappPreview() {
   return (
-    <div className="rounded-2xl bg-green-50 border border-green-200 p-6 flex items-center justify-between gap-4">
-      <div>
-        <p className="text-base font-semibold text-stone-900">Chat directly with Meena</p>
-        <p className="text-sm text-stone-500 mt-1">Usually replies within 1 hour · No booking fees</p>
+    <div className="rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 p-5 space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-1.5">
+          <ShieldCheck size={15} className="text-green-600" />
+          <span className="text-sm font-semibold text-green-800">Verified Host</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-stone-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
+          Usually responds within 2 hrs
+        </div>
       </div>
-      <span className="shrink-0 inline-flex items-center gap-2 bg-green-500 text-white text-sm font-bold px-5 py-2.5 rounded-full shadow-sm whitespace-nowrap">
-        💬 WhatsApp
-      </span>
+      <div className="flex items-center gap-3 w-full bg-green-500 text-white font-semibold py-3 px-5 rounded-xl shadow-md shadow-green-200/60">
+        <WAIcon size={20} />
+        <span className="flex-1 text-sm">Chat with Host on WhatsApp</span>
+      </div>
+      <p className="text-[10px] text-stone-400 text-center">
+        Opens WhatsApp with a pre-filled message · Number never shown publicly
+      </p>
     </div>
   )
 }
@@ -507,7 +766,7 @@ function BlockContent({ block }: { block: CanvasBlock }) {
   switch (block.type) {
     case 'hero':        return <HeroPreview id={id} />
     case 'host-story':  return <HostStoryPreview id={id} />
-    case 'birding-log': return <ActivityLogBlock blockId={id} />
+    case 'activity-log': return <ActivityLogBlock blockId={id} />
     case 'rules-block': return <RulesBlockPreview id={id} />
     case 'video':       return <VideoPreview id={id} />
     case 'gallery':     return <GalleryPreview id={id} />

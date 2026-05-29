@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import {
   DndContext,
   DragEndEvent,
@@ -21,6 +21,7 @@ import BuilderTopbar from './BuilderTopbar'
 import LeftPanel from './LeftPanel'
 import Canvas from './Canvas'
 import RightPanel from './RightPanel'
+import PublishModal from './PublishModal'
 
 /* ─── Helpers ────────────────────────────────────────────── */
 function makeId() {
@@ -35,7 +36,7 @@ function makeBlock(type: BlockType): CanvasBlock {
 const INITIAL_BLOCKS: CanvasBlock[] = [
   { id: 'init-hero',    type: 'hero',        props: { ...DEFAULT_PROPS } },
   { id: 'init-story',   type: 'host-story',  props: { ...DEFAULT_PROPS } },
-  { id: 'init-birding', type: 'birding-log', props: { ...DEFAULT_PROPS } },
+  { id: 'init-birding', type: 'activity-log', props: { ...DEFAULT_PROPS } },
   { id: 'init-rules',   type: 'rules-block', props: { ...DEFAULT_PROPS } },
 ]
 
@@ -46,6 +47,33 @@ export default function BuilderClient() {
   const [previewMode, setPreviewMode]   = useState(false)
   const [viewport, setViewport]         = useState<'desktop' | 'mobile'>('desktop')
   const [draggingType, setDraggingType] = useState<BlockType | null>(null)
+  const [pageName, setPageName]             = useState('My Homestay')
+  const [pageHighlights, setPageHighlights] = useState(['Bird Watching', 'Long Stays Welcome'])
+  const [pageLanguages, setPageLanguages]   = useState(['Marathi', 'Hindi', 'English'])
+  const [pageAddress, setPageAddress]       = useState('Khed, Ratnagiri, Maharashtra')
+  const [savedAt, setSavedAt]               = useState<Date | null>(null)
+  const [showPublish, setShowPublish]       = useState(false)
+
+  /* ── Load draft from localStorage on mount ───────────────── */
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('benative-builder-draft')
+      if (!raw) return
+      const draft = JSON.parse(raw)
+      if (draft.blocks)         setBlocks(draft.blocks)
+      if (draft.pageName)       setPageName(draft.pageName)
+      if (draft.pageHighlights) setPageHighlights(draft.pageHighlights)
+      if (draft.pageLanguages)  setPageLanguages(draft.pageLanguages)
+      if (draft.pageAddress)    setPageAddress(draft.pageAddress)
+    } catch {}
+  }, [])
+
+  const handleSave = useCallback(() => {
+    try {
+      localStorage.setItem('benative-builder-draft', JSON.stringify({ blocks, pageName, pageHighlights, pageLanguages, pageAddress }))
+      setSavedAt(new Date())
+    } catch {}
+  }, [blocks, pageHighlights, pageLanguages])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -182,6 +210,9 @@ export default function BuilderClient() {
             blockCount={blocks.length}
             onTogglePreview={() => { setPreviewMode(v => !v); if (previewMode) setSelectedId(null) }}
             onViewportChange={setViewport}
+            onSave={handleSave}
+            savedAt={savedAt}
+            onPublish={() => setShowPublish(true)}
           />
 
           <div className="flex flex-1 overflow-hidden">
@@ -198,6 +229,14 @@ export default function BuilderClient() {
               onMoveUp={id => moveBlock(id, 'up')}
               onMoveDown={id => moveBlock(id, 'down')}
               onDuplicate={duplicateBlock}
+              pageName={pageName}
+              onNameChange={setPageName}
+              pageHighlights={pageHighlights}
+              pageLanguages={pageLanguages}
+              onHighlightsChange={setPageHighlights}
+              onLanguagesChange={setPageLanguages}
+              pageAddress={pageAddress}
+              onAddressChange={setPageAddress}
             />
 
             {!previewMode && selectedBlock && (
@@ -222,6 +261,21 @@ export default function BuilderClient() {
             )}
           </div>
         </div>
+
+        <PublishModal
+          open={showPublish}
+          onClose={() => setShowPublish(false)}
+          builderData={{
+            title:     pageName,
+            hostName:  blocks.find(b => b.type === 'hero')?.props.texts?.['contact-name']     ?? '',
+            phone:     blocks.find(b => b.type === 'hero')?.props.texts?.['contact-phone']    ?? '',
+            whatsapp:  blocks.find(b => b.type === 'hero')?.props.texts?.['contact-whatsapp'] ?? '',
+            email:     blocks.find(b => b.type === 'hero')?.props.texts?.['contact-email']    ?? '',
+            address:   pageAddress,
+            languages: pageLanguages,
+            blocks,
+          }}
+        />
 
         <DragOverlay dropAnimation={{ duration: 150, easing: 'ease' }}>
           {draggingType && draggingMeta && (

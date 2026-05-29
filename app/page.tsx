@@ -68,8 +68,7 @@ export default async function HomePage() {
       homestay_categories ( categories ( name, slug ) ),
       homestay_blocks ( block_type, content_data )
     `)
-    .eq('is_verified', true)
-    .limit(4)
+    .limit(6)
 
   const homestays = (rawHomestays ?? []).map((h: any) => ({
     id: h.id,

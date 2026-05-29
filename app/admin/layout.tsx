@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Sidebar from './_components/Sidebar'
 
 export const metadata: Metadata = {
-  title: 'JALAD Admin',
-  description: 'JALAD Homestays — Admin Dashboard',
+  title: 'Be Native Admin',
+  description: 'Be Native — Admin Dashboard',
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -1,0 +1,156 @@
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+import type { CanvasBlock } from '@/app/admin/builder/_components/BuilderTypes'
+
+export interface PublishPayload {
+  slug:       string
+  title:      string
+  hostName:   string
+  phone:      string
+  whatsapp:   string
+  email:      string
+  address:    string
+  languages:  string[]
+  latitude:   number
+  longitude:  number
+  blocks:     CanvasBlock[]
+}
+
+/** Extract YouTube video ID from a full URL or bare ID */
+function extractYouTubeId(raw: string): string {
+  try {
+    const u = new URL(raw)
+    if (u.hostname.includes('youtu.be'))   return u.pathname.slice(1).split('?')[0]
+    if (u.hostname.includes('youtube.com')) return u.searchParams.get('v') ?? raw
+  } catch {}
+  return raw // already just an ID
+}
+
+/** Map a builder CanvasBlock → homestay_blocks content_data (field names match live block components) */
+function toContentData(block: CanvasBlock): Record<string, unknown> {
+  const img = block.props.images ?? {}
+  const txt = block.props.texts  ?? {}
+
+  switch (block.type) {
+    case 'hero':
+      return {
+        cover_image_url: img['cover']      ?? null,
+        tagline:         txt['tagline']    ?? null,
+      }
+    case 'host-story':
+      return {
+        host_image_url:       img['host-photo']      ?? null,
+        host_photo_shape:     txt['host-shape']      ?? 'circle',
+        host_photo_position:  txt['host-position']   ?? 'center',
+        host_photo_zoom:      parseFloat(txt['host-zoom'] ?? '1'),
+        story_title:          txt['story-title']     ?? null,
+        story_text:           txt['story-body']      ?? null,
+      }
+    case 'activity-log': {
+      let species: string[] = []
+      try { species = JSON.parse(txt['activities'] ?? '[]') } catch {}
+      return {
+        highlight_species:    species,
+        best_watching_hours:  txt['best-hours'] ?? '',
+        nearby_hotspot_trail: txt['hotspot']    ?? '',
+      }
+    }
+    case 'rules-block': {
+      let policies:   string[] = []
+      let prohibited: string[] = []
+      try { policies   = JSON.parse(txt['policies']   ?? '[]') } catch {}
+      try { prohibited = JSON.parse(txt['prohibited'] ?? '[]') } catch {}
+      return {
+        house_policies:   policies,    // live reads house_policies
+        prohibited_items: prohibited,  // live reads prohibited_items
+        safety_status:    txt['safety-status'] ?? '',
+      }
+    }
+    case 'video': {
+      const raw = txt['youtube-url'] ?? ''
+      return { youtube_video_id: raw ? extractYouTubeId(raw) : null }  // live reads youtube_video_id
+    }
+    case 'gallery': {
+      type GalleryItem = { key: string; ratio: string }
+      let meta: GalleryItem[] = []
+      try { meta = JSON.parse(txt['gallery-meta'] ?? '[]') } catch {}
+      // Fall back to key scan if no meta
+      if (meta.length === 0) {
+        meta = Object.keys(img)
+          .filter(k => k.startsWith('gallery-'))
+          .sort()
+          .map(k => ({ key: k, ratio: 'square' }))
+      }
+      const isValidUrl = (url: string | null) =>
+        url !== null && !url.startsWith('blob:') && !url.startsWith('data:') && url.startsWith('http')
+
+      const items = meta
+        .map(m => ({ url: img[m.key] ?? null, ratio: m.ratio || 'square' }))
+        .filter(item => isValidUrl(item.url))
+      return { items }
+    }
+    case 'rooms': {
+      const rooms = ['room-0', 'room-1'].map(k => ({ image_url: img[k] ?? null }))
+      return { rooms }
+    }
+    case 'food': {
+      return { images: ['food-0', 'food-1', 'food-2'].map(k => img[k] ?? null) }
+    }
+    default:
+      return {}
+  }
+}
+
+export async function publishHomestay(payload: PublishPayload) {
+  const supabase = createClient()
+
+  const parts    = payload.address.split(',').map(s => s.trim())
+  const village  = parts[0] ?? payload.address
+  const district = parts[1] ?? village
+
+  // 1. Upsert homestay row, get back the id
+  const { data: upserted, error: upsertErr } = await supabase
+    .from('homestays')
+    .upsert(
+      {
+        slug:              payload.slug,
+        title:             payload.title,
+        host_name:         payload.hostName,
+        contact_phone:     payload.phone,
+        languages_spoken:  payload.languages,
+        village_name:      village,
+        location_district: district,
+        latitude:          payload.latitude,
+        longitude:         payload.longitude,
+        is_verified:       true,
+      },
+      { onConflict: 'slug' }
+    )
+    .select('id')
+    .single()
+
+  if (upsertErr || !upserted) {
+    return { success: false as const, error: upsertErr?.message ?? 'Upsert failed' }
+  }
+
+  const homestayId = upserted.id
+
+  // 2. Delete existing blocks for this homestay
+  await supabase.from('homestay_blocks').delete().eq('homestay_id', homestayId)
+
+  // 3. Insert builder blocks
+  const blockRows = payload.blocks.map((block, i) => ({
+    homestay_id:  homestayId,
+    block_type:   block.type,
+    sort_order:   i,
+    content_data: toContentData(block),
+  }))
+
+  if (blockRows.length > 0) {
+    const { error: blockErr } = await supabase.from('homestay_blocks').insert(blockRows)
+    if (blockErr) return { success: false as const, error: blockErr.message }
+  }
+
+  return { success: true as const }
+}

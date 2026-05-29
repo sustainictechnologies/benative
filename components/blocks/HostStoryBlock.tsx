@@ -2,28 +2,68 @@ import Image from 'next/image'
 import type { HostStoryBlockData } from '@/types/blocks.types'
 
 interface Props {
-  data: HostStoryBlockData
+  data: HostStoryBlockData & {
+    host_photo_shape?:    string
+    host_photo_position?: string
+    host_photo_zoom?:     number
+  }
+}
+
+const SHAPE_CLASS: Record<string, string> = {
+  circle:  'rounded-full',
+  rounded: 'rounded-2xl',
+  square:  'rounded-none',
+}
+
+const POSITION_CLASS: Record<string, string> = {
+  'top-left':    'object-left-top',
+  'top':         'object-top',
+  'top-right':   'object-right-top',
+  'left':        'object-left',
+  'center':      'object-center',
+  'right':       'object-right',
+  'bottom-left': 'object-left-bottom',
+  'bottom':      'object-bottom',
+  'bottom-right':'object-right-bottom',
+}
+
+const ORIGIN_MAP: Record<string, string> = {
+  'top-left':    '0% 0%',
+  'top':         '50% 0%',
+  'top-right':   '100% 0%',
+  'left':        '0% 50%',
+  'center':      '50% 50%',
+  'right':       '100% 50%',
+  'bottom-left': '0% 100%',
+  'bottom':      '50% 100%',
+  'bottom-right':'100% 100%',
 }
 
 export default function HostStoryBlock({ data }: Props) {
+  const shapeClass    = SHAPE_CLASS[data.host_photo_shape    ?? 'circle']  ?? 'rounded-full'
+  const positionClass = POSITION_CLASS[data.host_photo_position ?? 'center'] ?? 'object-center'
+  const zoom          = data.host_photo_zoom ?? 1
+  const origin        = ORIGIN_MAP[data.host_photo_position ?? 'center'] ?? '50% 50%'
+
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-6 flex flex-col sm:flex-row gap-6">
       {data.host_image_url && (
         <div className="shrink-0">
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-stone-100">
+          <div className={`relative w-20 h-20 sm:w-24 sm:h-24 overflow-hidden bg-stone-100 ${shapeClass}`}>
             <Image
               src={data.host_image_url}
-              alt={data.story_title}
+              alt={data.story_title ?? 'Host photo'}
               fill
-              className="object-cover"
+              className={`object-cover ${positionClass}`}
               sizes="96px"
+              style={zoom !== 1 ? { transform: `scale(${zoom})`, transformOrigin: origin } : undefined}
             />
           </div>
         </div>
       )}
       <div className="space-y-2">
-        <h2 className="text-base font-semibold text-stone-900">{data.story_title}</h2>
-        <p className="text-sm text-stone-600 leading-relaxed">{data.story_text}</p>
+        {data.story_title && <h2 className="text-base font-semibold text-stone-900">{data.story_title}</h2>}
+        {data.story_text  && <p className="text-sm text-stone-600 leading-relaxed">{data.story_text}</p>}
       </div>
     </div>
   )

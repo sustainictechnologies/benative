@@ -57,7 +57,7 @@ export default function EditableImage({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="absolute inset-0 bg-black/45 flex flex-col items-center justify-center gap-2 rounded-[inherit]"
+              className="absolute inset-0 z-10 bg-black/45 flex flex-col items-center justify-center gap-2 rounded-[inherit]"
               onClick={e => e.stopPropagation()}
             >
               {/* Action buttons */}

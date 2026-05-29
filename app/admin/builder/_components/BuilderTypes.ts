@@ -1,7 +1,7 @@
 export type BlockType =
   | 'hero'
   | 'host-story'
-  | 'birding-log'
+  | 'activity-log'
   | 'rules-block'
   | 'video'
   | 'gallery'
@@ -48,7 +48,7 @@ export const DEFAULT_PROPS: BlockProps = {
 export const PALETTE = [
   { type: 'hero'        as BlockType, label: 'Hero Block',      emoji: '🌄', desc: 'Cover photo + contact card', group: 'Core' },
   { type: 'host-story'  as BlockType, label: 'Host Story',       emoji: '🙏', desc: 'Host photo & personal story', group: 'Core' },
-  { type: 'birding-log' as BlockType, label: 'Activity Log',     emoji: '🧭', desc: 'Activities & experiences', group: 'Core' },
+  { type: 'activity-log' as BlockType, label: 'Activity Log',     emoji: '🧭', desc: 'Activities & experiences', group: 'Core' },
   { type: 'rules-block' as BlockType, label: 'House Rules',      emoji: '📋', desc: 'Policies & prohibited items', group: 'Core' },
   { type: 'video'       as BlockType, label: 'Video',            emoji: '🎥', desc: 'YouTube embed + caption', group: 'Core' },
   { type: 'gallery'     as BlockType, label: 'Gallery',          emoji: '🖼️', desc: 'Photo grid showcase', group: 'Extra' },

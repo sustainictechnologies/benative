@@ -1,51 +1,45 @@
-import { Bird, Clock, MapPin } from 'lucide-react'
-import type { BirdingLogBlockData } from '@/types/blocks.types'
+import { ALL_ACTIVITIES } from '@/lib/activities'
 
 interface Props {
-  data: BirdingLogBlockData
+  data: {
+    highlight_species?: string[]
+  }
 }
 
 export default function BirdingLogBlock({ data }: Props) {
+  const ids = data.highlight_species ?? []
+
+  const activities = ids
+    .map(id => ALL_ACTIVITIES.find(a => a.id === id) ?? { id, label: id, emoji: '🧭', desc: '' })
+    .filter(Boolean)
+
+  if (activities.length === 0) return null
+
   return (
-    <div className="rounded-2xl border border-teal-100 bg-teal-50 p-6 space-y-5">
+    <div className="rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50/60 to-white p-5 space-y-4">
+
+      {/* Header — matches builder */}
       <div className="flex items-center gap-2">
-        <Bird size={20} className="text-teal-600" />
-        <h2 className="font-semibold text-teal-900">Birding Log</h2>
+        <span className="text-lg">🧭</span>
+        <h2 className="font-semibold text-stone-900 text-sm">Activity Log</h2>
       </div>
 
-      {data.highlight_species.length > 0 && (
-        <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-teal-600 mb-2">
-            Species spotted here
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {data.highlight_species.map((species) => (
-              <span
-                key={species}
-                className="text-xs bg-white text-teal-800 border border-teal-200 px-2.5 py-1 rounded-full"
-              >
-                {species}
-              </span>
-            ))}
+      {/* Activity cards grid — same structure as builder */}
+      <div className="grid grid-cols-2 gap-2">
+        {activities.map(a => (
+          <div
+            key={a.id}
+            className="flex items-start gap-2.5 p-3 bg-white border border-stone-100 rounded-xl hover:border-brand-200 hover:shadow-sm transition-all"
+          >
+            <span className="text-xl shrink-0 mt-0.5">{a.emoji}</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-stone-900 leading-tight">{a.label}</p>
+              {a.desc && (
+                <p className="text-[10px] text-stone-400 mt-0.5 leading-tight">{a.desc}</p>
+              )}
+            </div>
           </div>
-        </div>
-      )}
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div className="flex items-start gap-2.5">
-          <Clock size={14} className="text-teal-500 mt-0.5 shrink-0" />
-          <div>
-            <p className="text-xs font-semibold text-teal-700">Best watching hours</p>
-            <p className="text-sm text-teal-900">{data.best_watching_hours}</p>
-          </div>
-        </div>
-        <div className="flex items-start gap-2.5">
-          <MapPin size={14} className="text-teal-500 mt-0.5 shrink-0" />
-          <div>
-            <p className="text-xs font-semibold text-teal-700">Nearby hotspot</p>
-            <p className="text-sm text-teal-900">{data.nearby_hotspot_trail}</p>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   )

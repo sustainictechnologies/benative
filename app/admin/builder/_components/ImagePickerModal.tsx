@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, Link2, Upload, ImageIcon, CheckCircle2 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { X, Link2, Upload, ImageIcon, CheckCircle2, Loader2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 interface Props {
   currentUrl: string
@@ -16,8 +17,11 @@ export default function ImagePickerModal({ currentUrl, onConfirm, onClose }: Pro
   const [tab, setTab]           = useState<Tab>('url')
   const [urlInput, setUrlInput] = useState(currentUrl)
   const [preview, setPreview]   = useState(currentUrl)
-  const [dragging, setDragging] = useState(false)
-  const [fileName, setFileName] = useState('')
+  const [dragging, setDragging]   = useState(false)
+  const [fileName, setFileName]   = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [uploadErr, setUploadErr] = useState('')
+  const [fileObj, setFileObj]     = useState<File | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   /* ── URL tab ── */
@@ -25,12 +29,13 @@ export default function ImagePickerModal({ currentUrl, onConfirm, onClose }: Pro
     if (urlInput.trim()) onConfirm(urlInput.trim())
   }
 
-  /* ── File tab ── */
+  /* ── File tab — preview only, upload on confirm ── */
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) return
-    const objectUrl = URL.createObjectURL(file)
-    setPreview(objectUrl)
+    setFileObj(file)
     setFileName(file.name)
+    setPreview(URL.createObjectURL(file))
+    setUploadErr('')
   }, [])
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,8 +50,27 @@ export default function ImagePickerModal({ currentUrl, onConfirm, onClose }: Pro
     if (f) handleFile(f)
   }
 
-  const handleConfirmUpload = () => {
-    if (preview && preview !== currentUrl) onConfirm(preview)
+  const handleConfirmUpload = async () => {
+    if (!fileObj) return
+    setUploading(true)
+    setUploadErr('')
+    try {
+      const supabase = createClient()
+      const ext  = fileObj.name.split('.').pop()
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage
+        .from('homestay-images')
+        .upload(path, fileObj, { upsert: false })
+      if (error) { setUploadErr(error.message); return }
+      const { data: { publicUrl } } = supabase.storage
+        .from('homestay-images')
+        .getPublicUrl(path)
+      onConfirm(publicUrl)
+    } catch (e: unknown) {
+      setUploadErr(e instanceof Error ? e.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
   }
 
   return (
@@ -190,17 +214,21 @@ export default function ImagePickerModal({ currentUrl, onConfirm, onClose }: Pro
                 </div>
               )}
 
+              {uploadErr && <p className="text-xs text-rose-500">{uploadErr}</p>}
+
               <div className="flex gap-2 pt-1">
                 <button onClick={onClose} className="flex-1 py-2 rounded-xl border border-stone-200 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors">
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmUpload}
-                  disabled={!preview || preview === currentUrl}
+                  disabled={!fileObj || uploading}
                   className="flex-1 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                 >
-                  <CheckCircle2 size={13} />
-                  Use This Image
+                  {uploading
+                    ? <><Loader2 size={13} className="animate-spin" /> Uploading…</>
+                    : <><CheckCircle2 size={13} /> Use This Image</>
+                  }
                 </button>
               </div>
             </>

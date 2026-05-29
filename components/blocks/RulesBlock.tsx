@@ -20,13 +20,13 @@ export default function RulesBlock({ data }: Props) {
         </div>
       )}
 
-      {data.house_policies.length > 0 && (
+      {(data.house_policies ?? []).length > 0 && (
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">
             House policies
           </h3>
           <ul className="space-y-1.5">
-            {data.house_policies.map((policy) => (
+            {(data.house_policies ?? []).map((policy) => (
               <li key={policy} className="flex items-start gap-2 text-sm text-stone-700">
                 <span className="mt-1.5 w-1.5 h-1.5 bg-stone-400 rounded-full shrink-0" />
                 {policy}
@@ -36,13 +36,13 @@ export default function RulesBlock({ data }: Props) {
         </div>
       )}
 
-      {data.prohibited_items.length > 0 && (
+      {(data.prohibited_items ?? []).length > 0 && (
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">
             Please do not bring
           </h3>
           <ul className="space-y-1.5">
-            {data.prohibited_items.map((item) => (
+            {(data.prohibited_items ?? []).map((item) => (
               <li key={item} className="flex items-center gap-2 text-sm text-stone-600">
                 <Ban size={12} className="text-rose-400 shrink-0" />
                 {item}

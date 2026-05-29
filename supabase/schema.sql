@@ -72,7 +72,7 @@ CREATE TABLE public.homestay_categories (
 CREATE TABLE public.homestay_blocks (
   id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   homestay_id  UUID REFERENCES public.homestays(id) ON DELETE CASCADE NOT NULL,
-  block_type   TEXT NOT NULL,  -- 'hero' | 'host-story' | 'birding-log' | 'rules-block' | 'video' | 'agri-calendar'
+  block_type   TEXT NOT NULL,  -- 'hero' | 'host-story' | 'activity-log' | 'rules-block' | 'video' | 'agri-calendar'
   sort_order   INT  NOT NULL,
   content_data JSONB NOT NULL DEFAULT '{}'::jsonb
 );

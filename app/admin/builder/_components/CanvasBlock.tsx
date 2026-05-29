@@ -61,7 +61,7 @@ export default function CanvasBlockItem({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute -top-6 left-0 flex items-center gap-1.5 bg-brand-600 text-white text-[10px] font-semibold px-2.5 py-1 rounded-t-lg z-10"
+            className="absolute top-2 left-2 flex items-center gap-1.5 bg-brand-600 text-white text-[10px] font-semibold px-2.5 py-1 rounded-lg z-20 shadow-sm"
           >
             <span>{meta?.emoji}</span>
             <span>{meta?.label}</span>

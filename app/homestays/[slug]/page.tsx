@@ -23,8 +23,8 @@ export async function generateMetadata({ params }: Props) {
   const data = raw as any
   if (!data) return {}
   return {
-    title: `${data.title} · JALAD Homestays`,
-    description: `Authentic homestay in ${data.village_name}, ${data.location_district}. Direct host contact via JALAD.`,
+    title: `${data.title} · Be Native`,
+    description: `Authentic homestay in ${data.village_name}, ${data.location_district}. Direct host contact via Be Native.`,
   }
 }
 

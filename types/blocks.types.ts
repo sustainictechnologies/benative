@@ -35,7 +35,7 @@ export interface AgriCalendarBlockData {
 export type HomestayBlock =
   | { id: string; homestay_id: string; sort_order: number; block_type: 'hero';          content_data: HeroBlockData }
   | { id: string; homestay_id: string; sort_order: number; block_type: 'host-story';    content_data: HostStoryBlockData }
-  | { id: string; homestay_id: string; sort_order: number; block_type: 'birding-log';   content_data: BirdingLogBlockData }
+  | { id: string; homestay_id: string; sort_order: number; block_type: 'activity-log';   content_data: BirdingLogBlockData }
   | { id: string; homestay_id: string; sort_order: number; block_type: 'rules-block';   content_data: RulesBlockData }
   | { id: string; homestay_id: string; sort_order: number; block_type: 'video';         content_data: VideoBlockData }
   | { id: string; homestay_id: string; sort_order: number; block_type: 'agri-calendar'; content_data: AgriCalendarBlockData }

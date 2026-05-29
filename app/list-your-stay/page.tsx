@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 }
 
 const perks = [
-  { icon: Leaf,        title: 'Zero Commission',   body: 'JALAD never takes a cut. 100% of what guests pay goes directly to you.' },
+  { icon: Leaf,        title: 'Zero Commission',   body: 'Be Native never takes a cut. 100% of what guests pay goes directly to you.' },
   { icon: Phone,       title: 'Direct Contact',    body: 'Guests call or WhatsApp you directly. No middleman, no chatbot.' },
   { icon: ShieldCheck, title: 'Verified Badge',    body: 'We personally visit and verify hosts. A verified badge builds trust fast.' },
   { icon: Home,        title: 'Your Own Page',     body: 'A beautiful dedicated page for your homestay, photos, and story.' },
@@ -29,7 +29,7 @@ export default function ListYourStayPage() {
             <span className="text-brand-600">Welcome the world.</span>
           </h1>
           <p className="text-lg text-stone-500 leading-relaxed max-w-xl mx-auto">
-            Join India's slow-travel community. List your homestay on JALAD and connect directly with
+            Join India's slow-travel community. List your homestay on Be Native and connect directly with
             conscious travelers — at zero cost to you.
           </p>
         </div>

@@ -1,5 +1,6 @@
 'use client'
 
+// @ts-ignore
 import 'leaflet/dist/leaflet.css'
 import { useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Rectangle, useMap, useMapEvents } from 'react-leaflet'
@@ -101,9 +102,9 @@ export default function MapView({ homestays, selectedPlace = null, onBoundsChang
         />
       )}
 
-      {homestays.map((h) => (
+      {homestays.filter(h => h.latitude != null && h.longitude != null).map((h) => (
         <Marker key={h.id} position={[h.latitude, h.longitude]} icon={dotIcon}>
-          <Popup className="jalad-popup">
+          <Popup className="benative-popup">
             <div className="min-w-[180px]">
               <div className="flex items-start gap-1.5 mb-1">
                 <span className="font-semibold text-sm text-stone-900 leading-tight">{h.title}</span>
