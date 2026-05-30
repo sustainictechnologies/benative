@@ -97,6 +97,12 @@ function toContentData(block: CanvasBlock): Record<string, unknown> {
     case 'food': {
       return { images: ['food-0', 'food-1', 'food-2'].map(k => img[k] ?? null) }
     }
+    case 'map':
+      return {
+        location:    txt['map-location']     ?? '',
+        region:      txt['map-region']       ?? '',
+        nearest_town: txt['map-nearest-town'] ?? '',
+      }
     default:
       return {}
   }

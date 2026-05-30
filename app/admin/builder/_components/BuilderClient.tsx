@@ -125,6 +125,11 @@ export default function BuilderClient() {
               texts['gallery-meta'] = JSON.stringify(meta)
               break
             }
+            case 'map':
+              if (d.location)     texts['map-location']     = d.location
+              if (d.region)       texts['map-region']       = d.region
+              if (d.nearest_town) texts['map-nearest-town'] = d.nearest_town
+              break
             default: break
           }
 

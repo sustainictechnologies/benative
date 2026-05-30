@@ -730,18 +730,36 @@ function WhatsappPreview() {
 }
 
 /* ─── 12. MAP ────────────────────────────────────────────── */
-function MapPreview() {
+function MapPreview({ id }: { id: string }) {
+  const { getText, previewMode } = useBuilder()
+
+  const location   = getText(id, 'map-location',    'Village, District')
+  const region     = getText(id, 'map-region',      'State, India')
+  const nearestTown = getText(id, 'map-nearest-town', 'Nearest town info')
+
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-4">
       <div className="flex items-center gap-2">
         <MapPin size={18} className="text-brand-600" />
         <h2 className="text-base font-semibold text-stone-900">Location</h2>
       </div>
+
+      {/* Map placeholder */}
       <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-green-100 via-green-50 to-stone-100 border border-stone-200" style={{ height: 140 }}>
         <div className="absolute inset-0 flex items-center justify-center flex-col gap-1.5">
           <span className="text-3xl">📍</span>
-          <p className="text-sm font-semibold text-stone-700">Dodamarg, Sindhudurg</p>
-          <p className="text-xs text-stone-400">Maharashtra · 16.04°N, 74.14°E</p>
+          <EditableText
+            blockId={id} textKey="map-location"
+            defaultValue="Village, District"
+            className="text-sm font-semibold text-stone-700 text-center"
+            as="p"
+          />
+          <EditableText
+            blockId={id} textKey="map-region"
+            defaultValue="State, India"
+            className="text-xs text-stone-400 text-center"
+            as="p"
+          />
         </div>
         <svg className="absolute inset-0 w-full h-full opacity-15" viewBox="0 0 100 100" preserveAspectRatio="none">
           {[20,40,60,80].map(v => (
@@ -752,10 +770,23 @@ function MapPreview() {
           ))}
         </svg>
       </div>
+
+      {/* Nearest town */}
       <div className="flex items-center gap-2 text-sm text-stone-500">
-        <Globe2 size={14} className="text-stone-400" />
-        <span>Nearest town: Sawantwadi · 18 km</span>
+        <Globe2 size={14} className="text-stone-400 shrink-0" />
+        <EditableText
+          blockId={id} textKey="map-nearest-town"
+          defaultValue="Nearest town info"
+          className="text-sm text-stone-500"
+          as="span"
+        />
       </div>
+
+      {!previewMode && (
+        <p className="text-[10px] text-stone-300 italic">
+          Exact coordinates are set via the Publish → Pick on Map flow
+        </p>
+      )}
     </div>
   )
 }
@@ -774,7 +805,7 @@ function BlockContent({ block }: { block: CanvasBlock }) {
     case 'reviews':     return <ReviewsPreview />
     case 'food':        return <FoodPreview id={id} />
     case 'whatsapp':    return <WhatsappPreview />
-    case 'map':         return <MapPreview />
+    case 'map':         return <MapPreview id={id} />
     default:            return null
   }
 }

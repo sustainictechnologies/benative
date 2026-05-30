@@ -5,6 +5,7 @@ import BirdingLogBlock from './BirdingLogBlock'
 import RulesBlock from './RulesBlock'
 import VideoBlock from './VideoBlock'
 import GalleryBlock from './GalleryBlock'
+import MapBlock from './MapBlock'
 
 interface HomestayMeta {
   host_name: string
@@ -48,6 +49,8 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Pro
       )
     case 'gallery':
       return <GalleryBlock data={block.content_data as any} />
+    case 'map':
+      return <MapBlock data={block.content_data as any} />
     default:
       return null
   }
