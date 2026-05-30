@@ -32,6 +32,32 @@ export interface AgriCalendarBlockData {
   activities: string[]
 }
 
+export interface ContactBlockData {
+  host_name?: string
+  phone?: string
+  phone_show?: boolean
+  whatsapp?: string
+  whatsapp_show?: boolean
+  alt_phone?: string
+  alt_phone_show?: boolean
+  alt_whatsapp?: string
+  alt_whatsapp_show?: boolean
+  email?: string
+  email_show?: boolean
+  address?: string
+  address_show?: boolean
+  calling_window?: string
+  calling_window_show?: boolean
+  website?: string
+  website_show?: boolean
+  instagram?: string
+  instagram_show?: boolean
+  facebook?: string
+  facebook_show?: boolean
+  youtube?: string
+  youtube_show?: boolean
+}
+
 export type HomestayBlock =
   | { id: string; homestay_id: string; sort_order: number; block_type: 'hero';          content_data: HeroBlockData }
   | { id: string; homestay_id: string; sort_order: number; block_type: 'host-story';    content_data: HostStoryBlockData }
@@ -39,6 +65,7 @@ export type HomestayBlock =
   | { id: string; homestay_id: string; sort_order: number; block_type: 'rules-block';   content_data: RulesBlockData }
   | { id: string; homestay_id: string; sort_order: number; block_type: 'video';         content_data: VideoBlockData }
   | { id: string; homestay_id: string; sort_order: number; block_type: 'agri-calendar'; content_data: AgriCalendarBlockData }
+  | { id: string; homestay_id: string; sort_order: number; block_type: 'contact';       content_data: ContactBlockData }
   | { id: string; homestay_id: string; sort_order: number; block_type: string;          content_data: Record<string, unknown> }
 
 export interface HomestayWithCategories {

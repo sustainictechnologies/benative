@@ -18,7 +18,7 @@ import { motion } from 'framer-motion'
 
 import type { CanvasBlock, BlockType, BlockProps } from './BuilderTypes'
 import { DEFAULT_PROPS, PALETTE } from './BuilderTypes'
-import { BuilderContext } from './BuilderContext'
+import { BuilderContext, SelectedElement } from './BuilderContext'
 import BuilderTopbar from './BuilderTopbar'
 import LeftPanel from './LeftPanel'
 import Canvas from './Canvas'
@@ -54,7 +54,8 @@ export default function BuilderClient() {
   const [pageLanguages, setPageLanguages]   = useState(['Marathi', 'Hindi', 'English'])
   const [pageAddress, setPageAddress]       = useState('Khed, Ratnagiri, Maharashtra')
   const [savedAt, setSavedAt]               = useState<Date | null>(null)
-  const [showPublish, setShowPublish]       = useState(false)
+  const [showPublish, setShowPublish]           = useState(false)
+  const [selectedElement, setSelectedElement]   = useState<SelectedElement | null>(null)
 
   const searchParams  = useSearchParams()
   const editSlug      = searchParams.get('slug')
@@ -89,13 +90,22 @@ export default function BuilderClient() {
 
           switch (type) {
             case 'hero':
-              if (d.cover_image_url)   images['cover']            = d.cover_image_url
-              if (d.tagline)           texts['tagline']            = d.tagline
-              if (h.host_name)         texts['contact-name']      = h.host_name
-              if (h.contact_phone)     texts['contact-phone']     = h.contact_phone
-              if (h.whatsapp_number)   texts['contact-whatsapp']  = h.whatsapp_number
-              if (h.email)             texts['contact-email']     = h.email
-              if (h.address)           texts['contact-address']   = h.address
+              if (d.cover_image_url)   images['cover']   = d.cover_image_url
+              if (d.tagline)           texts['tagline']  = d.tagline
+              break
+            case 'contact':
+              texts['contact-host-name'] = d.host_name ?? h.host_name ?? ''
+              if (d.phone        || h.contact_phone)   { texts['contact-phone']         = d.phone        ?? h.contact_phone   ?? ''; texts['contact-phone-show']         = d.phone_show         === false ? 'false' : 'true' }
+              if (d.whatsapp     || h.whatsapp_number) { texts['contact-whatsapp']       = d.whatsapp     ?? h.whatsapp_number ?? ''; texts['contact-whatsapp-show']       = d.whatsapp_show       === false ? 'false' : 'true' }
+              if (d.email        || h.email)           { texts['contact-email']          = d.email        ?? h.email           ?? ''; texts['contact-email-show']          = d.email_show          === false ? 'false' : 'true' }
+              if (d.address      || h.address)         { texts['contact-address']        = d.address      ?? h.address         ?? ''; texts['contact-address-show']        = d.address_show        === false ? 'false' : 'true' }
+              if (d.calling_window || h.calling_window){ texts['contact-calling-window'] = d.calling_window ?? h.calling_window ?? ''; texts['contact-calling-window-show'] = d.calling_window_show === false ? 'false' : 'true' }
+              if (d.alt_phone)    { texts['contact-alt-phone']    = d.alt_phone;    texts['contact-alt-phone-show']    = d.alt_phone_show    === false ? 'false' : 'true' }
+              if (d.alt_whatsapp) { texts['contact-alt-whatsapp'] = d.alt_whatsapp; texts['contact-alt-whatsapp-show'] = d.alt_whatsapp_show === false ? 'false' : 'true' }
+              if (d.website)      { texts['contact-website']      = d.website;      texts['contact-website-show']      = d.website_show      === false ? 'false' : 'true' }
+              if (d.instagram)    { texts['contact-instagram']    = d.instagram;    texts['contact-instagram-show']    = d.instagram_show    === false ? 'false' : 'true' }
+              if (d.facebook)     { texts['contact-facebook']     = d.facebook;     texts['contact-facebook-show']     = d.facebook_show     === false ? 'false' : 'true' }
+              if (d.youtube)      { texts['contact-youtube']      = d.youtube;      texts['contact-youtube-show']      = d.youtube_show      === false ? 'false' : 'true' }
               break
             case 'host-story':
               if (d.host_image_url)    images['host-photo']       = d.host_image_url
@@ -131,6 +141,20 @@ export default function BuilderClient() {
               if (d.nearest_town) texts['map-nearest-town'] = d.nearest_town
               break
             default: break
+          }
+
+          // Load saved element styles generically
+          if (d.styles && typeof d.styles === 'object') {
+            Object.assign(texts, d.styles)
+          }
+
+          // Load saved sub-texts generically
+          if (Array.isArray(d.sub_texts) && d.sub_texts.length > 0) {
+            const ids = (d.sub_texts as { id: string; content: string }[]).map(st => st.id)
+            texts['sub-texts'] = JSON.stringify(ids)
+            for (const st of d.sub_texts as { id: string; content: string }[]) {
+              if (st.id && st.content) texts[st.id] = st.content
+            }
           }
 
           return {
@@ -249,6 +273,31 @@ export default function BuilderClient() {
     return block?.props.texts?.[textKey] ?? defaultValue
   }, [blocks])
 
+  const addSubTextToSelected = useCallback(() => {
+    setBlocks(prev => prev.map(b => {
+      if (b.id !== selectedId) return b
+      const texts = { ...(b.props.texts ?? {}) }
+      const existing: string[] = (() => { try { return JSON.parse(texts['sub-texts'] ?? '[]') } catch { return [] } })()
+      const newId = `st-${Date.now()}`
+      texts['sub-texts'] = JSON.stringify([...existing, newId])
+      texts[newId] = ''
+      return { ...b, props: { ...b.props, texts } }
+    }))
+  }, [selectedId])
+
+  const removeSubText = useCallback((blockId: string, subTextId: string) => {
+    setBlocks(prev => prev.map(b => {
+      if (b.id !== blockId) return b
+      const texts = { ...(b.props.texts ?? {}) }
+      const existing: string[] = (() => { try { return JSON.parse(texts['sub-texts'] ?? '[]') } catch { return [] } })()
+      texts['sub-texts'] = JSON.stringify(existing.filter(id => id !== subTextId))
+      delete texts[subTextId]
+      const STYLE_SUFFIXES = ['-font', '-size', '-color', '-bold', '-italic', '-align']
+      STYLE_SUFFIXES.forEach(s => delete texts[`${subTextId}${s}`])
+      return { ...b, props: { ...b.props, texts } }
+    }))
+  }, [])
+
   /* ── Context value ───────────────────────────────────── */
   const contextValue = useMemo(() => ({
     updateImage,
@@ -256,7 +305,12 @@ export default function BuilderClient() {
     updateText,
     getText,
     previewMode,
-  }), [updateImage, getImage, updateText, getText, previewMode])
+    selectedElement,
+    setSelectedElement,
+    selectedBlockId:      selectedId,
+    addSubTextToSelected,
+    removeSubText,
+  }), [updateImage, getImage, updateText, getText, previewMode, selectedElement, selectedId, addSubTextToSelected, removeSubText])
 
   /* ── Drag handlers ───────────────────────────────────── */
   const handleDragStart = ({ active }: DragStartEvent) => {
@@ -331,26 +385,7 @@ export default function BuilderClient() {
               onAddressChange={setPageAddress}
             />
 
-            {!previewMode && selectedBlock && (
-              <RightPanel
-                block={selectedBlock}
-                onUpdate={props => updateBlock(selectedBlock.id, props)}
-              />
-            )}
-
-            {!previewMode && !selectedBlock && (
-              <motion.aside
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="w-60 bg-white border-l border-stone-200 flex items-center justify-center shrink-0"
-              >
-                <div className="text-center px-6">
-                  <div className="text-3xl mb-2">👆</div>
-                  <p className="text-xs font-semibold text-stone-500">Click any section</p>
-                  <p className="text-[11px] text-stone-400 mt-1">to edit its styles</p>
-                </div>
-              </motion.aside>
-            )}
+            {!previewMode && <RightPanel />}
           </div>
         </div>
 
@@ -359,10 +394,10 @@ export default function BuilderClient() {
           onClose={() => setShowPublish(false)}
           builderData={{
             title:     pageName,
-            hostName:  blocks.find(b => b.type === 'hero')?.props.texts?.['contact-name']     ?? '',
-            phone:     blocks.find(b => b.type === 'hero')?.props.texts?.['contact-phone']    ?? '',
-            whatsapp:  blocks.find(b => b.type === 'hero')?.props.texts?.['contact-whatsapp'] ?? '',
-            email:     blocks.find(b => b.type === 'hero')?.props.texts?.['contact-email']    ?? '',
+            hostName:  blocks.find(b => b.type === 'contact')?.props.texts?.['contact-host-name'] ?? '',
+            phone:     blocks.find(b => b.type === 'contact')?.props.texts?.['contact-phone']    ?? '',
+            whatsapp:  blocks.find(b => b.type === 'contact')?.props.texts?.['contact-whatsapp'] ?? '',
+            email:     blocks.find(b => b.type === 'contact')?.props.texts?.['contact-email']    ?? '',
             address:   pageAddress,
             languages: pageLanguages,
             blocks,

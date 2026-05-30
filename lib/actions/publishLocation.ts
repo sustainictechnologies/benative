@@ -103,6 +103,32 @@ function toContentData(block: CanvasBlock): Record<string, unknown> {
         region:      txt['map-region']       ?? '',
         nearest_town: txt['map-nearest-town'] ?? '',
       }
+    case 'contact':
+      return {
+        host_name:          txt['contact-host-name']          ?? null,
+        phone:              txt['contact-phone']              ?? null,
+        phone_show:         txt['contact-phone-show']         !== 'false',
+        whatsapp:           txt['contact-whatsapp']           ?? null,
+        whatsapp_show:      txt['contact-whatsapp-show']      !== 'false',
+        alt_phone:          txt['contact-alt-phone']          ?? null,
+        alt_phone_show:     txt['contact-alt-phone-show']     !== 'false',
+        alt_whatsapp:       txt['contact-alt-whatsapp']       ?? null,
+        alt_whatsapp_show:  txt['contact-alt-whatsapp-show']  !== 'false',
+        email:              txt['contact-email']              ?? null,
+        email_show:         txt['contact-email-show']         !== 'false',
+        address:            txt['contact-address']            ?? null,
+        address_show:       txt['contact-address-show']       !== 'false',
+        calling_window:     txt['contact-calling-window']     ?? null,
+        calling_window_show: txt['contact-calling-window-show'] !== 'false',
+        website:            txt['contact-website']            ?? null,
+        website_show:       txt['contact-website-show']       !== 'false',
+        instagram:          txt['contact-instagram']          ?? null,
+        instagram_show:     txt['contact-instagram-show']     !== 'false',
+        facebook:           txt['contact-facebook']           ?? null,
+        facebook_show:      txt['contact-facebook-show']      !== 'false',
+        youtube:            txt['contact-youtube']            ?? null,
+        youtube_show:       txt['contact-youtube-show']       !== 'false',
+      }
     default:
       return {}
   }
@@ -145,13 +171,39 @@ export async function publishHomestay(payload: PublishPayload) {
   // 2. Delete existing blocks for this homestay
   await supabase.from('homestay_blocks').delete().eq('homestay_id', homestayId)
 
+  const STYLE_SUFFIXES = ['-font', '-size', '-color', '-bold', '-italic', '-align', '-fit']
+
   // 3. Insert builder blocks
-  const blockRows = payload.blocks.map((block, i) => ({
-    homestay_id:  homestayId,
-    block_type:   block.type,
-    sort_order:   i,
-    content_data: toContentData(block),
-  }))
+  const blockRows = payload.blocks.map((block, i) => {
+    const content = toContentData(block)
+    const txt = block.props.texts ?? {}
+
+    // Save element styles generically
+    const styles: Record<string, string> = {}
+    for (const [k, v] of Object.entries(txt)) {
+      if (STYLE_SUFFIXES.some(s => k.endsWith(s))) styles[k] = v
+    }
+    if (Object.keys(styles).length > 0) (content as any).styles = styles
+
+    // Save sub-texts generically
+    const subTextsRaw = txt['sub-texts']
+    if (subTextsRaw) {
+      try {
+        const ids = JSON.parse(subTextsRaw) as string[]
+        const sub_texts = ids
+          .filter(id => txt[id] !== undefined)
+          .map(id => ({ id, content: txt[id] ?? '' }))
+        if (sub_texts.length > 0) (content as any).sub_texts = sub_texts
+      } catch {}
+    }
+
+    return {
+      homestay_id:  homestayId,
+      block_type:   block.type,
+      sort_order:   i,
+      content_data: content,
+    }
+  })
 
   if (blockRows.length > 0) {
     const { error: blockErr } = await supabase.from('homestay_blocks').insert(blockRows)

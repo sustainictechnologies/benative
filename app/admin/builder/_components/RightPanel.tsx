@@ -1,105 +1,182 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Palette, Type, Layout, Image as ImageIcon, Sliders } from 'lucide-react'
-import type { CanvasBlock, BlockProps } from './BuilderTypes'
-import { PALETTE } from './BuilderTypes'
-import { useState } from 'react'
-
-interface Props {
-  block: CanvasBlock
-  onUpdate: (props: Partial<BlockProps>) => void
-}
-
-/* ─── Reusable Controls ──────────────────────────────────── */
-
-function SectionLabel({ icon: Icon, label }: { icon: any; label: string }) {
-  return (
-    <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-      <Icon size={13} className="text-brand-600" />
-      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">{label}</span>
-    </div>
-  )
-}
-
-function ColorRow({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <div className="flex items-center justify-between px-4 py-2">
-      <span className="text-xs text-stone-600">{label}</span>
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] font-mono text-stone-400">{value}</span>
-        <label className="cursor-pointer">
-          <input
-            type="color"
-            value={value}
-            onChange={e => onChange(e.target.value)}
-            className="sr-only"
-          />
-          <div
-            className="w-7 h-7 rounded-lg border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform"
-            style={{ background: value }}
-          />
-        </label>
-      </div>
-    </div>
-  )
-}
-
-function SliderRow({ label, value, min, max, unit, onChange }: {
-  label: string; value: number; min: number; max: number; unit: string; onChange: (v: number) => void
-}) {
-  return (
-    <div className="px-4 py-2">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs text-stone-600">{label}</span>
-        <span className="text-xs font-mono text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded-md">{value}{unit}</span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-brand-600 bg-stone-200"
-      />
-    </div>
-  )
-}
-
-function ToggleRow({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="flex items-center justify-between px-4 py-2">
-      <span className="text-xs text-stone-600">{label}</span>
-      <button
-        onClick={() => onChange(!value)}
-        className={`w-9 h-5 rounded-full transition-colors relative ${value ? 'bg-brand-600' : 'bg-stone-300'}`}
-      >
-        <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${value ? 'left-4' : 'left-0.5'}`} />
-      </button>
-    </div>
-  )
-}
-
-function Divider() {
-  return <div className="mx-4 my-1 border-t border-stone-100" />
-}
+import { Type, Image as ImageIcon, MousePointer2, AlignLeft, AlignCenter, AlignRight } from 'lucide-react'
+import { useBuilder } from './BuilderContext'
 
 const FONTS = ['Inter', 'Playfair Display', 'Lora', 'DM Sans', 'Merriweather']
 
-/* ─── Panel Tabs ─────────────────────────────────────────── */
-type Tab = 'style' | 'layout' | 'content'
+/* ─── Reusable controls ──────────────────────────────────── */
+function Label({ children }: { children: React.ReactNode }) {
+  return <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">{children}</p>
+}
 
-const TABS: { id: Tab; label: string; icon: any }[] = [
-  { id: 'style',   label: 'Style',   icon: Palette },
-  { id: 'layout',  label: 'Layout',  icon: Layout },
-  { id: 'content', label: 'Content', icon: ImageIcon },
-]
+function Row({ children }: { children: React.ReactNode }) {
+  return <div className="px-4 py-2.5 border-b border-stone-100 last:border-0">{children}</div>
+}
+
+function SectionHeader({ icon: Icon, label }: { icon: any; label: string }) {
+  return (
+    <div className="flex items-center gap-2 px-4 py-2.5 bg-stone-50 border-b border-stone-200">
+      <Icon size={13} className="text-brand-600" />
+      <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500">{label}</span>
+    </div>
+  )
+}
+
+/* ─── Text controls ──────────────────────────────────────── */
+function TextControls({ blockId, textKey }: { blockId: string; textKey: string }) {
+  const { getText, updateText } = useBuilder()
+
+  const font   = getText(blockId, `${textKey}-font`,   'Inter')
+  const size   = getText(blockId, `${textKey}-size`,   '14')
+  const color  = getText(blockId, `${textKey}-color`,  '#1c1c1c')
+  const bold   = getText(blockId, `${textKey}-bold`,   'false') === 'true'
+  const italic = getText(blockId, `${textKey}-italic`, 'false') === 'true'
+  const align  = getText(blockId, `${textKey}-align`,  'left')
+
+  return (
+    <div>
+      <SectionHeader icon={Type} label="Text Style" />
+
+      <Row>
+        <Label>Font family</Label>
+        <select
+          value={font}
+          onChange={e => updateText(blockId, `${textKey}-font`, e.target.value)}
+          className="w-full text-xs border border-stone-200 rounded-lg px-2.5 py-2 bg-white text-stone-700 focus:outline-none focus:border-brand-400"
+        >
+          {FONTS.map(f => <option key={f} value={f}>{f}</option>)}
+        </select>
+      </Row>
+
+      <Row>
+        <div className="flex items-center justify-between mb-1.5">
+          <Label>Font size</Label>
+          <span className="text-[10px] font-mono text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">{size}px</span>
+        </div>
+        <input
+          type="range" min={10} max={72} value={Number(size)}
+          onChange={e => updateText(blockId, `${textKey}-size`, e.target.value)}
+          className="w-full h-1.5 rounded-full accent-brand-600 cursor-pointer"
+        />
+        <div className="flex justify-between text-[8px] text-stone-300 mt-0.5">
+          <span>10px</span><span>72px</span>
+        </div>
+      </Row>
+
+      <Row>
+        <Label>Color</Label>
+        <div className="flex items-center gap-2">
+          <label className="cursor-pointer">
+            <input
+              type="color" value={color}
+              onChange={e => updateText(blockId, `${textKey}-color`, e.target.value)}
+              className="sr-only"
+            />
+            <div
+              className="w-7 h-7 rounded-lg border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform"
+              style={{ background: color }}
+            />
+          </label>
+          <span className="text-[10px] font-mono text-stone-400">{color}</span>
+        </div>
+      </Row>
+
+      <Row>
+        <Label>Style</Label>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => updateText(blockId, `${textKey}-bold`, bold ? 'false' : 'true')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${bold ? 'bg-brand-100 text-brand-700' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}
+          >
+            B
+          </button>
+          <button
+            onClick={() => updateText(blockId, `${textKey}-italic`, italic ? 'false' : 'true')}
+            className={`px-3 py-1.5 rounded-lg text-xs italic transition-colors ${italic ? 'bg-brand-100 text-brand-700' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}
+          >
+            I
+          </button>
+        </div>
+      </Row>
+
+      <Row>
+        <Label>Alignment</Label>
+        <div className="flex items-center gap-1.5">
+          {(['left', 'center', 'right'] as const).map((a, i) => {
+            const Icon = [AlignLeft, AlignCenter, AlignRight][i]
+            return (
+              <button
+                key={a}
+                onClick={() => updateText(blockId, `${textKey}-align`, a)}
+                className={`flex-1 flex items-center justify-center py-1.5 rounded-lg transition-colors ${align === a ? 'bg-brand-100 text-brand-700' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'}`}
+              >
+                <Icon size={13} />
+              </button>
+            )
+          })}
+        </div>
+      </Row>
+
+      <div className="px-4 pt-2 pb-3">
+        <p className="text-[9px] text-stone-300 font-mono truncate">
+          key: {textKey}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Image controls ─────────────────────────────────────── */
+function ImageControls({ blockId, imageKey }: { blockId: string; imageKey: string }) {
+  const { getText, updateText } = useBuilder()
+  const fit = getText(blockId, `${imageKey}-fit`, 'cover')
+
+  return (
+    <div>
+      <SectionHeader icon={ImageIcon} label="Image Style" />
+      <Row>
+        <Label>Object fit</Label>
+        <div className="flex gap-1.5">
+          {(['cover', 'contain', 'fill'] as const).map(f => (
+            <button
+              key={f}
+              onClick={() => updateText(blockId, `${imageKey}-fit`, f)}
+              className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold capitalize transition-colors ${fit === f ? 'bg-brand-100 text-brand-700' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      </Row>
+      <div className="px-4 pt-2 pb-3">
+        <p className="text-[9px] text-stone-300 font-mono truncate">key: {imageKey}</p>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Empty state ────────────────────────────────────────── */
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center h-full gap-3 px-6 text-center">
+      <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center">
+        <MousePointer2 size={18} className="text-stone-400" />
+      </div>
+      <div>
+        <p className="text-xs font-semibold text-stone-500 mb-1">No element selected</p>
+        <p className="text-[10px] text-stone-400 leading-relaxed">
+          Click any text or image on the canvas to edit its style here.
+        </p>
+      </div>
+    </div>
+  )
+}
 
 /* ─── Main Panel ─────────────────────────────────────────── */
-export default function RightPanel({ block, onUpdate }: Props) {
-  const [tab, setTab] = useState<Tab>('style')
-  const p = block.props
-  const meta = PALETTE.find(x => x.type === block.type)
+export default function RightPanel() {
+  const { selectedElement } = useBuilder()
 
   return (
     <motion.aside
@@ -108,156 +185,36 @@ export default function RightPanel({ block, onUpdate }: Props) {
       transition={{ duration: 0.25 }}
       className="w-60 bg-white border-l border-stone-200 flex flex-col shrink-0 overflow-hidden"
     >
-      {/* Block header */}
-      <div className="px-4 py-3 border-b border-stone-100 bg-stone-50">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{meta?.emoji}</span>
-          <div>
-            <p className="text-xs font-bold text-stone-800">{meta?.label}</p>
-            <p className="text-[10px] text-stone-400">Section properties</p>
-          </div>
-        </div>
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-stone-100 bg-stone-50 shrink-0">
+        <p className="text-xs font-bold text-stone-800">Properties</p>
+        <p className="text-[10px] text-stone-400">
+          {selectedElement
+            ? selectedElement.type === 'text'  ? `Text · ${selectedElement.textKey}`
+            : selectedElement.type === 'image' ? `Image · ${selectedElement.imageKey}`
+            : 'Element'
+            : 'Select an element'
+          }
+        </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-stone-100">
-        {TABS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold transition-colors ${
-              tab === id
-                ? 'text-brand-600 border-b-2 border-brand-600'
-                : 'text-stone-400 hover:text-stone-600'
-            }`}
-          >
-            <Icon size={13} />
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab content */}
+      {/* Controls */}
       <div className="flex-1 overflow-y-auto">
+        {!selectedElement && <EmptyState />}
 
-        {tab === 'style' && (
-          <div>
-            <SectionLabel icon={Palette} label="Colors" />
-            <ColorRow
-              label="Background"
-              value={p.bgColor ?? '#ffffff'}
-              onChange={v => onUpdate({ bgColor: v })}
-            />
-            <ColorRow
-              label="Text color"
-              value={p.textColor ?? '#1c1c1c'}
-              onChange={v => onUpdate({ textColor: v })}
-            />
-            <ColorRow
-              label="Accent / Brand"
-              value={p.accentColor ?? '#1e6b1e'}
-              onChange={v => onUpdate({ accentColor: v })}
-            />
-            <Divider />
-
-            {/* Quick color presets */}
-            <div className="px-4 py-2">
-              <p className="text-[10px] text-stone-400 mb-2">Presets</p>
-              <div className="grid grid-cols-5 gap-1.5">
-                {[
-                  ['#ffffff', '#1c1c1c', '#1e6b1e'],
-                  ['#f0f7f0', '#1c1c1c', '#1e6b1e'],
-                  ['#0f2e0f', '#ffffff', '#4fa04f'],
-                  ['#fdfcf8', '#3b2a1a', '#8b5e3c'],
-                  ['#1a4d6e', '#ffffff', '#7dd3fc'],
-                ].map(([bg, text, accent], i) => (
-                  <button
-                    key={i}
-                    onClick={() => onUpdate({ bgColor: bg, textColor: text, accentColor: accent })}
-                    className="aspect-square rounded-lg border border-stone-200 overflow-hidden hover:scale-110 transition-transform shadow-sm"
-                    style={{ background: bg }}
-                    title="Apply preset"
-                  >
-                    <div className="w-full h-1/2" style={{ background: accent }} />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <Divider />
-            <SectionLabel icon={Sliders} label="Effects" />
-            <ToggleRow
-              label="Drop shadow"
-              value={p.showShadow ?? false}
-              onChange={v => onUpdate({ showShadow: v })}
-            />
-            <SliderRow
-              label="Border radius"
-              value={p.borderRadius ?? 0}
-              min={0} max={32} unit="px"
-              onChange={v => onUpdate({ borderRadius: v })}
-            />
-          </div>
+        {selectedElement?.type === 'text' && (
+          <TextControls
+            blockId={selectedElement.blockId}
+            textKey={selectedElement.textKey}
+          />
         )}
 
-        {tab === 'layout' && (
-          <div>
-            <SectionLabel icon={Layout} label="Spacing" />
-            <SliderRow
-              label="Vertical padding"
-              value={p.paddingY ?? 60}
-              min={8} max={160} unit="px"
-              onChange={v => onUpdate({ paddingY: v })}
-            />
-            <Divider />
-            <SectionLabel icon={Type} label="Typography" />
-            <SliderRow
-              label="Heading size"
-              value={p.headingSize ?? 32}
-              min={16} max={72} unit="px"
-              onChange={v => onUpdate({ headingSize: v })}
-            />
-            <div className="px-4 py-2">
-              <p className="text-xs text-stone-600 mb-1.5">Font family</p>
-              <select
-                value={p.fontFamily ?? 'Inter'}
-                onChange={e => onUpdate({ fontFamily: e.target.value })}
-                className="w-full text-xs border border-stone-200 rounded-lg px-2.5 py-2 bg-white text-stone-700 focus:outline-none focus:border-brand-400"
-              >
-                {FONTS.map(f => <option key={f} value={f}>{f}</option>)}
-              </select>
-            </div>
-          </div>
+        {selectedElement?.type === 'image' && (
+          <ImageControls
+            blockId={selectedElement.blockId}
+            imageKey={selectedElement.imageKey}
+          />
         )}
-
-        {tab === 'content' && (
-          <div>
-            <SectionLabel icon={ImageIcon} label="Image" />
-            <div className="px-4 py-2 space-y-2">
-              {p.imageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={p.imageUrl}
-                  alt=""
-                  className="w-full h-24 object-cover rounded-xl border border-stone-100"
-                />
-              )}
-              <input
-                type="text"
-                placeholder="Paste image URL…"
-                value={p.imageUrl ?? ''}
-                onChange={e => onUpdate({ imageUrl: e.target.value })}
-                className="w-full text-xs border border-stone-200 rounded-lg px-3 py-2 focus:outline-none focus:border-brand-400 text-stone-700 placeholder:text-stone-300"
-              />
-              <p className="text-[10px] text-stone-400">Supports Unsplash, Cloudinary, or any public URL</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Bottom: block ID hint */}
-      <div className="px-4 py-2 border-t border-stone-100 bg-stone-50">
-        <p className="text-[9px] font-mono text-stone-400 truncate">id: {block.id}</p>
       </div>
     </motion.aside>
   )

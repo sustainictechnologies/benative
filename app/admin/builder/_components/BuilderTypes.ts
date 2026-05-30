@@ -11,6 +11,7 @@ export type BlockType =
   | 'food'
   | 'whatsapp'
   | 'map'
+  | 'contact'
 
 export interface BlockProps {
   bgColor?: string
@@ -46,7 +47,8 @@ export const DEFAULT_PROPS: BlockProps = {
 }
 
 export const PALETTE = [
-  { type: 'hero'        as BlockType, label: 'Hero Block',      emoji: '🌄', desc: 'Cover photo + contact card', group: 'Core' },
+  { type: 'hero'        as BlockType, label: 'Hero Block',      emoji: '🌄', desc: 'Cover photo + tagline',      group: 'Core' },
+  { type: 'contact'     as BlockType, label: 'Contact Card',    emoji: '📞', desc: 'Auth-gated host contact',    group: 'Core' },
   { type: 'host-story'  as BlockType, label: 'Host Story',       emoji: '🙏', desc: 'Host photo & personal story', group: 'Core' },
   { type: 'activity-log' as BlockType, label: 'Activity Log',     emoji: '🧭', desc: 'Activities & experiences', group: 'Core' },
   { type: 'rules-block' as BlockType, label: 'House Rules',      emoji: '📋', desc: 'Policies & prohibited items', group: 'Core' },

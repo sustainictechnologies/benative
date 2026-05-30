@@ -12,7 +12,6 @@ interface Props {
   defaultUrl: string
   alt?: string
   className?: string
-  /** Extra wrapper className (for aspect-ratio, rounded, etc.) */
   wrapperClassName?: string
 }
 
@@ -24,17 +23,25 @@ export default function EditableImage({
   className = 'w-full h-full object-cover',
   wrapperClassName = '',
 }: Props) {
-  const { updateImage, getImage, previewMode } = useBuilder()
+  const { updateImage, getImage, getText, previewMode, setSelectedElement } = useBuilder()
   const [hovered, setHovered]     = useState(false)
   const [showModal, setShowModal] = useState(false)
 
-  const src = getImage(blockId, imageKey, defaultUrl)
+  const src      = getImage(blockId, imageKey, defaultUrl)
   const isCustom = src !== defaultUrl
+
+  // Read element-specific object-fit override
+  const fit = getText(blockId, `${imageKey}-fit`, '') as React.CSSProperties['objectFit'] | ''
+  const fitStyle: React.CSSProperties = fit ? { objectFit: fit } : {}
+
+  const handleWrapperClick = () => {
+    setSelectedElement({ type: 'image', blockId, imageKey })
+  }
 
   if (previewMode) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={src} alt={alt} className={className} />
+      <img src={src} alt={alt} className={className} style={fitStyle} />
     )
   }
 
@@ -42,14 +49,13 @@ export default function EditableImage({
     <>
       <div
         className={`relative group/img ${wrapperClassName}`}
-        onMouseEnter={() => setHovered(true)}
+        onMouseEnter={() => { setHovered(true); setSelectedElement({ type: 'image', blockId, imageKey }) }}
         onMouseLeave={() => setHovered(false)}
+        onClick={handleWrapperClick}
       >
-        {/* Image */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={alt} className={className} />
+        <img src={src} alt={alt} className={className} style={fitStyle} />
 
-        {/* Hover overlay */}
         <AnimatePresence>
           {hovered && (
             <motion.div
@@ -60,9 +66,7 @@ export default function EditableImage({
               className="absolute inset-0 z-10 bg-black/45 flex flex-col items-center justify-center gap-2 rounded-[inherit]"
               onClick={e => e.stopPropagation()}
             >
-              {/* Action buttons */}
               <div className="flex items-center gap-1.5">
-                {/* Replace */}
                 <motion.button
                   whileHover={{ scale: 1.07 }}
                   whileTap={{ scale: 0.95 }}
@@ -73,7 +77,6 @@ export default function EditableImage({
                   Replace
                 </motion.button>
 
-                {/* Delete / reset to default */}
                 {isCustom && (
                   <motion.button
                     whileHover={{ scale: 1.07 }}
@@ -86,7 +89,6 @@ export default function EditableImage({
                 )}
               </div>
 
-              {/* Custom badge */}
               {isCustom && (
                 <span className="text-[9px] bg-brand-500 text-white px-2 py-0.5 rounded-full font-semibold">
                   Custom image
@@ -96,7 +98,6 @@ export default function EditableImage({
           )}
         </AnimatePresence>
 
-        {/* Edit icon — subtle persistent indicator */}
         {!hovered && (
           <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-black/30 rounded-md flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
             <ImageIcon size={10} className="text-white" />
@@ -104,7 +105,6 @@ export default function EditableImage({
         )}
       </div>
 
-      {/* Modal */}
       <AnimatePresence>
         {showModal && (
           <ImagePickerModal

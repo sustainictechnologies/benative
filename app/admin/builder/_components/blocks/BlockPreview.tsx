@@ -10,7 +10,6 @@ import { useBuilder } from '../BuilderContext'
 
 /* ─── 1. HERO BLOCK ─────────────────────────────────────── */
 function HeroPreview({ id }: { id: string }) {
-  const { previewMode } = useBuilder()
   return (
     <div className="rounded-2xl overflow-hidden border border-stone-200 bg-white">
       <div className="w-full aspect-[16/9] overflow-hidden">
@@ -21,60 +20,162 @@ function HeroPreview({ id }: { id: string }) {
           className="w-full h-full object-cover"
         />
       </div>
-      <div className="p-6 space-y-5">
+      <div className="px-6 py-4">
         <EditableText
           blockId={id} textKey="tagline"
           defaultValue="Where the jungle meets your pillow."
           className="text-base text-stone-600 italic"
           as="p"
         />
-        {previewMode ? (
-          /* Preview mode — show WhatsApp button as guest would see it */
-          <div className="rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 p-5 space-y-3">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck size={15} className="text-green-600" />
-                <span className="text-sm font-semibold text-green-800">Verified Host</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-stone-500">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
-                Usually responds within 2 hrs
-              </div>
-            </div>
-            <div className="flex items-center gap-3 w-full bg-green-500 text-white font-semibold py-3 px-5 rounded-xl shadow-md shadow-green-200/60">
-              <WAIcon size={20} />
-              <span className="flex-1 text-sm">Chat with Host on WhatsApp</span>
-            </div>
-            <p className="text-[10px] text-stone-400 text-center">Opens WhatsApp with a friendly pre-filled message</p>
+      </div>
+    </div>
+  )
+}
+
+/* ─── 1b. CONTACT BLOCK ──────────────────────────────────── */
+const PHONE_RE = /^\+[1-9]\d{6,14}$/
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const URL_RE   = /^https?:\/\/.+/
+
+function validatePhone(v: string) { return PHONE_RE.test(v.replace(/\s/g, '')) ? null : 'Use international format: +91 9876543210' }
+function validateEmail(v: string) { return EMAIL_RE.test(v) ? null : 'Enter a valid email address' }
+function validateUrl(v: string)   { return URL_RE.test(v)   ? null : 'Must start with http:// or https://' }
+
+function ContactFieldRow({
+  blockId, textKey, showKey, label, placeholder, emoji,
+  validate,
+}: {
+  blockId: string
+  textKey: string
+  showKey?: string
+  label: string
+  placeholder: string
+  emoji: string
+  validate?: (v: string) => string | null
+}) {
+  const { getText, updateText } = useBuilder()
+  const [error, setError] = useState<string | null>(null)
+
+  const value = getText(blockId, textKey, '')
+  const show  = showKey ? getText(blockId, showKey, 'true') !== 'false' : true
+
+  const handleBlur = () => {
+    if (validate && value.trim()) setError(validate(value))
+    else setError(null)
+  }
+
+  return (
+    <div className="flex items-start gap-2 px-4 py-2.5 border-b border-stone-100 last:border-0">
+      <span className="text-sm shrink-0 mt-1">{emoji}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-0.5">{label}</p>
+        <input
+          value={value}
+          onChange={e => updateText(blockId, textKey, e.target.value)}
+          onBlur={handleBlur}
+          placeholder={placeholder}
+          className={`w-full text-sm text-stone-700 placeholder:text-stone-300 bg-transparent outline-none border-b pb-0.5 transition-colors ${
+            error ? 'border-rose-300' : 'border-transparent focus:border-brand-300'
+          }`}
+        />
+        {error && <p className="text-[10px] text-rose-500 mt-0.5">{error}</p>}
+      </div>
+      {showKey && (
+        <label className="flex items-center gap-1 shrink-0 cursor-pointer pt-3.5">
+          <input
+            type="checkbox"
+            checked={show}
+            onChange={e => updateText(blockId, showKey, e.target.checked ? 'true' : 'false')}
+            className="w-3.5 h-3.5 accent-brand-600"
+          />
+          <span className="text-[9px] text-stone-400">Show</span>
+        </label>
+      )}
+    </div>
+  )
+}
+
+function ContactPreview({ id }: { id: string }) {
+  const { getText, previewMode } = useBuilder()
+
+  if (previewMode) {
+    const name    = getText(id, 'contact-host-name', 'Host Name')
+    const phone   = getText(id, 'contact-phone', '') || getText(id, 'contact-whatsapp', '')
+    const email   = getText(id, 'contact-email', '')
+    const address = getText(id, 'contact-address', '')
+    const window_ = getText(id, 'contact-calling-window', '')
+
+    const socials = [
+      getText(id, 'contact-website',   '') && getText(id, 'contact-website-show',   'true') !== 'false' && { label: '🌐' },
+      getText(id, 'contact-instagram', '') && getText(id, 'contact-instagram-show', 'true') !== 'false' && { label: '📸' },
+      getText(id, 'contact-facebook',  '') && getText(id, 'contact-facebook-show',  'true') !== 'false' && { label: '👤' },
+      getText(id, 'contact-youtube',   '') && getText(id, 'contact-youtube-show',   'true') !== 'false' && { label: '▶️' },
+    ].filter(Boolean) as { label: string }[]
+
+    return (
+      <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-4">
+        <p className="font-semibold text-stone-900 text-base">{name}</p>
+        <div className="rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 p-4 space-y-3">
+          <div className="flex items-center gap-3 w-full bg-green-500 text-white font-semibold py-3 px-4 rounded-xl">
+            <WAIcon size={18} />
+            <span className="flex-1 text-sm">Chat with Host on WhatsApp</span>
           </div>
-        ) : (
-          /* Builder mode — editable contact fields */
-          <div className="border border-stone-200 rounded-xl overflow-hidden">
-            <div className="bg-amber-50 border-b border-amber-100 px-3 py-1.5">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-amber-600">Contact Details (hidden behind login on live site)</span>
+          {(phone || email || address || window_) && (
+            <div className="space-y-1.5 pt-1">
+              {phone   && <p className="text-xs text-stone-500">📞 {phone}</p>}
+              {email   && <p className="text-xs text-stone-500">✉️ {email}</p>}
+              {address && <p className="text-xs text-stone-500">📍 {address}</p>}
+              {window_ && <p className="text-xs text-stone-500">🕐 Best time: {window_}</p>}
             </div>
-            <div className="divide-y divide-stone-100">
-              {[
-                { key: 'contact-name',     label: 'Host Name', placeholder: 'e.g. Meena Patil',         emoji: '👤' },
-                { key: 'contact-phone',    label: 'Phone',     placeholder: 'e.g. +91 98765 43210',      emoji: '📞' },
-                { key: 'contact-whatsapp', label: 'WhatsApp',  placeholder: 'e.g. +91 98765 43210',      emoji: '💬' },
-                { key: 'contact-email',    label: 'Email',     placeholder: 'e.g. meena@example.com',    emoji: '✉️' },
-                { key: 'contact-address',  label: 'Address',   placeholder: 'e.g. Dodamarg, Sindhudurg', emoji: '📍' },
-              ].map(({ key, label, placeholder, emoji }) => (
-                <div key={key} className="flex items-center gap-2.5 px-4 py-2.5">
-                  <span className="text-sm shrink-0">{emoji}</span>
-                  <span className="text-[10px] font-semibold text-stone-400 w-16 shrink-0">{label}</span>
-                  <EditableText
-                    blockId={id} textKey={key}
-                    defaultValue={placeholder}
-                    className="flex-1 text-sm text-stone-700 truncate"
-                    as="span"
-                  />
-                </div>
+          )}
+          {socials.length > 0 && (
+            <div className="flex gap-2 pt-1 border-t border-green-100">
+              {socials.map((s, i) => (
+                <span key={i} className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-sm">{s.label}</span>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+        <p className="text-[10px] text-stone-400 text-center">Shown after login + code of conduct on live site</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden">
+      <div className="bg-stone-50 border-b border-stone-200 px-4 py-2.5 flex items-center gap-2">
+        <ShieldCheck size={13} className="text-brand-500" />
+        <span className="text-[9px] font-bold uppercase tracking-widest text-stone-500">
+          Contact Card — shown after login + code of conduct
+        </span>
+      </div>
+
+      {/* Host name — always visible, no toggle */}
+      <div className="bg-amber-50/50 border-b border-stone-100">
+        <ContactFieldRow
+          blockId={id} textKey="contact-host-name"
+          label="Host Name (always visible)" placeholder="e.g. Meena Patil" emoji="👤"
+        />
+      </div>
+
+      {/* Contact fields */}
+      <ContactFieldRow blockId={id} textKey="contact-phone"        showKey="contact-phone-show"        label="Phone"          placeholder="+91 98765 43210"     emoji="📞" validate={validatePhone} />
+      <ContactFieldRow blockId={id} textKey="contact-whatsapp"     showKey="contact-whatsapp-show"     label="WhatsApp"       placeholder="+91 98765 43210"     emoji="💬" validate={validatePhone} />
+      <ContactFieldRow blockId={id} textKey="contact-alt-phone"    showKey="contact-alt-phone-show"    label="Alt Phone"      placeholder="+91 98765 43210"     emoji="📱" validate={validatePhone} />
+      <ContactFieldRow blockId={id} textKey="contact-alt-whatsapp" showKey="contact-alt-whatsapp-show" label="Alt WhatsApp"   placeholder="+91 98765 43210"     emoji="💬" validate={validatePhone} />
+      <ContactFieldRow blockId={id} textKey="contact-email"        showKey="contact-email-show"        label="Email"          placeholder="host@example.com"    emoji="✉️" validate={validateEmail} />
+      <ContactFieldRow blockId={id} textKey="contact-address"      showKey="contact-address-show"      label="Address"        placeholder="Village, District"   emoji="📍" />
+      <ContactFieldRow blockId={id} textKey="contact-calling-window" showKey="contact-calling-window-show" label="Calling Window" placeholder="5 PM – 8 PM"    emoji="🕐" />
+
+      {/* Social links */}
+      <div className="border-t border-stone-200">
+        <div className="bg-stone-50 border-b border-stone-100 px-4 py-1.5">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400">Social &amp; Web Links (icon only)</span>
+        </div>
+        <ContactFieldRow blockId={id} textKey="contact-website"   showKey="contact-website-show"   label="Website"   placeholder="https://yoursite.com"      emoji="🌐" validate={validateUrl} />
+        <ContactFieldRow blockId={id} textKey="contact-instagram" showKey="contact-instagram-show" label="Instagram" placeholder="https://instagram.com/..."  emoji="📸" validate={validateUrl} />
+        <ContactFieldRow blockId={id} textKey="contact-facebook"  showKey="contact-facebook-show"  label="Facebook"  placeholder="https://facebook.com/..."   emoji="👤" validate={validateUrl} />
+        <ContactFieldRow blockId={id} textKey="contact-youtube"   showKey="contact-youtube-show"   label="YouTube"   placeholder="https://youtube.com/..."    emoji="▶️" validate={validateUrl} />
       </div>
     </div>
   )
@@ -791,43 +892,67 @@ function MapPreview({ id }: { id: string }) {
   )
 }
 
+/* ─── Sub-texts section (available in every block) ──────── */
+function SubTextsSection({ blockId }: { blockId: string }) {
+  const { getText, previewMode, removeSubText } = useBuilder()
+
+  const ids: string[] = (() => {
+    try { return JSON.parse(getText(blockId, 'sub-texts', '[]')) } catch { return [] }
+  })()
+
+  if (ids.length === 0) return null
+
+  return (
+    <div className="space-y-2 mt-3 px-1">
+      {ids.map(id => (
+        <div key={id} className="relative group/st">
+          <EditableText
+            blockId={blockId}
+            textKey={id}
+            defaultValue="Click to write…"
+            multiline
+            className="text-sm text-stone-600 leading-relaxed w-full min-h-[2rem]"
+            as="p"
+          />
+          {!previewMode && (
+            <button
+              onClick={e => { e.stopPropagation(); removeSubText(blockId, id) }}
+              className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/st:opacity-100 transition-opacity text-[10px] leading-none z-10"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /* ─── Main Switch ────────────────────────────────────────── */
 function BlockContent({ block }: { block: CanvasBlock }) {
   const id = block.id
   switch (block.type) {
-    case 'hero':        return <HeroPreview id={id} />
-    case 'host-story':  return <HostStoryPreview id={id} />
+    case 'hero':         return <HeroPreview id={id} />
+    case 'contact':      return <ContactPreview id={id} />
+    case 'host-story':   return <HostStoryPreview id={id} />
     case 'activity-log': return <ActivityLogBlock blockId={id} />
-    case 'rules-block': return <RulesBlockPreview id={id} />
-    case 'video':       return <VideoPreview id={id} />
-    case 'gallery':     return <GalleryPreview id={id} />
-    case 'rooms':       return <RoomsPreview id={id} />
-    case 'reviews':     return <ReviewsPreview />
-    case 'food':        return <FoodPreview id={id} />
-    case 'whatsapp':    return <WhatsappPreview />
-    case 'map':         return <MapPreview id={id} />
-    default:            return null
+    case 'rules-block':  return <RulesBlockPreview id={id} />
+    case 'video':        return <VideoPreview id={id} />
+    case 'gallery':      return <GalleryPreview id={id} />
+    case 'rooms':        return <RoomsPreview id={id} />
+    case 'reviews':      return <ReviewsPreview />
+    case 'food':         return <FoodPreview id={id} />
+    case 'whatsapp':     return <WhatsappPreview />
+    case 'map':          return <MapPreview id={id} />
+    default:             return null
   }
 }
 
 export default function BlockPreview({ block }: { block: CanvasBlock }) {
-  const { bgColor, textColor, accentColor, paddingY, borderRadius, showShadow, fontFamily, headingSize } = block.props
-
-  const wrapperStyle: React.CSSProperties = {
-    backgroundColor: bgColor ?? '#ffffff',
-    color: textColor ?? '#1c1c1c',
-    paddingTop: paddingY ?? 0,
-    paddingBottom: paddingY ?? 0,
-    borderRadius: borderRadius ? `${borderRadius}px` : undefined,
-    boxShadow: showShadow ? '0 4px 24px rgba(0,0,0,0.15)' : undefined,
-    fontFamily: fontFamily ?? 'Inter',
-    '--accent': accentColor ?? '#1e6b1e',
-    '--heading-size': headingSize ? `${headingSize}px` : '32px',
-  } as React.CSSProperties
-
   return (
-    <div style={wrapperStyle} className="transition-all duration-200">
+    <div className="transition-all duration-200">
       <BlockContent block={block} />
+      <SubTextsSection blockId={block.id} />
     </div>
   )
 }

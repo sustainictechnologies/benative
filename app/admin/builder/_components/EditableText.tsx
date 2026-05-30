@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Pencil } from 'lucide-react'
 import { useBuilder } from './BuilderContext'
 
+const STYLE_SUFFIXES = ['-font', '-size', '-color', '-bold', '-italic', '-align']
+
 interface Props {
   blockId: string
   textKey: string
@@ -21,24 +23,38 @@ export default function EditableText({
   className = '',
   as: Tag = 'p',
 }: Props) {
-  const { getText, updateText, previewMode } = useBuilder()
+  const { getText, updateText, previewMode, setSelectedElement } = useBuilder()
   const value = getText(blockId, textKey, defaultValue)
 
-  const [editing, setEditing]   = useState(false)
-  const [draft, setDraft]       = useState(value)
-  const [hovered, setHovered]   = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft]     = useState(value)
+  const [hovered, setHovered] = useState(false)
   const inputRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null)
 
-  // Keep draft in sync if value changes externally
   useEffect(() => { if (!editing) setDraft(value) }, [value, editing])
-
-  // Auto-focus when editing starts
   useEffect(() => {
     if (editing) {
       inputRef.current?.focus()
       inputRef.current?.select()
     }
   }, [editing])
+
+  // Read element-specific styles stored as text keys
+  const font    = getText(blockId, `${textKey}-font`,   '')
+  const size    = getText(blockId, `${textKey}-size`,   '')
+  const color   = getText(blockId, `${textKey}-color`,  '')
+  const bold    = getText(blockId, `${textKey}-bold`,   '') === 'true'
+  const italic  = getText(blockId, `${textKey}-italic`, '') === 'true'
+  const align   = getText(blockId, `${textKey}-align`,  '') as React.CSSProperties['textAlign'] | ''
+
+  const inlineStyle: React.CSSProperties = {
+    ...(font   ? { fontFamily: font }                      : {}),
+    ...(size   ? { fontSize: `${size}px` }                : {}),
+    ...(color  ? { color }                                 : {}),
+    ...(bold   ? { fontWeight: 'bold' }                   : {}),
+    ...(italic ? { fontStyle: 'italic' }                  : {}),
+    ...(align  ? { textAlign: align }                     : {}),
+  }
 
   const commit = () => {
     const trimmed = draft.trim()
@@ -51,9 +67,15 @@ export default function EditableText({
     setEditing(false)
   }
 
-  /* ── Preview mode: plain text ─────────────────────────── */
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditing(true)
+    setSelectedElement({ type: 'text', blockId, textKey })
+  }
+
+  /* ── Preview mode ─────────────────────────────────────── */
   if (previewMode) {
-    return <Tag className={className}>{value}</Tag>
+    return <Tag className={className} style={inlineStyle}>{value}</Tag>
   }
 
   /* ── Editing: inline input ────────────────────────────── */
@@ -70,7 +92,7 @@ export default function EditableText({
         e.stopPropagation()
       },
       className: `w-full bg-brand-50 border border-brand-400 rounded-lg px-2 py-1 outline-none resize-none text-inherit font-inherit leading-inherit ${className}`,
-      style: { minHeight: multiline ? 72 : undefined },
+      style: { ...inlineStyle, minHeight: multiline ? 72 : undefined },
     }
 
     return multiline
@@ -82,14 +104,13 @@ export default function EditableText({
   return (
     <Tag
       className={`relative group/txt cursor-text ${className}`}
+      style={inlineStyle}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={e => { e.stopPropagation(); setEditing(true) }}
+      onClick={handleClick}
       title="Click to edit"
     >
       {value}
-
-      {/* Hover underline + pencil */}
       {hovered && (
         <span className="absolute inset-0 rounded pointer-events-none ring-1 ring-brand-400 ring-offset-1 bg-brand-50/30" />
       )}
