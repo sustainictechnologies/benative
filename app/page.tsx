@@ -2,54 +2,99 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import {
-  MapPin, ShieldCheck, Leaf, Bird, Bike, Phone, Star,
-  ArrowRight, Users, Heart, Sprout, Map
+  MapPin, Users, Bird, Bike, ShieldCheck, Leaf,
+  ArrowRight, Phone, Mountain, Star, Heart, Sprout,
 } from 'lucide-react'
+
+/* ── Data ─────────────────────────────────────────────────── */
+
+const valueCards = [
+  {
+    icon: Users,
+    title: 'Stay With Local Families',
+    desc: 'Live with locals and experience real hospitality.',
+  },
+  {
+    icon: Leaf,
+    title: 'Support Local Communities',
+    desc: 'Your stay helps rural families and local communities.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Safe & Verified',
+    desc: 'Verified hosts and safe stays you can trust.',
+  },
+  {
+    icon: Mountain,
+    title: 'Explore Offbeat India',
+    desc: 'Discover hidden places, nature, culture and local life.',
+  },
+]
 
 const categories = [
   {
     icon: Bird,
     label: 'Bird Watching',
-    desc: 'Spot rare birds in their natural habitat',
-    bg: 'bg-teal-50',
-    border: 'border-teal-200',
-    iconColor: 'text-teal-500',
-    textColor: 'text-teal-700',
+    desc: 'For those who find peace in every flutter.',
+    bg: '/bird_waching.jpg',
   },
   {
     icon: Bike,
     label: 'Rider Friendly',
-    desc: 'Perfect stays for solo riders',
-    bg: 'bg-orange-50',
-    border: 'border-orange-200',
-    iconColor: 'text-orange-500',
-    textColor: 'text-orange-700',
+    desc: 'Built for explorers who ride free.',
+    bg: '/Rider_Friendly.jpeg',
   },
   {
     icon: ShieldCheck,
     label: 'Solo Female Safe',
-    desc: 'Safe, comfortable and welcoming',
-    bg: 'bg-rose-50',
-    border: 'border-rose-200',
-    iconColor: 'text-rose-500',
-    textColor: 'text-rose-700',
+    desc: 'Safe, respectful and welcoming stays.',
+    bg: '/Solo_Female_Safe.jpeg',
   },
   {
     icon: Leaf,
-    label: 'Agriculture Immersion',
-    desc: 'Live the village life and connect deeper',
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    iconColor: 'text-green-600',
-    textColor: 'text-green-700',
+    label: 'Agri Immersion',
+    desc: 'Live the village life. Get your hands dirty.',
+    bg: '/Agri_Immersion.jpeg',
   },
 ]
 
-const trustMetrics = [
-  { icon: Leaf,        label: 'No Booking Fees',   sub: 'Pay directly to hosts' },
-  { icon: ShieldCheck, label: 'Verified Hosts',     sub: 'Community verified' },
-  { icon: Phone,       label: 'Direct Contact',     sub: 'Call or WhatsApp' },
-  { icon: Users,       label: 'Community Trusted',  sub: 'By travelers like you' },
+type TrustItem =
+  | { kind: 'symbol'; symbol: string; label: string; sub: string }
+  | { kind: 'icon'; Icon: React.ElementType; label: string; sub: string }
+
+const trustMetrics: TrustItem[] = [
+  { kind: 'symbol', symbol: '₹', label: 'No Booking Fees',   sub: 'Pay directly to hosts'  },
+  { kind: 'icon',   Icon: ShieldCheck, label: 'Verified Hosts',     sub: 'Community verified'     },
+  { kind: 'icon',   Icon: Phone,       label: 'Direct Contact',     sub: 'Call or WhatsApp'       },
+  { kind: 'icon',   Icon: Users,       label: 'Community Trusted',  sub: 'By travelers like you'  },
+]
+
+const regions = [
+  {
+    name: 'Konkan Coast',
+    state: 'Maharashtra',
+    img: 'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=500&q=70',
+  },
+  {
+    name: 'Western Ghats',
+    state: 'Karnataka · Goa',
+    img: 'https://images.unsplash.com/photo-1516912481808-3406841bd33c?w=500&q=70',
+  },
+  {
+    name: 'Spiti Valley',
+    state: 'Himachal Pradesh',
+    img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=500&q=70',
+  },
+  {
+    name: 'Coorg Hills',
+    state: 'Karnataka',
+    img: 'https://images.unsplash.com/photo-1545158535-c3f7168c28b6?w=500&q=70',
+  },
+  {
+    name: 'Rajasthan',
+    state: 'Desert & Forts',
+    img: 'https://images.unsplash.com/photo-1477587458883-47145ed31b23?w=500&q=70',
+  },
 ]
 
 const values = [
@@ -58,6 +103,8 @@ const values = [
   { icon: Leaf,   label: 'Responsible Travel',    sub: 'Travel respectfully. Preserve nature, culture, and way of life.' },
   { icon: Users,  label: 'Real Connections',      sub: 'Real people, real stories, real hospitality — across India.' },
 ]
+
+/* ── Page ─────────────────────────────────────────────────── */
 
 export default async function HomePage() {
   const supabase = createClient()
@@ -83,93 +130,110 @@ export default async function HomePage() {
   }))
 
   return (
-    <div className="bg-white">
+    <div className="bg-[#f8f7f2]">
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative min-h-screen flex overflow-hidden">
-        {/* BG image */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/hero.jpg"
-            alt="Konkan coast"
-            fill
-            className="object-cover object-center"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent" style={{backgroundSize: '55% 100%', backgroundRepeat: 'no-repeat'}} />
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-10 grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
+
+        {/* Left: headline + buttons */}
+        <div>
+          <h1 className="text-3xl lg:text-4xl font-black text-stone-900 leading-[1.15] mb-3 tracking-tight">
+            Shed Your Tourist Skin,<br />
+            Blend into the Local Ecosystem,<br />
+            <span className="text-brand-600">and Become a Traveler.</span>
+          </h1>
+          <div className="w-12 h-[3px] bg-brand-600 rounded-full mt-3 mb-7" />
+          <p className="text-stone-500 text-base leading-relaxed mb-9 max-w-[400px]">
+            Bypass giant booking platforms. <br />
+            We link you directly with authentic
+            rural homes, local kitchens,
+            and Native guides who know
+            the land by heart.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/explore"
+              className="inline-flex items-center gap-2.5 bg-stone-900 hover:bg-stone-800 text-white font-semibold px-6 py-3 rounded-full transition-colors text-sm shadow-sm"
+            >
+              <MapPin size={15} /> Explore Homestays
+            </Link>
+            <Link
+              href="/list-your-stay"
+              className="inline-flex items-center gap-2.5 border-2 border-stone-300 text-stone-700 hover:border-stone-500 hover:bg-stone-100 font-semibold px-6 py-3 rounded-full transition-colors text-sm"
+            >
+              <Users size={15} /> Become a Host
+            </Link>
+          </div>
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full grid lg:grid-cols-2 gap-0">
-
-          {/* Left: text — full height flex column */}
-          <div className="flex flex-col justify-center py-24 pr-8">
-            <div className="inline-flex items-center gap-2 bg-stone-100 border border-stone-200 text-stone-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-8 w-fit">
-              <MapPin size={11} /> Himalayas · Forests · Villages · Coastlines · Deserts
-            </div>
-
-            <h1 className="text-[72px] font-black text-stone-900 leading-[1.0] mb-6 tracking-tight">
-              Stay With<br />
-              <span className="text-brand-600">Local Families</span><br />
-              Across India
-            </h1>
-
-            <p className="text-lg text-stone-500 leading-relaxed mb-10 max-w-sm">
-              Authentic community stays, direct host connections, and
-              meaningful travel experiences across rural and culturally
-              rich regions of India.
-            </p>
-
-            <div className="flex flex-wrap gap-3 mb-14">
-              <Link
-                href="/explore"
-                className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold px-7 py-3.5 rounded-full transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-sm"
-              >
-                <MapPin size={15} /> Explore Homestays
-              </Link>
-              <Link
-                href="/list-your-stay"
-                className="inline-flex items-center gap-2 bg-stone-100 border-2 border-stone-400 text-stone-800 hover:bg-brand-50 hover:border-brand-600 hover:text-brand-700 font-semibold px-7 py-3.5 rounded-full transition-all text-sm"
-              >
-                <Users size={15} /> Become a Host
-              </Link>
-            </div>
-
-            {/* Trust row */}
-            <div className="flex items-start gap-8">
-              {trustMetrics.map(({ icon: Icon, label, sub }) => (
-                <div key={label} className="flex flex-col items-start gap-1">
-                  <Icon size={20} className="text-brand-600 mb-1" />
-                  <span className="text-stone-900 text-sm font-bold">{label}</span>
-                  <span className="text-stone-900 text-xs font-semibold">{sub}</span>
-                </div>
-              ))}
-            </div>
+        {/* Right: why choose + value cards */}
+        <div>
+          <h2 className="text-brand-600 font-black text-xl text-center mb-5 tracking-tight">
+            Why Be Native?
+          </h2>
+          <div className="relative grid grid-cols-2">
+            {/* Centre + divider */}
+            <div className="absolute left-1/2 top-[25%] bottom-[25%] w-px bg-stone-200 -translate-x-px pointer-events-none" />
+            <div className="absolute top-1/2 left-[25%] right-[25%] h-px bg-stone-200 -translate-y-px pointer-events-none" />
+            {valueCards.map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="flex flex-col items-center text-center px-3 py-6">
+                <Icon size={28} className="text-brand-600 mb-4" strokeWidth={1.5} />
+                <h3 className="font-bold text-stone-900 text-sm leading-snug min-h-[2.5rem] flex items-center justify-center mb-2">{title}</h3>
+                <p className="text-stone-400 text-xs leading-relaxed">{desc}</p>
+              </div>
+            ))}
           </div>
-
-          {/* Right: 4 category cards pinned to bottom-right */}
-          <div className="hidden lg:flex flex-col justify-end pb-14 pl-4">
-            <div className="flex gap-3">
-              {categories.map(({ icon: Icon, label, desc, bg, border, iconColor, textColor }) => (
-                <Link
-                  key={label}
-                  href="/explore"
-                  className={`group w-36 h-44 shrink-0 ${bg} border ${border} rounded-2xl p-4 flex flex-col justify-between hover:scale-[1.03] transition-all duration-300 shadow-md hover:shadow-xl`}
-                >
-                  <div>
-                    <Icon size={22} className={`${iconColor} mb-3`} />
-                    <div className={`font-bold text-[13px] leading-snug mb-1 ${textColor}`}>{label}</div>
-                    <div className="text-[10px] text-stone-500 leading-relaxed">{desc}</div>
-                  </div>
-                  <div className={`w-6 h-6 rounded-full border-2 ${border} flex items-center justify-center mt-3 bg-white/50`}>
-                    <ArrowRight size={11} className={iconColor} />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-
         </div>
       </section>
+
+      {/* ── Category Cards ────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {categories.map(({ icon: Icon, label, desc, bg }) => (
+          <Link
+            key={label}
+            href="/explore"
+            className="group relative rounded-2xl overflow-hidden aspect-[4/3]"
+          >
+            <Image
+              src={bg}
+              alt={label}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              sizes="(max-width: 768px) 50vw, 25vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+                  <Icon size={14} className="text-white" />
+                </div>
+                <h3 className="text-white font-bold text-sm">{label}</h3>
+              </div>
+              <p className="text-white/70 text-xs leading-snug">{desc}</p>
+            </div>
+          </Link>
+        ))}
+      </section>
+
+      {/* ── Trust Metrics ─────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 grid grid-cols-2 lg:grid-cols-4 gap-6">
+        {trustMetrics.map((m) => (
+          <div key={m.label} className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center shrink-0">
+              {m.kind === 'symbol' ? (
+                <span className="text-stone-700 font-bold text-base">{m.symbol}</span>
+              ) : (
+                <m.Icon size={18} className="text-stone-600" />
+              )}
+            </div>
+            <div>
+              <p className="text-stone-900 font-bold text-sm">{m.label}</p>
+              <p className="text-stone-400 text-xs">{m.sub}</p>
+            </div>
+          </div>
+        ))}
+      </section>
+
 
       {/* ── Handpicked Homestays ─────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
@@ -186,104 +250,66 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="grid lg:grid-cols-5 gap-5">
-          {/* Homestay cards */}
-          <div className="lg:col-span-4 grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
-            {homestays.length > 0 ? homestays.map((h) => (
-              <Link
-                key={h.id}
-                href={`/homestays/${h.slug}`}
-                className="group bg-white rounded-3xl overflow-hidden border border-stone-100 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1"
-              >
-                <div className="relative h-44 bg-stone-100 overflow-hidden">
-                  {h.cover_image_url ? (
-                    <Image
-                      src={h.cover_image_url}
-                      alt={h.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="300px"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-brand-100 to-stone-200 flex items-center justify-center">
-                      <MapPin size={28} className="text-brand-300" />
-                    </div>
-                  )}
-                  {h.is_verified && (
-                    <span className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-sm text-brand-700 text-[10px] font-semibold px-2 py-1 rounded-full">
-                      <ShieldCheck size={9} /> Verified Host
-                    </span>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-stone-900 text-sm leading-snug mb-1">{h.title}</h3>
-                  <div className="flex items-center gap-1 text-xs text-stone-400 mb-2.5">
-                    <MapPin size={10} />
-                    <span>{h.village_name}, {h.location_district}</span>
+        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
+          {homestays.length > 0 ? homestays.map((h) => (
+            <Link
+              key={h.id}
+              href={`/homestays/${h.slug}`}
+              className="group bg-white rounded-3xl overflow-hidden border border-stone-100 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1"
+            >
+              <div className="relative h-44 bg-stone-100 overflow-hidden">
+                {h.cover_image_url ? (
+                  <Image
+                    src={h.cover_image_url}
+                    alt={h.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="300px"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-brand-100 to-stone-200 flex items-center justify-center">
+                    <MapPin size={28} className="text-brand-300" />
                   </div>
-                  {h.categories.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {h.categories.slice(0, 2).map((c: any) => (
-                        <span key={c.slug} className="text-[10px] bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full">
-                          {c.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1 pt-3 border-t border-stone-100">
-                    <Star size={11} className="fill-amber-400 text-amber-400" />
-                    <span className="text-xs font-semibold text-stone-700">4.8</span>
-                    <span className="text-xs text-stone-400 ml-auto">Direct contact</span>
-                  </div>
+                )}
+                {h.is_verified && (
+                  <span className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-sm text-brand-700 text-[10px] font-semibold px-2 py-1 rounded-full">
+                    <ShieldCheck size={9} /> Verified Host
+                  </span>
+                )}
+              </div>
+              <div className="p-4">
+                <h3 className="font-semibold text-stone-900 text-sm leading-snug mb-1">{h.title}</h3>
+                <div className="flex items-center gap-1 text-xs text-stone-400 mb-2.5">
+                  <MapPin size={10} />
+                  <span>{h.village_name}, {h.location_district}</span>
                 </div>
-              </Link>
-            )) : (
-              [1,2,3,4].map((i) => (
-                <div key={i} className="bg-white rounded-3xl overflow-hidden border border-stone-100">
-                  <div className="h-44 bg-gradient-to-br from-brand-50 to-stone-100 animate-pulse" />
-                  <div className="p-4 space-y-2">
-                    <div className="h-4 bg-stone-100 rounded-full animate-pulse" />
-                    <div className="h-3 bg-stone-100 rounded-full w-2/3 animate-pulse" />
+                {h.categories.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {h.categories.slice(0, 2).map((c: any) => (
+                      <span key={c.slug} className="text-[10px] bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full">
+                        {c.name}
+                      </span>
+                    ))}
                   </div>
+                )}
+                <div className="flex items-center gap-1 pt-3 border-t border-stone-100">
+                  <Star size={11} className="fill-amber-400 text-amber-400" />
+                  <span className="text-xs font-semibold text-stone-700">4.8</span>
+                  <span className="text-xs text-stone-400 ml-auto">Direct contact</span>
                 </div>
-              ))
-            )}
-          </div>
-
-          {/* Map widget */}
-          <div className="lg:col-span-1 bg-white rounded-3xl overflow-hidden border border-stone-100 shadow-card flex flex-col">
-            <div className="flex-1 relative min-h-52">
-              <Image
-                src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=400&q=80"
-                alt="Map"
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-brand-900/10" />
-              {[
-                { top: '28%', left: '48%' },
-                { top: '43%', left: '33%' },
-                { top: '54%', left: '58%' },
-                { top: '66%', left: '42%' },
-              ].map((pos, i) => (
-                <div key={i} style={{ position: 'absolute', ...pos }}>
-                  <div className="w-5 h-5 bg-brand-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center -translate-x-1/2 -translate-y-1/2">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                  </div>
+              </div>
+            </Link>
+          )) : (
+            [1,2,3,4].map((i) => (
+              <div key={i} className="bg-white rounded-3xl overflow-hidden border border-stone-100">
+                <div className="h-44 bg-gradient-to-br from-brand-50 to-stone-100 animate-pulse" />
+                <div className="p-4 space-y-2">
+                  <div className="h-4 bg-stone-100 rounded-full animate-pulse" />
+                  <div className="h-3 bg-stone-100 rounded-full w-2/3 animate-pulse" />
                 </div>
-              ))}
-            </div>
-            <div className="p-4">
-              <p className="text-xs font-bold text-stone-800 mb-0.5">Explore on Map</p>
-              <p className="text-xs text-stone-400 mb-3 leading-relaxed">See all stays across rural India</p>
-              <Link
-                href="/map"
-                className="flex items-center justify-center gap-2 w-full bg-stone-50 hover:bg-brand-50 border border-stone-200 hover:border-brand-200 text-stone-700 hover:text-brand-700 text-xs font-semibold py-2.5 rounded-xl transition-all"
-              >
-                <Map size={13} /> Open Full Map
-              </Link>
-            </div>
-          </div>
+              </div>
+            ))
+          )}
         </div>
       </section>
 
@@ -315,7 +341,7 @@ export default async function HomePage() {
             <p className="text-white/70 mb-8 max-w-md mx-auto text-lg">Browse verified homestays across mountains, forests, villages, and coastlines. Call the host directly. Pay zero fees.</p>
             <Link
               href="/map"
-              className="inline-flex items-center gap-2 bg-white text-brand-700 font-bold px-8 py-3.5 rounded-full hover:bg-cream-100 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 bg-white text-brand-700 font-bold px-8 py-3.5 rounded-full hover:bg-stone-100 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             >
               <MapPin size={16} /> Browse the Map
             </Link>

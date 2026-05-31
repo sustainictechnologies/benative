@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Type, Image as ImageIcon, MousePointer2, AlignLeft, AlignCenter, AlignRight } from 'lucide-react'
+import { Type, Image as ImageIcon, MousePointer2, AlignLeft, AlignCenter, AlignRight, List } from 'lucide-react'
 import { useBuilder } from './BuilderContext'
 
 const FONTS = ['Inter', 'Playfair Display', 'Lora', 'DM Sans', 'Merriweather']
@@ -33,7 +33,7 @@ function TextControls({ blockId, textKey }: { blockId: string; textKey: string }
   const color  = getText(blockId, `${textKey}-color`,  '#1c1c1c')
   const bold   = getText(blockId, `${textKey}-bold`,   'false') === 'true'
   const italic = getText(blockId, `${textKey}-italic`, 'false') === 'true'
-  const align  = getText(blockId, `${textKey}-align`,  'left')
+  const align  = getText(blockId, `${textKey}-align`,  '')
 
   return (
     <div>
@@ -128,6 +128,49 @@ function TextControls({ blockId, textKey }: { blockId: string; textKey: string }
   )
 }
 
+/* ─── List controls ──────────────────────────────────────── */
+const BULLET_OPTIONS = [
+  { value: 'dot',    label: '•',  title: 'Dot'    },
+  { value: 'dash',   label: '—',  title: 'Dash'   },
+  { value: 'number', label: '1.', title: 'Number' },
+  { value: 'check',  label: '✓',  title: 'Check'  },
+  { value: 'arrow',  label: '→',  title: 'Arrow'  },
+  { value: 'square', label: '▪',  title: 'Square' },
+]
+
+function ListControls({ blockId, listKey }: { blockId: string; listKey: string }) {
+  const { getText, updateText } = useBuilder()
+  const current = getText(blockId, `${listKey}-bullet`, 'dot')
+
+  return (
+    <div>
+      <SectionHeader icon={List} label="List Style" />
+      <Row>
+        <Label>Bullet type</Label>
+        <div className="grid grid-cols-3 gap-1.5 mt-1">
+          {BULLET_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => updateText(blockId, `${listKey}-bullet`, opt.value)}
+              title={opt.title}
+              className={`py-2.5 rounded-lg text-sm font-bold transition-colors ${
+                current === opt.value
+                  ? 'bg-brand-100 text-brand-700 ring-1 ring-brand-300'
+                  : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </Row>
+      <div className="px-4 pt-1 pb-3">
+        <p className="text-[9px] text-stone-300 font-mono truncate">key: {listKey}</p>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Image controls ─────────────────────────────────────── */
 function ImageControls({ blockId, imageKey }: { blockId: string; imageKey: string }) {
   const { getText, updateText } = useBuilder()
@@ -192,6 +235,7 @@ export default function RightPanel() {
           {selectedElement
             ? selectedElement.type === 'text'  ? `Text · ${selectedElement.textKey}`
             : selectedElement.type === 'image' ? `Image · ${selectedElement.imageKey}`
+            : selectedElement.type === 'list'  ? `List · ${selectedElement.listKey}`
             : 'Element'
             : 'Select an element'
           }
@@ -213,6 +257,13 @@ export default function RightPanel() {
           <ImageControls
             blockId={selectedElement.blockId}
             imageKey={selectedElement.imageKey}
+          />
+        )}
+
+        {selectedElement?.type === 'list' && (
+          <ListControls
+            blockId={selectedElement.blockId}
+            listKey={selectedElement.listKey}
           />
         )}
       </div>

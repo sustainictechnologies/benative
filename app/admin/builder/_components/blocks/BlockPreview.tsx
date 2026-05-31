@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react'
 import type { CanvasBlock } from '../BuilderTypes'
-import { ShieldCheck, MapPin, Ban, ScrollText, Globe2, X, Plus } from 'lucide-react'
+import { ShieldCheck, MapPin, Ban, ScrollText, Globe2, X, Plus, LayoutGrid, Type, Image as ImageIcon, List } from 'lucide-react'
 import EditableImage from '../EditableImage'
 import EditableText from '../EditableText'
 import ActivityLogBlock from './ActivityLogBlock'
 import { useBuilder } from '../BuilderContext'
+import type { LayoutRow, LayoutCell, CellType } from '../BuilderContext'
 
 /* ─── 1. HERO BLOCK ─────────────────────────────────────── */
 function HeroPreview({ id }: { id: string }) {
@@ -348,13 +349,17 @@ function HostStoryPreview({ id }: { id: string }) {
 }
 
 /* ─── 4. RULES BLOCK ─────────────────────────────────────── */
-const DEFAULT_POLICIES = [
-  'Check-in after 2:00 PM, check-out by 11:00 AM',
-  'Quiet hours after 10:00 PM',
-  'No smoking inside the house',
-  'Traditional attire near prayer areas',
-]
-const DEFAULT_PROHIBITED = ['Single-use plastics', 'Outside alcohol', 'Loud music']
+
+function bulletIcon(style: string, index: number): React.ReactNode {
+  switch (style) {
+    case 'dash':   return <span className="text-stone-400 shrink-0 text-xs leading-none">—</span>
+    case 'number': return <span className="text-[10px] text-stone-500 font-mono shrink-0 min-w-[14px]">{index + 1}.</span>
+    case 'check':  return <span className="text-green-500 shrink-0 text-xs">✓</span>
+    case 'arrow':  return <span className="text-brand-500 shrink-0 text-xs">→</span>
+    case 'square': return <span className="w-2 h-2 bg-stone-500 shrink-0 block" />
+    default:       return <span className="w-1.5 h-1.5 bg-stone-400 rounded-full shrink-0 block" />
+  }
+}
 
 function EditableList({
   items,
@@ -363,6 +368,8 @@ function EditableList({
   onEdit,
   icon,
   previewMode,
+  blockId,
+  listKey,
 }: {
   items: string[]
   onAdd: (val: string) => void
@@ -370,16 +377,32 @@ function EditableList({
   onEdit: (i: number, val: string) => void
   icon: React.ReactNode
   previewMode: boolean
+  blockId?: string
+  listKey?: string
 }) {
+  const { getText, setSelectedElement } = useBuilder()
   const [draft, setDraft] = useState('')
   const [editingIdx, setEditingIdx] = useState<number | null>(null)
   const [editDraft, setEditDraft] = useState('')
 
+  const bulletStyle = (blockId && listKey) ? getText(blockId, `${listKey}-bullet`, 'dot') : null
+  const getIcon = (i: number) => bulletStyle ? bulletIcon(bulletStyle, i) : icon
+
   return (
+    <div className="space-y-1.5">
+      {blockId && listKey && !previewMode && (
+        <button
+          onClick={e => { e.stopPropagation(); setSelectedElement({ type: 'list', blockId, listKey }) }}
+          className="flex items-center gap-1 text-[10px] font-semibold text-stone-400 hover:text-brand-600 bg-stone-100 hover:bg-brand-50 border border-stone-200 hover:border-brand-300 px-2 py-0.5 rounded-full transition-colors"
+        >
+          {bulletStyle ? bulletIcon(bulletStyle, 0) : <span className="w-1.5 h-1.5 bg-stone-400 rounded-full block" />}
+          <span>Bullet style</span>
+        </button>
+      )}
     <ul className="space-y-1">
       {items.map((item, i) => (
         <li key={i} className="flex items-start gap-1.5 group/item">
-          <span className="mt-1 shrink-0">{icon}</span>
+          <span className="mt-1 shrink-0">{getIcon(i)}</span>
           {!previewMode && editingIdx === i ? (
             <input
               autoFocus
@@ -424,64 +447,150 @@ function EditableList({
         </li>
       )}
     </ul>
+    </div>
+  )
+}
+
+type RulesRow = { rowId: string; cols: string[] }
+
+const DEFAULT_RULES_DATA = [
+  { title: 'Safety',         items: ['No smoking inside the house', 'Quiet hours after 10:00 PM'] },
+  { title: 'Protection',     items: ['No single-use plastics', 'Respect property and belongings'] },
+  { title: 'House Policies', items: ['Check-in after 2:00 PM, check-out by 11:00 AM', 'Traditional attire near prayer areas'] },
+]
+
+function RulesSectionBlock({
+  blockId, sectionId, onRemove, showRemove, previewMode,
+}: {
+  blockId: string; sectionId: string; onRemove: () => void; showRemove: boolean; previewMode: boolean
+}) {
+  const { getText, updateText } = useBuilder()
+  const getItems = (): string[] => { try { return JSON.parse(getText(blockId, `${sectionId}-items`, '[]')) } catch { return [] } }
+  const items    = getItems()
+  const saveItems = (next: string[]) => updateText(blockId, `${sectionId}-items`, JSON.stringify(next))
+
+  return (
+    <div className="relative group/sec flex-1 min-w-0 bg-white border border-stone-200 rounded-xl p-4 space-y-3">
+      <EditableText
+        blockId={blockId} textKey={`${sectionId}-title`}
+        defaultValue="Section Title"
+        className="text-xs font-bold uppercase tracking-wider text-stone-500 block w-full"
+        as="h3"
+      />
+      <EditableList
+        items={items}
+        previewMode={previewMode}
+        icon={<span className="w-1.5 h-1.5 bg-stone-400 rounded-full mt-1.5 shrink-0 block" />}
+        blockId={blockId}
+        listKey={sectionId}
+        onAdd={val => saveItems([...items, val])}
+        onRemove={i => saveItems(items.filter((_, idx) => idx !== i))}
+        onEdit={(i, val) => { const next = [...items]; next[i] = val; saveItems(next) }}
+      />
+      {!previewMode && showRemove && (
+        <button
+          onClick={e => { e.stopPropagation(); onRemove() }}
+          className="absolute -top-2 -right-2 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover/sec:opacity-100 transition-opacity z-10"
+        >×</button>
+      )}
+    </div>
   )
 }
 
 function RulesBlockPreview({ id }: { id: string }) {
   const { getText, updateText, previewMode } = useBuilder()
 
-  const getPolicies = (): string[] => {
-    try { return JSON.parse(getText(id, 'policies', JSON.stringify(DEFAULT_POLICIES))) } catch { return DEFAULT_POLICIES }
-  }
-  const getProhibited = (): string[] => {
-    try { return JSON.parse(getText(id, 'prohibited', JSON.stringify(DEFAULT_PROHIBITED))) } catch { return DEFAULT_PROHIBITED }
-  }
+  const getRows = (): RulesRow[] => { try { return JSON.parse(getText(id, 'rules-rows', '[]')) } catch { return [] } }
+  const saveRows = (next: RulesRow[]) => updateText(id, 'rules-rows', JSON.stringify(next))
 
-  const policies   = getPolicies()
-  const prohibited = getProhibited()
-
-  const savePolicies   = (next: string[]) => updateText(id, 'policies',   JSON.stringify(next))
-  const saveProhibited = (next: string[]) => updateText(id, 'prohibited', JSON.stringify(next))
-
-  // Persist defaults on first mount so publish always has data
   useEffect(() => {
-    if (!getText(id, 'policies',   '')) updateText(id, 'policies',   JSON.stringify(DEFAULT_POLICIES))
-    if (!getText(id, 'prohibited', '')) updateText(id, 'prohibited', JSON.stringify(DEFAULT_PROHIBITED))
+    if (!getText(id, 'rules-rows', '')) {
+      const ts   = Date.now()
+      const sec0 = `rs-${ts}-0`; const sec1 = `rs-${ts}-1`; const sec2 = `rs-${ts}-2`
+      updateText(id, `${sec0}-title`, DEFAULT_RULES_DATA[0].title)
+      updateText(id, `${sec0}-items`, JSON.stringify(DEFAULT_RULES_DATA[0].items))
+      updateText(id, `${sec1}-title`, DEFAULT_RULES_DATA[1].title)
+      updateText(id, `${sec1}-items`, JSON.stringify(DEFAULT_RULES_DATA[1].items))
+      updateText(id, `${sec2}-title`, DEFAULT_RULES_DATA[2].title)
+      updateText(id, `${sec2}-items`, JSON.stringify(DEFAULT_RULES_DATA[2].items))
+      updateText(id, 'rules-rows', JSON.stringify([
+        { rowId: `rr-${ts}-0`, cols: [sec0, sec1] },
+        { rowId: `rr-${ts}-1`, cols: [sec2] },
+      ]))
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
+  const rows = getRows()
+
+  const addRow = () => {
+    const ts = Date.now()
+    const secId = `rs-${ts}`
+    saveRows([...rows, { rowId: `rr-${ts}`, cols: [secId] }])
+  }
+
+  const removeRow = (rowId: string) => saveRows(rows.filter(r => r.rowId !== rowId))
+
+  const addColumn = (rowId: string) => {
+    const secId = `rs-${Date.now()}`
+    saveRows(rows.map(r => r.rowId === rowId ? { ...r, cols: [...r.cols, secId] } : r))
+  }
+
+  const removeColumn = (rowId: string, secId: string) => {
+    const row = rows.find(r => r.rowId === rowId)
+    if (!row) return
+    if (row.cols.length <= 1) removeRow(rowId)
+    else saveRows(rows.map(r => r.rowId === rowId ? { ...r, cols: r.cols.filter(c => c !== secId) } : r))
+  }
+
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-5">
+    <div className="rounded-2xl border border-stone-200 bg-stone-50 p-6 space-y-4">
       <div className="flex items-center gap-2">
-        <ScrollText size={18} className="text-stone-500" />
-        <h2 className="font-semibold text-stone-900">House Rules & Safety</h2>
-      </div>
-      <div className="flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-        <ShieldCheck size={16} className="text-green-600 shrink-0" />
-        <p className="text-sm font-medium text-green-800">Verified safe for solo female travelers</p>
-      </div>
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">House policies</p>
-        <EditableList
-          items={policies}
-          previewMode={previewMode}
-          icon={<span className="w-1.5 h-1.5 bg-stone-400 rounded-full mt-2 block" />}
-          onAdd={val => savePolicies([...policies, val])}
-          onRemove={i => savePolicies(policies.filter((_, idx) => idx !== i))}
-          onEdit={(i, val) => { const next = [...policies]; next[i] = val; savePolicies(next) }}
+        <ScrollText size={18} className="text-stone-500 shrink-0" />
+        <EditableText
+          blockId={id} textKey="rules-title"
+          defaultValue="House Rules & Safety"
+          className="font-semibold text-stone-900"
+          as="h2"
         />
       </div>
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">Please do not bring</p>
-        <EditableList
-          items={prohibited}
-          previewMode={previewMode}
-            icon={<Ban size={10} className="text-rose-400 mt-0.5" />}
-            onAdd={val => saveProhibited([...prohibited, val])}
-            onRemove={i => saveProhibited(prohibited.filter((_, idx) => idx !== i))}
-            onEdit={(i, val) => { const next = [...prohibited]; next[i] = val; saveProhibited(next) }}
-          />
+
+      <div className="space-y-3">
+        {rows.map(row => (
+          <div key={row.rowId} className="relative group/row">
+            <div className="flex gap-3 items-stretch">
+              {row.cols.map(secId => (
+                <RulesSectionBlock
+                  key={secId}
+                  blockId={id}
+                  sectionId={secId}
+                  onRemove={() => removeColumn(row.rowId, secId)}
+                  showRemove={true}
+                  previewMode={previewMode}
+                />
+              ))}
+              {!previewMode && (
+                <button
+                  onClick={() => addColumn(row.rowId)}
+                  className="shrink-0 w-10 border-2 border-dashed border-stone-200 rounded-xl flex items-center justify-center text-stone-300 hover:border-brand-400 hover:text-brand-500 transition-colors"
+                  title="Add column"
+                >
+                  <Plus size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
+
+      {!previewMode && (
+        <button
+          onClick={addRow}
+          className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-stone-200 rounded-xl text-xs font-semibold text-stone-400 hover:border-brand-400 hover:text-brand-600 transition-colors"
+        >
+          <Plus size={12} /> Add Row
+        </button>
+      )}
     </div>
   )
 }
@@ -677,33 +786,123 @@ function GalleryPreview({ id }: { id: string }) {
 }
 
 /* ─── 7. ROOMS ───────────────────────────────────────────── */
-const ROOM_DEFAULTS = [
+const ROOM_IMG_DEFAULTS = [
   'https://images.unsplash.com/photo-1540518614846-7eded433c457?w=300&q=60',
   'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=300&q=60',
 ]
 
+const DEFAULT_ROOMS = [
+  { name: 'Garden Room',  guests: '2 guests · 1 bed',  price: '₹2,400 / night' },
+  { name: 'Forest Suite', guests: '4 guests · 2 beds', price: '₹3,800 / night' },
+]
+
 function RoomsPreview({ id }: { id: string }) {
-  const rooms = [
-    { key: 'room-0', name: 'Garden Room',  guests: '2 guests · 1 bed', price: '₹2,400 / night' },
-    { key: 'room-1', name: 'Forest Suite', guests: '4 guests · 2 beds', price: '₹3,800 / night' },
-  ]
+  const { getText, updateText, updateImage, previewMode } = useBuilder()
+
+  const getIds = (): string[] => {
+    try { return JSON.parse(getText(id, 'rooms-meta', '[]')) } catch { return [] }
+  }
+
+  const saveIds = (next: string[]) => updateText(id, 'rooms-meta', JSON.stringify(next))
+
+  useEffect(() => {
+    if (!getText(id, 'rooms-meta', '')) {
+      const ids = DEFAULT_ROOMS.map((_, i) => `rm-${Date.now() + i}`)
+      saveIds(ids)
+      ids.forEach((rid, i) => {
+        updateText(id, `${rid}-name`,    DEFAULT_ROOMS[i].name)
+        updateText(id, `${rid}-guests`,  DEFAULT_ROOMS[i].guests)
+        updateText(id, `${rid}-price`,   DEFAULT_ROOMS[i].price)
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  const ids = getIds()
+
+  const addRoom = () => saveIds([...ids, `rm-${Date.now()}`])
+
+  const removeRoom = (roomId: string) => {
+    saveIds(ids.filter(i => i !== roomId))
+    updateImage(id, roomId, null)
+    ;['-name', '-guests', '-price', '-details'].forEach(s => updateText(id, `${roomId}${s}`, null))
+  }
+
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-5">
-      <h2 className="text-base font-semibold text-stone-900">Rooms & Accommodation</h2>
+      <div className="flex items-center justify-between">
+        <EditableText
+          blockId={id} textKey="rooms-title"
+          defaultValue="Rooms & Accommodation"
+          className="text-base font-semibold text-stone-900"
+          as="h2"
+        />
+        {!previewMode && (
+          <button
+            onClick={addRoom}
+            className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-full transition-colors"
+          >
+            <Plus size={12} /> Add Room
+          </button>
+        )}
+      </div>
+
+      {ids.length === 0 && !previewMode && (
+        <p className="text-xs text-stone-400 text-center py-4 border border-dashed border-stone-200 rounded-xl">
+          No rooms yet — click "+ Add Room" to start
+        </p>
+      )}
+
       <div className="space-y-3">
-        {rooms.map((r, i) => (
-          <div key={r.key} className="flex gap-4 border border-stone-100 rounded-xl overflow-hidden">
-            <EditableImage
-              blockId={id} imageKey={r.key}
-              defaultUrl={ROOM_DEFAULTS[i]}
-              wrapperClassName="w-24 shrink-0"
-              className="w-full h-full object-cover"
-            />
-            <div className="py-3 pr-4 space-y-1">
-              <p className="text-sm font-semibold text-stone-900">{r.name}</p>
-              <p className="text-xs text-stone-500">{r.guests}</p>
-              <p className="text-sm font-bold text-brand-600">{r.price}</p>
+        {ids.map((roomId, i) => (
+          <div key={roomId} className="relative group/room border border-stone-100 rounded-xl overflow-hidden flex">
+            {/* Image */}
+            <div className="w-28 h-24 shrink-0 relative">
+              <EditableImage
+                blockId={id} imageKey={roomId}
+                defaultUrl={ROOM_IMG_DEFAULTS[i % ROOM_IMG_DEFAULTS.length]}
+                wrapperClassName="absolute inset-0"
+                className="w-full h-full object-cover"
+              />
             </div>
+
+            {/* Details */}
+            <div className="flex-1 py-2.5 px-3 space-y-1 min-w-0">
+              <EditableText
+                blockId={id} textKey={`${roomId}-name`}
+                defaultValue="Room Name"
+                className="text-sm font-semibold text-stone-900 w-full"
+                as="p"
+              />
+              <EditableText
+                blockId={id} textKey={`${roomId}-guests`}
+                defaultValue="2 guests · 1 bed"
+                className="text-xs text-stone-500 w-full"
+                as="p"
+              />
+              <EditableText
+                blockId={id} textKey={`${roomId}-price`}
+                defaultValue="₹2,400 / night"
+                className="text-sm font-bold text-brand-600 w-full"
+                as="p"
+              />
+              <EditableText
+                blockId={id} textKey={`${roomId}-details`}
+                defaultValue="Add details (AC, view, bed type…)"
+                className="text-xs text-stone-400 w-full"
+                as="p"
+              />
+            </div>
+
+            {/* Delete button */}
+            {!previewMode && (
+              <button
+                onClick={e => { e.stopPropagation(); removeRoom(roomId) }}
+                className="absolute top-1.5 right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/room:opacity-100 transition-opacity text-[10px] z-10"
+              >
+                ×
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -749,48 +948,127 @@ function ReviewsPreview() {
 }
 
 /* ─── 10. FOOD SECTION ───────────────────────────────────── */
-const FOOD_DEFAULTS = [
+const FOOD_IMG_DEFAULTS = [
   'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=200&q=60',
   'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=200&q=60',
   'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=200&q=60',
 ]
 
+const DEFAULT_FOOD_ITEMS = [
+  { name: 'Home-cooked Meals',     desc: 'Fresh vegetables from our garden' },
+  { name: 'Traditional Breakfast', desc: 'Poha, chai, seasonal fruits'       },
+]
+
 function FoodPreview({ id }: { id: string }) {
+  const { getText, updateText, updateImage, previewMode } = useBuilder()
+
+  const getIds = (): string[] => {
+    try { return JSON.parse(getText(id, 'food-meta', '[]')) } catch { return [] }
+  }
+
+  const saveIds = (next: string[]) => updateText(id, 'food-meta', JSON.stringify(next))
+
+  useEffect(() => {
+    if (!getText(id, 'food-meta', '')) {
+      const ids = DEFAULT_FOOD_ITEMS.map((_, i) => `fd-${Date.now() + i}`)
+      saveIds(ids)
+      ids.forEach((fid, i) => {
+        updateText(id, `${fid}-name`, DEFAULT_FOOD_ITEMS[i].name)
+        updateText(id, `${fid}-desc`, DEFAULT_FOOD_ITEMS[i].desc)
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  const ids = getIds()
+
+  const addItem = () => saveIds([...ids, `fd-${Date.now()}`])
+
+  const removeItem = (fid: string) => {
+    saveIds(ids.filter(i => i !== fid))
+    updateImage(id, fid, null)
+    ;['-name', '-desc'].forEach(s => updateText(id, `${fid}${s}`, null))
+  }
+
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-6 flex gap-5 items-start">
-      <div className="flex-1 space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">Farm to Table</p>
-        <h2 className="text-base font-semibold text-stone-900">Authentic Home Cooking</h2>
-        <p className="text-sm text-stone-600 leading-relaxed">
-          Fresh vegetables from our garden, traditional recipes passed through generations.
-        </p>
-        <div className="flex flex-wrap gap-1.5 pt-1">
-          {['Breakfast', 'Lunch', 'Dinner'].map(m => (
-            <span key={m} className="text-xs bg-brand-50 text-brand-700 border border-brand-100 px-2.5 py-1 rounded-full">{m}</span>
-          ))}
-        </div>
+    <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-5">
+      {/* Section header */}
+      <div className="space-y-1.5">
+        <EditableText
+          blockId={id} textKey="food-label"
+          defaultValue="Farm to Table"
+          className="text-xs font-semibold uppercase tracking-widest text-brand-600 block"
+          as="p"
+        />
+        <EditableText
+          blockId={id} textKey="food-title"
+          defaultValue="Authentic Home Cooking"
+          className="text-base font-semibold text-stone-900 block"
+          as="h2"
+        />
+        <EditableText
+          blockId={id} textKey="food-desc"
+          defaultValue="Fresh vegetables from our garden, traditional recipes passed through generations."
+          multiline
+          className="text-sm text-stone-600 leading-relaxed block"
+          as="p"
+        />
       </div>
-      <div className="w-28 shrink-0">
-        <div className="grid grid-cols-2 gap-1">
-          <EditableImage
-            blockId={id} imageKey="food-0"
-            defaultUrl={FOOD_DEFAULTS[0]}
-            wrapperClassName="col-span-2 aspect-video overflow-hidden rounded-lg"
-            className="w-full h-full object-cover"
-          />
-          <EditableImage
-            blockId={id} imageKey="food-1"
-            defaultUrl={FOOD_DEFAULTS[1]}
-            wrapperClassName="aspect-square overflow-hidden rounded-lg"
-            className="w-full h-full object-cover"
-          />
-          <EditableImage
-            blockId={id} imageKey="food-2"
-            defaultUrl={FOOD_DEFAULTS[2]}
-            wrapperClassName="aspect-square overflow-hidden rounded-lg"
-            className="w-full h-full object-cover"
-          />
+
+      {/* Add button */}
+      {!previewMode && (
+        <div className="flex justify-end">
+          <button
+            onClick={addItem}
+            className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-full transition-colors"
+          >
+            <Plus size={12} /> Add Dish
+          </button>
         </div>
+      )}
+
+      {ids.length === 0 && !previewMode && (
+        <p className="text-xs text-stone-400 text-center py-4 border border-dashed border-stone-200 rounded-xl">
+          No dishes yet — click "+ Add Dish" to start
+        </p>
+      )}
+
+      {/* Food items */}
+      <div className="space-y-3">
+        {ids.map((fid, i) => (
+          <div key={fid} className="relative group/food border border-stone-100 rounded-xl overflow-hidden flex">
+            <div className="w-24 h-20 shrink-0 relative">
+              <EditableImage
+                blockId={id} imageKey={fid}
+                defaultUrl={FOOD_IMG_DEFAULTS[i % FOOD_IMG_DEFAULTS.length]}
+                wrapperClassName="absolute inset-0"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex-1 py-2.5 px-3 space-y-1 min-w-0">
+              <EditableText
+                blockId={id} textKey={`${fid}-name`}
+                defaultValue="Dish Name"
+                className="text-sm font-semibold text-stone-900 w-full"
+                as="p"
+              />
+              <EditableText
+                blockId={id} textKey={`${fid}-desc`}
+                defaultValue="Short description…"
+                className="text-xs text-stone-500 w-full"
+                as="p"
+              />
+            </div>
+            {!previewMode && (
+              <button
+                onClick={e => { e.stopPropagation(); removeItem(fid) }}
+                className="absolute top-1.5 right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/food:opacity-100 transition-opacity text-[10px] z-10"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -892,36 +1170,164 @@ function MapPreview({ id }: { id: string }) {
   )
 }
 
-/* ─── Sub-texts section (available in every block) ──────── */
-function SubTextsSection({ blockId }: { blockId: string }) {
-  const { getText, previewMode, removeSubText } = useBuilder()
+/* ─── Layout system (matrix rows × cols, available in every block) ── */
 
-  const ids: string[] = (() => {
+function StylePill({ blockId, textKey }: { blockId: string; textKey: string }) {
+  const { setSelectedElement, previewMode } = useBuilder()
+  if (previewMode) return null
+  return (
+    <button
+      onClick={e => { e.stopPropagation(); setSelectedElement({ type: 'text', blockId, textKey }) }}
+      className="flex items-center gap-1 text-[10px] font-semibold text-stone-400 hover:text-brand-600 bg-stone-100 hover:bg-brand-50 border border-stone-200 hover:border-brand-300 px-2 py-0.5 rounded-full transition-colors w-fit"
+    >
+      <Type size={9} /> Text style
+    </button>
+  )
+}
+
+function TextCell({ blockId, cellId }: { blockId: string; cellId: string }) {
+  return (
+    <div className="space-y-1">
+      <StylePill blockId={blockId} textKey={cellId} />
+      <EditableText
+        blockId={blockId} textKey={cellId}
+        defaultValue="Click to write…"
+        multiline
+        className="text-sm text-stone-600 leading-relaxed w-full min-h-[2rem]"
+        as="p"
+      />
+    </div>
+  )
+}
+
+function ImageCell({ blockId, cellId }: { blockId: string; cellId: string }) {
+  return (
+    <div className="relative w-full overflow-hidden rounded-lg" style={{ minHeight: 80 }}>
+      <EditableImage
+        blockId={blockId} imageKey={cellId}
+        defaultUrl="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=300&q=60"
+        wrapperClassName="w-full"
+        className="w-full h-full object-cover rounded-lg"
+      />
+    </div>
+  )
+}
+
+function ListCell({ blockId, cellId }: { blockId: string; cellId: string }) {
+  const { getText, updateText, previewMode } = useBuilder()
+
+  const getItems = (): string[] => {
+    try { return JSON.parse(getText(blockId, `${cellId}-items`, '[]')) } catch { return [] }
+  }
+  const items = getItems()
+  const saveItems = (next: string[]) => updateText(blockId, `${cellId}-items`, JSON.stringify(next))
+
+  return (
+    <EditableList
+      items={items}
+      previewMode={previewMode}
+      icon={<span className="w-1.5 h-1.5 bg-stone-400 rounded-full mt-1.5 shrink-0 block" />}
+      blockId={blockId}
+      listKey={cellId}
+      onAdd={val => saveItems([...items, val])}
+      onRemove={i => saveItems(items.filter((_, idx) => idx !== i))}
+      onEdit={(i, val) => { const next = [...items]; next[i] = val; saveItems(next) }}
+    />
+  )
+}
+
+function EmptyCell({ blockId, rowId, cellId }: { blockId: string; rowId: string; cellId: string }) {
+  const { setCellType } = useBuilder()
+  const opts: { type: CellType; Icon: React.ElementType; label: string }[] = [
+    { type: 'text',  Icon: Type,      label: 'Text'  },
+    { type: 'image', Icon: ImageIcon, label: 'Image' },
+    { type: 'list',  Icon: List,      label: 'List'  },
+  ]
+  return (
+    <div className="flex items-center justify-center gap-1.5 border-2 border-dashed border-stone-200 rounded-lg p-3 min-h-[56px]">
+      {opts.map(({ type, Icon, label }) => (
+        <button
+          key={type}
+          onClick={e => { e.stopPropagation(); setCellType(blockId, rowId, cellId, type) }}
+          className="flex items-center gap-1 text-[10px] text-stone-400 hover:text-brand-600 px-2 py-1 rounded border border-stone-200 hover:border-brand-300 transition-colors bg-white"
+        >
+          <Icon size={10} /> {label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+const COL_GRID: Record<number, string> = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3' }
+const NEXT_COLS: Record<number, 1 | 2 | 3> = { 1: 2, 2: 3, 3: 1 }
+
+function LayoutSection({ blockId }: { blockId: string }) {
+  const { getText, previewMode, removeLayoutRow, setRowCols, clearCell } = useBuilder()
+
+  const rows: LayoutRow[] = (() => {
+    try { return JSON.parse(getText(blockId, 'layout-rows', '[]')) } catch { return [] }
+  })()
+
+  // Also render legacy sub-texts for backward compat
+  const subTextIds: string[] = (() => {
     try { return JSON.parse(getText(blockId, 'sub-texts', '[]')) } catch { return [] }
   })()
 
-  if (ids.length === 0) return null
+  if (rows.length === 0 && subTextIds.length === 0) return null
 
   return (
-    <div className="space-y-2 mt-3 px-1">
-      {ids.map(id => (
-        <div key={id} className="relative group/st">
+    <div className="space-y-2 mt-3">
+      {/* Legacy sub-texts */}
+      {subTextIds.map(id => (
+        <div key={id} className="px-1">
           <EditableText
-            blockId={blockId}
-            textKey={id}
+            blockId={blockId} textKey={id}
             defaultValue="Click to write…"
             multiline
-            className="text-sm text-stone-600 leading-relaxed w-full min-h-[2rem]"
+            className="text-sm text-stone-600 leading-relaxed w-full"
             as="p"
           />
+        </div>
+      ))}
+
+      {/* Layout rows */}
+      {rows.map((row: LayoutRow) => (
+        <div key={row.id} className="relative group/lrow">
+          {/* Row controls */}
           {!previewMode && (
-            <button
-              onClick={e => { e.stopPropagation(); removeSubText(blockId, id) }}
-              className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/st:opacity-100 transition-opacity text-[10px] leading-none z-10"
-            >
-              ×
-            </button>
+            <div className="absolute -top-2.5 right-0 flex items-center gap-1 z-20 opacity-0 group-hover/lrow:opacity-100 transition-opacity">
+              <button
+                onClick={e => { e.stopPropagation(); setRowCols(blockId, row.id, NEXT_COLS[row.cols]) }}
+                className="flex items-center gap-0.5 bg-white border border-stone-200 rounded-md px-1.5 py-0.5 text-[9px] font-bold text-stone-500 hover:border-brand-400 hover:text-brand-600 shadow-sm transition-colors"
+              >
+                <LayoutGrid size={9} /> {row.cols}col
+              </button>
+              <button
+                onClick={e => { e.stopPropagation(); removeLayoutRow(blockId, row.id) }}
+                className="w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center text-[9px]"
+              >×</button>
+            </div>
           )}
+
+          {/* Cells */}
+          <div className={`grid ${COL_GRID[row.cols] ?? 'grid-cols-1'} gap-2`}>
+            {row.cells.map((cell: LayoutCell) => (
+              <div key={cell.id} className="relative group/cell min-w-0">
+                {cell.type === 'text'  && <TextCell  blockId={blockId} cellId={cell.id} />}
+                {cell.type === 'image' && <ImageCell blockId={blockId} cellId={cell.id} />}
+                {cell.type === 'list'  && <ListCell  blockId={blockId} cellId={cell.id} />}
+                {cell.type === 'empty' && !previewMode && (
+                  <EmptyCell blockId={blockId} rowId={row.id} cellId={cell.id} />
+                )}
+                {!previewMode && cell.type !== 'empty' && (
+                  <button
+                    onClick={e => { e.stopPropagation(); clearCell(blockId, row.id, cell.id) }}
+                    className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-stone-400 text-white rounded-full items-center justify-center text-[9px] hidden group-hover/cell:flex z-10"
+                  >×</button>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>
@@ -952,7 +1358,7 @@ export default function BlockPreview({ block }: { block: CanvasBlock }) {
   return (
     <div className="transition-all duration-200">
       <BlockContent block={block} />
-      <SubTextsSection blockId={block.id} />
+      <LayoutSection blockId={block.id} />
     </div>
   )
 }
