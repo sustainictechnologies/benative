@@ -7,6 +7,8 @@ import RulesBlock from './RulesBlock'
 import VideoBlock from './VideoBlock'
 import GalleryBlock from './GalleryBlock'
 import MapBlock from './MapBlock'
+import RoomsBlock from './RoomsBlock'
+import FoodBlock from './FoodBlock'
 
 interface HomestayMeta {
   host_name: string
@@ -20,6 +22,68 @@ interface Props {
   homestay: HomestayMeta
   isLoggedIn: boolean
   slug: string
+}
+
+function LayoutRenderer({ block }: { block: HomestayBlock }) {
+  const d       = block.content_data as Record<string, unknown>
+  const layout  = d.layout as { rows: any[]; cells: Record<string, string>; images: Record<string, string> } | undefined
+  const styles  = (d.styles ?? {}) as Record<string, string>
+
+  if (!layout?.rows?.length) return null
+
+  const COL_CLASS: Record<number, string> = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3' }
+
+  return (
+    <div className="mt-3 space-y-3">
+      {layout.rows.map((row: any) => (
+        <div key={row.id} className={`grid ${COL_CLASS[row.cols] ?? 'grid-cols-1'} gap-3`}>
+          {(row.cells ?? []).map((cell: any) => {
+            if (cell.type === 'text') {
+              const text = layout.cells?.[cell.id] ?? ''
+              if (!text) return <div key={cell.id} />
+              return (
+                <p key={cell.id} className="text-sm text-stone-600 leading-relaxed"
+                  style={{
+                    fontFamily: styles[`${cell.id}-font`]  || undefined,
+                    fontSize:   styles[`${cell.id}-size`]  ? `${styles[`${cell.id}-size`]}px` : undefined,
+                    color:      styles[`${cell.id}-color`] || undefined,
+                    fontWeight: styles[`${cell.id}-bold`]   === 'true' ? 'bold'   : undefined,
+                    fontStyle:  styles[`${cell.id}-italic`] === 'true' ? 'italic' : undefined,
+                    textAlign:  (styles[`${cell.id}-align`] || undefined) as React.CSSProperties['textAlign'],
+                  }}
+                >{text}</p>
+              )
+            }
+            if (cell.type === 'image') {
+              const url = layout.images?.[cell.id]
+              if (!url) return <div key={cell.id} />
+              return (
+                <div key={cell.id} className="relative w-full aspect-video rounded-lg overflow-hidden">
+                  <Image src={url} alt="" fill className="object-cover" sizes="600px" />
+                </div>
+              )
+            }
+            if (cell.type === 'list') {
+              let items: string[] = []
+              try { items = JSON.parse(layout.cells?.[`${cell.id}-items`] ?? '[]') } catch {}
+              if (!items.length) return <div key={cell.id} />
+              return (
+                <ul key={cell.id} className="space-y-1.5">
+                  {items.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-stone-600">
+                      <span className="mt-1.5 w-1.5 h-1.5 bg-stone-400 rounded-full shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )
+            }
+            return null
+          })}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function SubTexts({ block }: { block: HomestayBlock }) {
@@ -95,6 +159,12 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Pro
     case 'gallery':
       content = <GalleryBlock data={block.content_data as any} />
       break
+    case 'rooms':
+      content = <RoomsBlock data={block.content_data as any} />
+      break
+    case 'food':
+      content = <FoodBlock data={block.content_data as any} />
+      break
     case 'map':
       content = <MapBlock data={block.content_data as any} />
       break
@@ -105,6 +175,7 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Pro
   return (
     <>
       {content}
+      <LayoutRenderer block={block} />
       <SubTexts block={block} />
     </>
   )

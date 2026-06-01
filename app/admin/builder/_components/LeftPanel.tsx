@@ -2,7 +2,7 @@
 
 import { useDraggable } from '@dnd-kit/core'
 import { motion } from 'framer-motion'
-import { GripVertical, Layers, Type } from 'lucide-react'
+import { GripVertical, Layers, Type, Image as ImageIcon, List } from 'lucide-react'
 import { PALETTE } from './BuilderTypes'
 import type { BlockType } from './BuilderTypes'
 import { useBuilder } from './BuilderContext'
@@ -35,15 +35,21 @@ function PaletteItem({ type, label, emoji, desc }: {
   )
 }
 
-function AddTextButton() {
-  const { addSubTextToSelected, selectedBlockId } = useBuilder()
+const ELEMENT_TYPES = [
+  { type: 'text'  as const, Icon: Type,      label: 'Text',  desc: 'Paragraph of text'     },
+  { type: 'image' as const, Icon: ImageIcon,  label: 'Image', desc: 'Photo or illustration'  },
+  { type: 'list'  as const, Icon: List,       label: 'List',  desc: 'Bullet list of items'   },
+]
+
+function ElementButton({ type, Icon, label, desc }: typeof ELEMENT_TYPES[number]) {
+  const { addLayoutRow, selectedBlockId } = useBuilder()
   const disabled = !selectedBlockId
 
   return (
     <motion.button
       whileHover={disabled ? {} : { x: 2 }}
       transition={{ duration: 0.12 }}
-      onClick={addSubTextToSelected}
+      onClick={() => !disabled && addLayoutRow(selectedBlockId!, type)}
       disabled={disabled}
       className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl border transition-all select-none text-left ${
         disabled
@@ -51,11 +57,11 @@ function AddTextButton() {
           : 'border-stone-100 bg-white hover:border-brand-200 hover:bg-brand-50 cursor-pointer'
       }`}
     >
-      <Type size={16} className={disabled ? 'text-stone-300' : 'text-brand-500'} />
+      <Icon size={15} className={disabled ? 'text-stone-300' : 'text-brand-500'} />
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-stone-800 leading-none mb-0.5">Text</p>
+        <p className="text-xs font-semibold text-stone-800 leading-none mb-0.5">{label}</p>
         <p className="text-[10px] text-stone-400 truncate">
-          {disabled ? 'Select a block first' : 'Add paragraph to selected block'}
+          {disabled ? 'Select a block first' : desc}
         </p>
       </div>
     </motion.button>
@@ -63,6 +69,8 @@ function AddTextButton() {
 }
 
 export default function LeftPanel() {
+  const { selectedBlockId } = useBuilder()
+
   return (
     <motion.aside
       initial={{ x: -16, opacity: 0 }}
@@ -108,15 +116,19 @@ export default function LeftPanel() {
           </div>
         ))}
 
-        {/* Elements — added to selected block */}
+        {/* Elements — add to selected block as layout rows */}
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2 px-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-1 px-1">
             ✏️ Elements
           </p>
           <p className="text-[10px] text-stone-400 px-1 mb-2 leading-relaxed">
-            Click to add inside the selected block.
+            {selectedBlockId ? 'Click to add inside selected block.' : 'Select a block first.'}
           </p>
-          <AddTextButton />
+          <div className="space-y-1.5">
+            {ELEMENT_TYPES.map(el => (
+              <ElementButton key={el.type} {...el} />
+            ))}
+          </div>
         </div>
 
       </div>

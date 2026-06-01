@@ -18,7 +18,7 @@ import { motion } from 'framer-motion'
 
 import type { CanvasBlock, BlockType, BlockProps } from './BuilderTypes'
 import { DEFAULT_PROPS, PALETTE } from './BuilderTypes'
-import { BuilderContext, SelectedElement } from './BuilderContext'
+import { BuilderContext, SelectedElement, LayoutRow, LayoutCell, CellType } from './BuilderContext'
 import BuilderTopbar from './BuilderTopbar'
 import LeftPanel from './LeftPanel'
 import Canvas from './Canvas'
@@ -60,6 +60,12 @@ export default function BuilderClient() {
   const searchParams  = useSearchParams()
   const editSlug      = searchParams.get('slug')
   const loadedRef     = useRef(false)
+
+  /* ── Undo history ────────────────────────────────────────── */
+  const historyRef      = useRef<CanvasBlock[][]>([])
+  const snapshotTimer   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastSnapshotRef = useRef<CanvasBlock[]>(INITIAL_BLOCKS)
+  const skipSnapshotRef = useRef(false)
 
   /* ── Load existing homestay when slug is in URL ─────────── */
   useEffect(() => {
@@ -118,10 +124,20 @@ export default function BuilderClient() {
             case 'activity-log':
               texts['activities'] = JSON.stringify(d.highlight_species ?? [])
               break
-            case 'rules-block':
-              texts['policies']   = JSON.stringify(d.house_policies   ?? [])
-              texts['prohibited'] = JSON.stringify(d.prohibited_items ?? [])
+            case 'rules-block': {
+              if (d.title) texts['rules-title'] = d.title
+              const rulesRows = d.sections as Array<{ rowId: string; cols: Array<{ id: string; title?: string; items?: string[] }> }> | undefined
+              if (rulesRows?.length) {
+                texts['rules-rows'] = JSON.stringify(
+                  rulesRows.map(row => ({ rowId: row.rowId, cols: row.cols.map(c => c.id) }))
+                )
+                rulesRows.forEach(row => row.cols.forEach(col => {
+                  if (col.title) texts[`${col.id}-title`] = col.title
+                  if (col.items?.length) texts[`${col.id}-items`] = JSON.stringify(col.items)
+                }))
+              }
               break
+            }
             case 'video':
               if (d.youtube_video_id)  texts['youtube-url'] = d.youtube_video_id
               break
@@ -140,12 +156,52 @@ export default function BuilderClient() {
               if (d.region)       texts['map-region']       = d.region
               if (d.nearest_town) texts['map-nearest-town'] = d.nearest_town
               break
+            case 'food': {
+              if (d.label)       texts['food-label'] = d.label
+              if (d.title)       texts['food-title'] = d.title
+              if (d.description) texts['food-desc']  = d.description
+              const foodItems = (d.items ?? []) as Array<{ id?: string; image_url?: string; name?: string; desc?: string }>
+              const foodIds = foodItems.map((item, i) => item.id ?? `fd-${i}`)
+              texts['food-meta'] = JSON.stringify(foodIds)
+              foodItems.forEach((item, i) => {
+                const fid = foodIds[i]
+                if (item.image_url) images[fid]            = item.image_url
+                if (item.name)      texts[`${fid}-name`]   = item.name
+                if (item.desc)      texts[`${fid}-desc`]   = item.desc
+              })
+              break
+            }
+            case 'rooms': {
+              if (d.title) texts['rooms-title'] = d.title
+              const rooms = (d.rooms ?? []) as Array<{ id?: string; image_url?: string; name?: string; guests?: string; price?: string; details?: string }>
+              const ids = rooms.map((r, i) => r.id ?? `rm-${i}`)
+              texts['rooms-meta'] = JSON.stringify(ids)
+              rooms.forEach((r, i) => {
+                const rid = ids[i]
+                if (r.image_url) images[rid]               = r.image_url
+                if (r.name)      texts[`${rid}-name`]      = r.name
+                if (r.guests)    texts[`${rid}-guests`]    = r.guests
+                if (r.price)     texts[`${rid}-price`]     = r.price
+                if (r.details)   texts[`${rid}-details`]   = r.details
+              })
+              break
+            }
             default: break
           }
 
           // Load saved element styles generically
           if (d.styles && typeof d.styles === 'object') {
             Object.assign(texts, d.styles)
+          }
+
+          // Load saved layout rows generically
+          if (d.layout && typeof d.layout === 'object') {
+            const layout = d.layout as { rows?: unknown; cells?: Record<string, string>; images?: Record<string, string> }
+            if (Array.isArray(layout.rows) && layout.rows.length > 0) {
+              texts['layout-rows'] = JSON.stringify(layout.rows)
+            }
+            if (layout.cells) Object.assign(texts, layout.cells)
+            if (layout.images) Object.assign(images, layout.images)
           }
 
           // Load saved sub-texts generically
@@ -164,7 +220,13 @@ export default function BuilderClient() {
           }
         })
 
-        if (loaded.length > 0) setBlocks(loaded)
+        if (loaded.length > 0) {
+          setBlocks(loaded)
+          // Reset history — don't allow undoing back to blank initial state
+          historyRef.current      = []
+          lastSnapshotRef.current = loaded
+          skipSnapshotRef.current = true
+        }
         setSelectedId(null)
       })
   }, [editSlug])
@@ -182,6 +244,41 @@ export default function BuilderClient() {
       if (draft.pageLanguages)  setPageLanguages(draft.pageLanguages)
       if (draft.pageAddress)    setPageAddress(draft.pageAddress)
     } catch {}
+  }, [])
+
+  /* ── Debounced snapshot on every blocks change ───────────── */
+  useEffect(() => {
+    if (skipSnapshotRef.current) {
+      skipSnapshotRef.current = false
+      lastSnapshotRef.current = blocks
+      return
+    }
+    if (snapshotTimer.current) clearTimeout(snapshotTimer.current)
+    snapshotTimer.current = setTimeout(() => {
+      if (lastSnapshotRef.current !== blocks) {
+        historyRef.current = [...historyRef.current.slice(-49), lastSnapshotRef.current]
+        lastSnapshotRef.current = blocks
+      }
+    }, 600)
+  }, [blocks])
+
+  /* ── Ctrl+Z / Cmd+Z keyboard listener ───────────────────── */
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key !== 'z' || e.shiftKey) return
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return   // let browser handle native undo in text fields
+      e.preventDefault()
+      if (historyRef.current.length === 0) return
+      const prev = historyRef.current[historyRef.current.length - 1]
+      historyRef.current      = historyRef.current.slice(0, -1)
+      skipSnapshotRef.current = true
+      lastSnapshotRef.current = prev
+      if (snapshotTimer.current) clearTimeout(snapshotTimer.current)
+      setBlocks(prev)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
   const handleSave = useCallback(() => {
@@ -285,6 +382,80 @@ export default function BuilderClient() {
     }))
   }, [selectedId])
 
+  /* ── Layout row/cell operations ─────────────────────────── */
+  const parseRows = (txt: Record<string, string>): LayoutRow[] => {
+    try { return JSON.parse(txt['layout-rows'] ?? '[]') } catch { return [] }
+  }
+
+  const addLayoutRow = useCallback((blockId: string, cellType: 'text' | 'image' | 'list') => {
+    setBlocks(prev => prev.map(b => {
+      if (b.id !== blockId) return b
+      const texts = { ...(b.props.texts ?? {}) }
+      const rows  = parseRows(texts)
+      const rowId  = `row-${Date.now()}`
+      const cellId = `cell-${Date.now()}`
+      const newRow: LayoutRow = { id: rowId, cols: 1, cells: [{ id: cellId, type: cellType }] }
+      texts['layout-rows'] = JSON.stringify([...rows, newRow])
+      return { ...b, props: { ...b.props, texts } }
+    }))
+  }, [])
+
+  const removeLayoutRow = useCallback((blockId: string, rowId: string) => {
+    setBlocks(prev => prev.map(b => {
+      if (b.id !== blockId) return b
+      const texts = { ...(b.props.texts ?? {}) }
+      texts['layout-rows'] = JSON.stringify(parseRows(texts).filter(r => r.id !== rowId))
+      return { ...b, props: { ...b.props, texts } }
+    }))
+  }, [])
+
+  const setRowCols = useCallback((blockId: string, rowId: string, cols: 1 | 2 | 3) => {
+    setBlocks(prev => prev.map(b => {
+      if (b.id !== blockId) return b
+      const texts = { ...(b.props.texts ?? {}) }
+      const rows  = parseRows(texts).map(r => {
+        if (r.id !== rowId) return r
+        const cells = [...r.cells]
+        while (cells.length < cols) {
+          cells.push({ id: `cell-${Date.now()}-${cells.length}`, type: 'empty' as CellType })
+        }
+        return { ...r, cols, cells: cells.slice(0, cols) }
+      })
+      texts['layout-rows'] = JSON.stringify(rows)
+      return { ...b, props: { ...b.props, texts } }
+    }))
+  }, [])
+
+  const setCellType = useCallback((blockId: string, rowId: string, cellId: string, type: CellType) => {
+    setBlocks(prev => prev.map(b => {
+      if (b.id !== blockId) return b
+      const texts = { ...(b.props.texts ?? {}) }
+      const rows  = parseRows(texts).map(r => {
+        if (r.id !== rowId) return r
+        return { ...r, cells: r.cells.map((c: LayoutCell) => c.id === cellId ? { ...c, type } : c) }
+      })
+      texts['layout-rows'] = JSON.stringify(rows)
+      return { ...b, props: { ...b.props, texts } }
+    }))
+  }, [])
+
+  const clearCell = useCallback((blockId: string, rowId: string, cellId: string) => {
+    setBlocks(prev => prev.map(b => {
+      if (b.id !== blockId) return b
+      const texts  = { ...(b.props.texts ?? {}) }
+      const images = { ...(b.props.images ?? {}) }
+      const rows   = parseRows(texts).map(r => {
+        if (r.id !== rowId) return r
+        return { ...r, cells: r.cells.map((c: LayoutCell) => c.id === cellId ? { ...c, type: 'empty' as CellType } : c) }
+      })
+      texts['layout-rows'] = JSON.stringify(rows)
+      delete texts[cellId]
+      delete texts[`${cellId}-items`]
+      delete images[cellId]
+      return { ...b, props: { ...b.props, texts, images } }
+    }))
+  }, [])
+
   const removeSubText = useCallback((blockId: string, subTextId: string) => {
     setBlocks(prev => prev.map(b => {
       if (b.id !== blockId) return b
@@ -310,7 +481,12 @@ export default function BuilderClient() {
     selectedBlockId:      selectedId,
     addSubTextToSelected,
     removeSubText,
-  }), [updateImage, getImage, updateText, getText, previewMode, selectedElement, selectedId, addSubTextToSelected, removeSubText])
+    addLayoutRow,
+    removeLayoutRow,
+    setRowCols,
+    setCellType,
+    clearCell,
+  }), [updateImage, getImage, updateText, getText, previewMode, selectedElement, selectedId, addSubTextToSelected, removeSubText, addLayoutRow, removeLayoutRow, setRowCols, setCellType, clearCell])
 
   /* ── Drag handlers ───────────────────────────────────── */
   const handleDragStart = ({ active }: DragStartEvent) => {

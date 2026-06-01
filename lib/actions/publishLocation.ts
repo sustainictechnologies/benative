@@ -57,15 +57,17 @@ function toContentData(block: CanvasBlock): Record<string, unknown> {
       }
     }
     case 'rules-block': {
-      let policies:   string[] = []
-      let prohibited: string[] = []
-      try { policies   = JSON.parse(txt['policies']   ?? '[]') } catch {}
-      try { prohibited = JSON.parse(txt['prohibited'] ?? '[]') } catch {}
-      return {
-        house_policies:   policies,    // live reads house_policies
-        prohibited_items: prohibited,  // live reads prohibited_items
-        safety_status:    txt['safety-status'] ?? '',
-      }
+      let rowsMeta: { rowId: string; cols: string[] }[] = []
+      try { rowsMeta = JSON.parse(txt['rules-rows'] ?? '[]') } catch {}
+      const sections = rowsMeta.map(row => ({
+        rowId: row.rowId,
+        cols:  row.cols.map(secId => ({
+          id:    secId,
+          title: txt[`${secId}-title`] ?? '',
+          items: (() => { try { return JSON.parse(txt[`${secId}-items`] ?? '[]') } catch { return [] } })(),
+        })),
+      }))
+      return { title: txt['rules-title'] ?? '', sections }
     }
     case 'video': {
       const raw = txt['youtube-url'] ?? ''
@@ -91,11 +93,32 @@ function toContentData(block: CanvasBlock): Record<string, unknown> {
       return { items }
     }
     case 'rooms': {
-      const rooms = ['room-0', 'room-1'].map(k => ({ image_url: img[k] ?? null }))
-      return { rooms }
+      let ids: string[] = []
+      try { ids = JSON.parse(txt['rooms-meta'] ?? '[]') } catch {}
+      const rooms = ids.map(rid => ({
+        id:        rid,
+        image_url: img[rid]                ?? null,
+        name:      txt[`${rid}-name`]      ?? '',
+        guests:    txt[`${rid}-guests`]    ?? '',
+        price:     txt[`${rid}-price`]     ?? '',
+        details:   txt[`${rid}-details`]   ?? '',
+      }))
+      return { title: txt['rooms-title'] ?? '', rooms }
     }
     case 'food': {
-      return { images: ['food-0', 'food-1', 'food-2'].map(k => img[k] ?? null) }
+      let ids: string[] = []
+      try { ids = JSON.parse(txt['food-meta'] ?? '[]') } catch {}
+      return {
+        label:       txt['food-label'] ?? '',
+        title:       txt['food-title'] ?? '',
+        description: txt['food-desc']  ?? '',
+        items: ids.map(fid => ({
+          id:        fid,
+          image_url: img[fid]               ?? null,
+          name:      txt[`${fid}-name`]     ?? '',
+          desc:      txt[`${fid}-desc`]     ?? '',
+        })),
+      }
     }
     case 'map':
       return {
@@ -171,7 +194,7 @@ export async function publishHomestay(payload: PublishPayload) {
   // 2. Delete existing blocks for this homestay
   await supabase.from('homestay_blocks').delete().eq('homestay_id', homestayId)
 
-  const STYLE_SUFFIXES = ['-font', '-size', '-color', '-bold', '-italic', '-align', '-fit']
+  const STYLE_SUFFIXES = ['-font', '-size', '-color', '-bold', '-italic', '-align', '-fit', '-bullet']
 
   // 3. Insert builder blocks
   const blockRows = payload.blocks.map((block, i) => {
@@ -184,6 +207,25 @@ export async function publishHomestay(payload: PublishPayload) {
       if (STYLE_SUFFIXES.some(s => k.endsWith(s))) styles[k] = v
     }
     if (Object.keys(styles).length > 0) (content as any).styles = styles
+
+    // Save layout rows generically
+    const layoutRowsRaw = txt['layout-rows']
+    if (layoutRowsRaw) {
+      try {
+        const rows = JSON.parse(layoutRowsRaw)
+        const allCellIds: string[] = rows.flatMap((r: any) => (r.cells ?? []).map((c: any) => c.id as string))
+        const cells: Record<string, string> = {}
+        const layoutImages: Record<string, string> = {}
+        const imgMap = block.props.images ?? {}
+        for (const cellId of allCellIds) {
+          if (txt[cellId])             cells[cellId] = txt[cellId]
+          if (txt[`${cellId}-items`])  cells[`${cellId}-items`] = txt[`${cellId}-items`]
+          STYLE_SUFFIXES.forEach(s => { if (txt[`${cellId}${s}`]) cells[`${cellId}${s}`] = txt[`${cellId}${s}`] })
+          if (imgMap[cellId]) layoutImages[cellId] = imgMap[cellId]
+        }
+        if (rows.length > 0) (content as any).layout = { rows, cells, images: layoutImages }
+      } catch {}
+    }
 
     // Save sub-texts generically
     const subTextsRaw = txt['sub-texts']

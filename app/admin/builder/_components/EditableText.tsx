@@ -28,7 +28,6 @@ export default function EditableText({
 
   const [editing, setEditing] = useState(false)
   const [draft, setDraft]     = useState(value)
-  const [hovered, setHovered] = useState(false)
   const inputRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null)
 
   useEffect(() => { if (!editing) setDraft(value) }, [value, editing])
@@ -105,20 +104,14 @@ export default function EditableText({
     <Tag
       className={`relative group/txt cursor-text ${className}`}
       style={inlineStyle}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       onClick={handleClick}
       title="Click to edit"
     >
       {value}
-      {hovered && (
-        <span className="absolute inset-0 rounded pointer-events-none ring-1 ring-brand-400 ring-offset-1 bg-brand-50/30" />
-      )}
-      {hovered && (
-        <span className="absolute -top-5 right-0 flex items-center gap-1 bg-brand-600 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-md shadow-sm pointer-events-none">
-          <Pencil size={8} /> Edit
-        </span>
-      )}
+      <span className="absolute inset-0 rounded pointer-events-none ring-1 ring-brand-400 ring-offset-1 bg-brand-50/30 opacity-0 group-hover/txt:opacity-100 transition-opacity duration-100" />
+      <span className="absolute -top-5 right-0 flex items-center gap-1 bg-brand-600 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-md shadow-sm pointer-events-none opacity-0 group-hover/txt:opacity-100 transition-opacity duration-100">
+        <Pencil size={8} /> Edit
+      </span>
     </Tag>
   )
 }
