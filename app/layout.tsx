@@ -2,7 +2,7 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
-import { Home, Search, Menu } from 'lucide-react'
+import { Home, Search, Menu, Heart } from 'lucide-react'
 import NavLinks from '@/components/NavLinks'
 import UserButton from '@/components/UserButton'
 
@@ -45,16 +45,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* Nav links */}
             <NavLinks />
 
-            {/* CTA button */}
-            <div className="ml-auto flex items-center gap-3 shrink-0">
-              <UserButton />
+            {/* Top-right icons */}
+            <div className="ml-auto flex items-center gap-2 shrink-0">
               <Link
-                href="/list-your-stay"
-                className="hidden sm:flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-colors shadow-sm whitespace-nowrap"
+                href="/favorites"
+                className="hidden sm:flex w-9 h-9 items-center justify-center rounded-full hover:bg-stone-100 transition-colors"
+                title="Favourite Homestays"
               >
-                <Home size={14} />
-                List Your Homestay
+                <Heart size={18} className="text-stone-500 hover:text-red-500 transition-colors" />
               </Link>
+              <UserButton />
               <button className="lg:hidden p-2 rounded-xl hover:bg-stone-100 transition-colors">
                 <Menu size={20} className="text-stone-600" />
               </button>
