@@ -139,12 +139,12 @@ export default async function HomePage() {
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-10 grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
 
-        {/* Left: headline + buttons */}
+        {/* Left: headline */}
         <div>
-          <h1 className="text-3xl lg:text-4xl font-black text-stone-900 leading-[1.15] mb-3 tracking-tight">
+          <h1 className="text-3xl lg:text-4xl font-black text-stone-900 leading-snug lg:leading-[1.45] mb-3 tracking-tight">
             Shed Your Tourist Skin,<br />
             Blend into the Local Ecosystem,<br />
-            <span className="text-brand-600">and Become a Traveler.</span>
+            <span className="text-brand-600">And Become a Traveler.</span>
           </h1>
           <div className="w-12 h-[3px] bg-brand-600 rounded-full mt-3 mb-7" />
           <p className="text-stone-500 text-base leading-relaxed mb-9 max-w-[400px]">
@@ -154,20 +154,6 @@ export default async function HomePage() {
             and Native guides who know
             the land by heart.
           </p>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/explore"
-              className="inline-flex items-center gap-2.5 bg-stone-900 hover:bg-stone-800 text-white font-semibold px-6 py-3 rounded-full transition-colors text-sm shadow-sm"
-            >
-              <MapPin size={15} /> Explore Homestays
-            </Link>
-            <Link
-              href="/list-your-stay"
-              className="inline-flex items-center gap-2.5 border-2 border-stone-300 text-stone-700 hover:border-stone-500 hover:bg-stone-100 font-semibold px-6 py-3 rounded-full transition-colors text-sm"
-            >
-              <Users size={15} /> Become a Host
-            </Link>
-          </div>
         </div>
 
         {/* Right: why choose + value cards */}
@@ -177,8 +163,8 @@ export default async function HomePage() {
           </h2>
           <div className="relative grid grid-cols-2">
             {/* Centre + divider */}
-            <div className="absolute left-1/2 top-[25%] bottom-[25%] w-px bg-stone-200 -translate-x-px pointer-events-none" />
-            <div className="absolute top-1/2 left-[25%] right-[25%] h-px bg-stone-200 -translate-y-px pointer-events-none" />
+            <div className="absolute left-1/2 top-[25%] bottom-[25%] w-px bg-stone-400 -translate-x-px pointer-events-none" />
+            <div className="absolute top-1/2 left-[25%] right-[25%] h-px bg-stone-400 -translate-y-px pointer-events-none" />
             {valueCards.map(({ icon: Icon, title, desc }) => (
               <div key={title} className="flex flex-col items-center text-center px-3 py-6">
                 <Icon size={28} className="text-brand-600 mb-4" strokeWidth={1.5} />
@@ -191,7 +177,14 @@ export default async function HomePage() {
       </section>
 
       {/* ── Category Cards ────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-black text-stone-900 tracking-tight">Explore Homestays</h2>
+          <Link href="/explore" className="text-sm font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+            View all <ArrowRight size={14} />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {categories.map(({ icon: Icon, label, desc, bg, slug }) => (
           <Link
             key={label}
@@ -217,25 +210,31 @@ export default async function HomePage() {
             </div>
           </Link>
         ))}
+        </div>
       </section>
 
       {/* ── Trust Metrics ─────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 grid grid-cols-2 lg:grid-cols-4 gap-6">
-        {trustMetrics.map((m) => (
-          <div key={m.label} className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center shrink-0">
-              {m.kind === 'symbol' ? (
-                <span className="text-stone-700 font-bold text-base">{m.symbol}</span>
-              ) : (
-                <m.Icon size={18} className="text-stone-600" />
-              )}
-            </div>
-            <div>
-              <p className="text-stone-900 font-bold text-sm">{m.label}</p>
-              <p className="text-stone-400 text-xs">{m.sub}</p>
-            </div>
+      <section className="bg-brand-50 border-y border-brand-100 my-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <p className="text-brand-600 text-xs font-semibold uppercase tracking-widest text-center mb-6">
+            Why travelers choose Be Native
+          </p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-brand-200">
+            {trustMetrics.map((m) => (
+              <div key={m.label} className="flex flex-col items-center text-center px-6 py-2 gap-2">
+                <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0">
+                  {m.kind === 'symbol' ? (
+                    <span className="text-brand-600 font-bold text-base">{m.symbol}</span>
+                  ) : (
+                    <m.Icon size={18} className="text-brand-600" />
+                  )}
+                </div>
+                <p className="text-stone-900 font-bold text-sm">{m.label}</p>
+                <p className="text-stone-500 text-xs">{m.sub}</p>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </section>
 
 
