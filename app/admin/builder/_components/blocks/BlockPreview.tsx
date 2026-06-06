@@ -28,6 +28,7 @@ function HeroPreview({ id }: { id: string }) {
           className="text-base text-stone-600 italic"
           as="p"
         />
+        <LayoutSection blockId={id} />
       </div>
     </div>
   )
@@ -327,23 +328,26 @@ function HostPhotoEditor({ id }: { id: string }) {
 
 function HostStoryPreview({ id }: { id: string }) {
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-6 flex flex-col sm:flex-row gap-6">
-      <HostPhotoEditor id={id} />
-      <div className="space-y-2">
-        <EditableText
-          blockId={id} textKey="story-title"
-          defaultValue="Our Story — The Patil Family"
-          className="text-base font-semibold text-stone-900"
-          as="h2"
-        />
-        <EditableText
-          blockId={id} textKey="story-body"
-          defaultValue="We've farmed this land for three generations. In 2012, we opened our home to travelers — not as a business, but as a way of sharing the life we love."
-          multiline
-          className="text-sm text-stone-600 leading-relaxed"
-          as="p"
-        />
+    <div className="rounded-2xl border border-stone-200 bg-white p-6">
+      <div className="flex flex-col md:flex-row gap-6">
+        <HostPhotoEditor id={id} />
+        <div className="flex-1 min-w-0 w-full space-y-2">
+          <EditableText
+            blockId={id} textKey="story-title"
+            defaultValue="Our Story — The Patil Family"
+            className="text-base font-semibold text-stone-900 w-full"
+            as="h2"
+          />
+          <EditableText
+            blockId={id} textKey="story-body"
+            defaultValue="We've farmed this land for three generations. In 2012, we opened our home to travelers — not as a business, but as a way of sharing the life we love."
+            multiline
+            className="text-sm text-stone-600 leading-relaxed w-full"
+            as="p"
+          />
+        </div>
       </div>
+      <LayoutSection blockId={id} />
     </div>
   )
 }
@@ -382,6 +386,7 @@ function EditableList({
 }) {
   const { getText, setSelectedElement } = useBuilder()
   const [draft, setDraft] = useState('')
+  const [addingItem, setAddingItem] = useState(false)
   const [editingIdx, setEditingIdx] = useState<number | null>(null)
   const [editDraft, setEditDraft] = useState('')
 
@@ -434,16 +439,28 @@ function EditableList({
         </li>
       ))}
       {!previewMode && (
-        <li className="flex items-center gap-1.5 mt-1.5">
-          <input
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && draft.trim()) { onAdd(draft.trim()); setDraft('') }
-            }}
-            placeholder="Add item… (Enter to save)"
-            className="flex-1 text-[11px] bg-stone-50 border border-dashed border-stone-300 rounded-lg px-2.5 py-1.5 outline-none placeholder:text-stone-300 focus:border-brand-400 focus:bg-brand-50 transition-colors"
-          />
+        <li className="mt-1.5">
+          {addingItem ? (
+            <input
+              autoFocus
+              value={draft}
+              onChange={e => setDraft(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && draft.trim()) { onAdd(draft.trim()); setDraft(''); setAddingItem(false) }
+                if (e.key === 'Escape') { setDraft(''); setAddingItem(false) }
+              }}
+              onBlur={() => { if (draft.trim()) { onAdd(draft.trim()) }; setDraft(''); setAddingItem(false) }}
+              placeholder="Type and press Enter…"
+              className="w-full text-[11px] bg-brand-50 border border-brand-300 rounded-lg px-2.5 py-1.5 outline-none transition-colors"
+            />
+          ) : (
+            <button
+              onClick={() => setAddingItem(true)}
+              className="flex items-center gap-1 text-[10px] text-stone-400 hover:text-brand-600 transition-colors"
+            >
+              <Plus size={10} /> Add item
+            </button>
+          )}
         </li>
       )}
     </ul>
@@ -1358,7 +1375,8 @@ export default function BlockPreview({ block }: { block: CanvasBlock }) {
   return (
     <div className="transition-all duration-200">
       <BlockContent block={block} />
-      <LayoutSection blockId={block.id} />
+      {/* hero & host-story render LayoutSection internally inside their rounded border */}
+      {block.type !== 'hero' && block.type !== 'host-story' && <LayoutSection blockId={block.id} />}
     </div>
   )
 }
