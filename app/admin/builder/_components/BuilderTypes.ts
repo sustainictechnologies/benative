@@ -3,6 +3,7 @@ export type BlockType =
   | 'host-story'
   | 'activity-log'
   | 'rules-block'
+  | 'how-to-reach'
   | 'video'
   | 'gallery'
 
@@ -51,7 +52,8 @@ export const PALETTE = [
   { type: 'contact'     as BlockType, label: 'Contact Card',    emoji: '📞', desc: 'Auth-gated host contact',    group: 'Core' },
   { type: 'host-story'  as BlockType, label: 'Host Story',       emoji: '🙏', desc: 'Host photo & personal story', group: 'Core' },
   { type: 'activity-log' as BlockType, label: 'Activity Log',     emoji: '🧭', desc: 'Activities & experiences', group: 'Core' },
-  { type: 'rules-block' as BlockType, label: 'House Rules',      emoji: '📋', desc: 'Policies & prohibited items', group: 'Core' },
+  { type: 'rules-block'   as BlockType, label: 'House Rules',      emoji: '📋', desc: 'Policies & prohibited items', group: 'Core' },
+  { type: 'how-to-reach' as BlockType, label: 'How to Reach',     emoji: '🗺️', desc: 'Directions by road/train/air',  group: 'Core' },
   { type: 'video'       as BlockType, label: 'Video',            emoji: '🎥', desc: 'YouTube embed + caption', group: 'Core' },
   { type: 'gallery'     as BlockType, label: 'Gallery',          emoji: '🖼️', desc: 'Photo grid showcase', group: 'Extra' },
 

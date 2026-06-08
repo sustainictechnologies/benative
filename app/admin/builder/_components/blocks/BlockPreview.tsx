@@ -2,17 +2,25 @@
 
 import React, { useState, useEffect } from 'react'
 import type { CanvasBlock } from '../BuilderTypes'
-import { ShieldCheck, MapPin, Ban, ScrollText, Globe2, X, Plus, LayoutGrid, Type, Image as ImageIcon, List } from 'lucide-react'
+import { ShieldCheck, MapPin, Ban, ScrollText, Globe2, X, Plus, LayoutGrid, Type, Image as ImageIcon, List, Navigation } from 'lucide-react'
 import EditableImage from '../EditableImage'
 import EditableText from '../EditableText'
 import ActivityLogBlock from './ActivityLogBlock'
 import { useBuilder } from '../BuilderContext'
 import type { LayoutRow, LayoutCell, CellType } from '../BuilderContext'
 
+/* ─── Block theme helper ─────────────────────────────────── */
+function useBlockTheme(id: string): React.CSSProperties {
+  const { getText } = useBuilder()
+  const bg = getText(id, '_bg-color', '')
+  return bg ? { backgroundColor: bg } : {}
+}
+
 /* ─── 1. HERO BLOCK ─────────────────────────────────────── */
 function HeroPreview({ id }: { id: string }) {
+  const theme = useBlockTheme(id)
   return (
-    <div className="rounded-2xl overflow-hidden border border-stone-200 bg-white">
+    <div className="rounded-2xl overflow-hidden border border-stone-200 bg-white" style={theme}>
       <div className="w-full aspect-[16/9] overflow-hidden">
         <EditableImage
           blockId={id} imageKey="cover"
@@ -28,6 +36,7 @@ function HeroPreview({ id }: { id: string }) {
           className="text-base text-stone-600 italic"
           as="p"
         />
+        <LayoutSection blockId={id} />
       </div>
     </div>
   )
@@ -98,6 +107,7 @@ function ContactFieldRow({
 
 function ContactPreview({ id }: { id: string }) {
   const { getText, previewMode } = useBuilder()
+  const theme = useBlockTheme(id)
 
   if (previewMode) {
     const name    = getText(id, 'contact-host-name', 'Host Name')
@@ -143,7 +153,7 @@ function ContactPreview({ id }: { id: string }) {
   }
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden">
+    <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden" style={theme}>
       <div className="bg-stone-50 border-b border-stone-200 px-4 py-2.5 flex items-center gap-2">
         <ShieldCheck size={13} className="text-brand-500" />
         <span className="text-[9px] font-bold uppercase tracking-widest text-stone-500">
@@ -326,24 +336,28 @@ function HostPhotoEditor({ id }: { id: string }) {
 }
 
 function HostStoryPreview({ id }: { id: string }) {
+  const theme = useBlockTheme(id)
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-6 flex flex-col sm:flex-row gap-6">
-      <HostPhotoEditor id={id} />
-      <div className="space-y-2">
-        <EditableText
-          blockId={id} textKey="story-title"
-          defaultValue="Our Story — The Patil Family"
-          className="text-base font-semibold text-stone-900"
-          as="h2"
-        />
-        <EditableText
-          blockId={id} textKey="story-body"
-          defaultValue="We've farmed this land for three generations. In 2012, we opened our home to travelers — not as a business, but as a way of sharing the life we love."
-          multiline
-          className="text-sm text-stone-600 leading-relaxed"
-          as="p"
-        />
+    <div className="rounded-2xl border border-stone-200 bg-white p-6" style={theme}>
+      <div className="flex flex-col md:flex-row gap-6">
+        <HostPhotoEditor id={id} />
+        <div className="flex-1 min-w-0 w-full space-y-2">
+          <EditableText
+            blockId={id} textKey="story-title"
+            defaultValue="Our Story — The Patil Family"
+            className="text-base font-semibold text-stone-900 w-full"
+            as="h2"
+          />
+          <EditableText
+            blockId={id} textKey="story-body"
+            defaultValue="We've farmed this land for three generations. In 2012, we opened our home to travelers — not as a business, but as a way of sharing the life we love."
+            multiline
+            className="text-sm text-stone-600 leading-relaxed w-full"
+            as="p"
+          />
+        </div>
       </div>
+      <LayoutSection blockId={id} />
     </div>
   )
 }
@@ -382,6 +396,7 @@ function EditableList({
 }) {
   const { getText, setSelectedElement } = useBuilder()
   const [draft, setDraft] = useState('')
+  const [addingItem, setAddingItem] = useState(false)
   const [editingIdx, setEditingIdx] = useState<number | null>(null)
   const [editDraft, setEditDraft] = useState('')
 
@@ -434,16 +449,28 @@ function EditableList({
         </li>
       ))}
       {!previewMode && (
-        <li className="flex items-center gap-1.5 mt-1.5">
-          <input
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && draft.trim()) { onAdd(draft.trim()); setDraft('') }
-            }}
-            placeholder="Add item… (Enter to save)"
-            className="flex-1 text-[11px] bg-stone-50 border border-dashed border-stone-300 rounded-lg px-2.5 py-1.5 outline-none placeholder:text-stone-300 focus:border-brand-400 focus:bg-brand-50 transition-colors"
-          />
+        <li className="mt-1.5">
+          {addingItem ? (
+            <input
+              autoFocus
+              value={draft}
+              onChange={e => setDraft(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && draft.trim()) { onAdd(draft.trim()); setDraft(''); setAddingItem(false) }
+                if (e.key === 'Escape') { setDraft(''); setAddingItem(false) }
+              }}
+              onBlur={() => { if (draft.trim()) { onAdd(draft.trim()) }; setDraft(''); setAddingItem(false) }}
+              placeholder="Type and press Enter…"
+              className="w-full text-[11px] bg-brand-50 border border-brand-300 rounded-lg px-2.5 py-1.5 outline-none transition-colors"
+            />
+          ) : (
+            <button
+              onClick={() => setAddingItem(true)}
+              className="flex items-center gap-1 text-[10px] text-stone-400 hover:text-brand-600 transition-colors"
+            >
+              <Plus size={10} /> Add item
+            </button>
+          )}
         </li>
       )}
     </ul>
@@ -499,6 +526,7 @@ function RulesSectionBlock({
 
 function RulesBlockPreview({ id }: { id: string }) {
   const { getText, updateText, previewMode } = useBuilder()
+  const theme = useBlockTheme(id)
 
   const getRows = (): RulesRow[] => { try { return JSON.parse(getText(id, 'rules-rows', '[]')) } catch { return [] } }
   const saveRows = (next: RulesRow[]) => updateText(id, 'rules-rows', JSON.stringify(next))
@@ -544,12 +572,120 @@ function RulesBlockPreview({ id }: { id: string }) {
   }
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-stone-50 p-6 space-y-4">
+    <div className="rounded-2xl border border-stone-200 bg-stone-50 p-6 space-y-4" style={theme}>
       <div className="flex items-center gap-2">
         <ScrollText size={18} className="text-stone-500 shrink-0" />
         <EditableText
           blockId={id} textKey="rules-title"
           defaultValue="House Rules & Safety"
+          className="font-semibold text-stone-900"
+          as="h2"
+        />
+      </div>
+
+      <div className="space-y-3">
+        {rows.map(row => (
+          <div key={row.rowId} className="relative group/row">
+            <div className="flex gap-3 items-stretch">
+              {row.cols.map(secId => (
+                <RulesSectionBlock
+                  key={secId}
+                  blockId={id}
+                  sectionId={secId}
+                  onRemove={() => removeColumn(row.rowId, secId)}
+                  showRemove={true}
+                  previewMode={previewMode}
+                />
+              ))}
+              {!previewMode && (
+                <button
+                  onClick={() => addColumn(row.rowId)}
+                  className="shrink-0 w-10 border-2 border-dashed border-stone-200 rounded-xl flex items-center justify-center text-stone-300 hover:border-brand-400 hover:text-brand-500 transition-colors"
+                  title="Add column"
+                >
+                  <Plus size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {!previewMode && (
+        <button
+          onClick={addRow}
+          className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-stone-200 rounded-xl text-xs font-semibold text-stone-400 hover:border-brand-400 hover:text-brand-600 transition-colors"
+        >
+          <Plus size={12} /> Add Row
+        </button>
+      )}
+    </div>
+  )
+}
+
+/* ─── 4b. HOW TO REACH ───────────────────────────────────── */
+type ReachRow = { rowId: string; cols: string[] }
+
+const DEFAULT_REACH_DATA = [
+  { title: 'By Road',  items: ['Take NH-17 from Goa · approx 2 hrs drive', 'Nearest bus stop: Sawantwadi ST depot'] },
+  { title: 'By Train', items: ['Nearest railway station: Kudal (23 km)', 'Auto / cab available from station'] },
+  { title: 'By Air',   items: ['Nearest airport: Goa International (90 km)', 'Cab hire recommended from airport'] },
+]
+
+function HowToReachPreview({ id }: { id: string }) {
+  const { getText, updateText, previewMode } = useBuilder()
+  const theme = useBlockTheme(id)
+
+  const getRows = (): ReachRow[] => { try { return JSON.parse(getText(id, 'reach-rows', '[]')) } catch { return [] } }
+  const saveRows = (next: ReachRow[]) => updateText(id, 'reach-rows', JSON.stringify(next))
+
+  useEffect(() => {
+    if (!getText(id, 'reach-rows', '')) {
+      const ts   = Date.now()
+      const sec0 = `rc-${ts}-0`; const sec1 = `rc-${ts}-1`; const sec2 = `rc-${ts}-2`
+      updateText(id, `${sec0}-title`, DEFAULT_REACH_DATA[0].title)
+      updateText(id, `${sec0}-items`, JSON.stringify(DEFAULT_REACH_DATA[0].items))
+      updateText(id, `${sec1}-title`, DEFAULT_REACH_DATA[1].title)
+      updateText(id, `${sec1}-items`, JSON.stringify(DEFAULT_REACH_DATA[1].items))
+      updateText(id, `${sec2}-title`, DEFAULT_REACH_DATA[2].title)
+      updateText(id, `${sec2}-items`, JSON.stringify(DEFAULT_REACH_DATA[2].items))
+      updateText(id, 'reach-rows', JSON.stringify([
+        { rowId: `rr-${ts}-0`, cols: [sec0, sec1] },
+        { rowId: `rr-${ts}-1`, cols: [sec2] },
+      ]))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  const rows = getRows()
+
+  const addRow = () => {
+    const ts = Date.now()
+    const secId = `rc-${ts}`
+    saveRows([...rows, { rowId: `rr-${ts}`, cols: [secId] }])
+  }
+
+  const removeRow = (rowId: string) => saveRows(rows.filter(r => r.rowId !== rowId))
+
+  const addColumn = (rowId: string) => {
+    const secId = `rc-${Date.now()}`
+    saveRows(rows.map(r => r.rowId === rowId ? { ...r, cols: [...r.cols, secId] } : r))
+  }
+
+  const removeColumn = (rowId: string, secId: string) => {
+    const row = rows.find(r => r.rowId === rowId)
+    if (!row) return
+    if (row.cols.length <= 1) removeRow(rowId)
+    else saveRows(rows.map(r => r.rowId === rowId ? { ...r, cols: r.cols.filter(c => c !== secId) } : r))
+  }
+
+  return (
+    <div className="rounded-2xl border border-stone-200 bg-stone-50 p-6 space-y-4" style={theme}>
+      <div className="flex items-center gap-2">
+        <Navigation size={18} className="text-brand-500 shrink-0" />
+        <EditableText
+          blockId={id} textKey="reach-title"
+          defaultValue="How to Reach"
           className="font-semibold text-stone-900"
           as="h2"
         />
@@ -624,11 +760,12 @@ function extractYouTubeId(url: string): string | null {
 
 function VideoPreview({ id }: { id: string }) {
   const { getText, previewMode } = useBuilder()
+  const theme = useBlockTheme(id)
   const ytUrl = getText(id, 'youtube-url', '')
   const videoId = ytUrl ? extractYouTubeId(ytUrl) : null
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-stone-200 bg-stone-950">
+    <div className="rounded-2xl overflow-hidden border border-stone-200 bg-stone-950" style={theme}>
       {/* Embed or placeholder */}
       {videoId ? (
         <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
@@ -687,6 +824,7 @@ const GALLERY_PLACEHOLDER = 'https://images.unsplash.com/photo-1470770841072-f97
 
 function GalleryPreview({ id }: { id: string }) {
   const { getText, updateText, updateImage, previewMode } = useBuilder()
+  const theme = useBlockTheme(id)
 
   const getMeta = (): GalleryItem[] => {
     try {
@@ -722,7 +860,7 @@ function GalleryPreview({ id }: { id: string }) {
     saveMeta(meta.map(m => m.key === key ? { ...m, ratio } : m))
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-4">
+    <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-4" style={theme}>
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold text-stone-900">Photo Gallery</h2>
         {!previewMode && (
@@ -798,6 +936,7 @@ const DEFAULT_ROOMS = [
 
 function RoomsPreview({ id }: { id: string }) {
   const { getText, updateText, updateImage, previewMode } = useBuilder()
+  const theme = useBlockTheme(id)
 
   const getIds = (): string[] => {
     try { return JSON.parse(getText(id, 'rooms-meta', '[]')) } catch { return [] }
@@ -829,7 +968,7 @@ function RoomsPreview({ id }: { id: string }) {
   }
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-5">
+    <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-5" style={theme}>
       <div className="flex items-center justify-between">
         <EditableText
           blockId={id} textKey="rooms-title"
@@ -961,6 +1100,7 @@ const DEFAULT_FOOD_ITEMS = [
 
 function FoodPreview({ id }: { id: string }) {
   const { getText, updateText, updateImage, previewMode } = useBuilder()
+  const theme = useBlockTheme(id)
 
   const getIds = (): string[] => {
     try { return JSON.parse(getText(id, 'food-meta', '[]')) } catch { return [] }
@@ -991,7 +1131,7 @@ function FoodPreview({ id }: { id: string }) {
   }
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-5">
+    <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-5" style={theme}>
       {/* Section header */}
       <div className="space-y-1.5">
         <EditableText
@@ -1111,13 +1251,14 @@ function WhatsappPreview() {
 /* ─── 12. MAP ────────────────────────────────────────────── */
 function MapPreview({ id }: { id: string }) {
   const { getText, previewMode } = useBuilder()
+  const theme = useBlockTheme(id)
 
   const location   = getText(id, 'map-location',    'Village, District')
   const region     = getText(id, 'map-region',      'State, India')
   const nearestTown = getText(id, 'map-nearest-town', 'Nearest town info')
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-4">
+    <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-4" style={theme}>
       <div className="flex items-center gap-2">
         <MapPin size={18} className="text-brand-600" />
         <h2 className="text-base font-semibold text-stone-900">Location</h2>
@@ -1343,6 +1484,7 @@ function BlockContent({ block }: { block: CanvasBlock }) {
     case 'host-story':   return <HostStoryPreview id={id} />
     case 'activity-log': return <ActivityLogBlock blockId={id} />
     case 'rules-block':  return <RulesBlockPreview id={id} />
+    case 'how-to-reach': return <HowToReachPreview id={id} />
     case 'video':        return <VideoPreview id={id} />
     case 'gallery':      return <GalleryPreview id={id} />
     case 'rooms':        return <RoomsPreview id={id} />
@@ -1358,7 +1500,8 @@ export default function BlockPreview({ block }: { block: CanvasBlock }) {
   return (
     <div className="transition-all duration-200">
       <BlockContent block={block} />
-      <LayoutSection blockId={block.id} />
+      {/* hero & host-story render LayoutSection internally inside their rounded border */}
+      {block.type !== 'hero' && block.type !== 'host-story' && <LayoutSection blockId={block.id} />}
     </div>
   )
 }

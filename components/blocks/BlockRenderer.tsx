@@ -5,6 +5,7 @@ import ContactBlock from './ContactBlock'
 import HostStoryBlock from './HostStoryBlock'
 import BirdingLogBlock from './BirdingLogBlock'
 import RulesBlock from './RulesBlock'
+import HowToReachBlock from './HowToReachBlock'
 import VideoBlock from './VideoBlock'
 import GalleryBlock from './GalleryBlock'
 import MapBlock from './MapBlock'
@@ -117,17 +118,39 @@ function SubTexts({ block }: { block: HomestayBlock }) {
 }
 
 export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Props) {
-  let content: React.ReactNode = null
+  const bgColor = ((block.content_data as any)?.styles?.['_bg-color'] as string | undefined) || undefined
+  const bgStyle = bgColor ? { backgroundColor: bgColor } : undefined
 
-  switch (block.block_type) {
-    case 'hero':
-      content = (
+  // Hero and host-story: BlockRenderer owns the outer border so LayoutRenderer
+  // can sit inside it — keeping added text/image/list blocks within the card border.
+  if (block.block_type === 'hero') {
+    return (
+      <div className="rounded-2xl overflow-hidden border border-stone-200 bg-white" style={bgStyle}>
         <HeroBlock
           data={block.content_data as any}
           hostName={homestay.host_name}
         />
-      )
-      break
+        <div className="px-6 pb-4">
+          <LayoutRenderer block={block} />
+          <SubTexts block={block} />
+        </div>
+      </div>
+    )
+  }
+
+  if (block.block_type === 'host-story') {
+    return (
+      <div className="rounded-2xl border border-stone-200 bg-white p-6" style={bgStyle}>
+        <HostStoryBlock data={block.content_data as any} />
+        <LayoutRenderer block={block} />
+        <SubTexts block={block} />
+      </div>
+    )
+  }
+
+  let content: React.ReactNode = null
+
+  switch (block.block_type) {
     case 'contact':
       content = (
         <ContactBlock
@@ -140,14 +163,14 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Pro
         />
       )
       break
-    case 'host-story':
-      content = <HostStoryBlock data={block.content_data as any} />
-      break
     case 'activity-log':
       content = <BirdingLogBlock data={block.content_data as any} />
       break
     case 'rules-block':
       content = <RulesBlock data={block.content_data as any} />
+      break
+    case 'how-to-reach':
+      content = <HowToReachBlock data={block.content_data as any} />
       break
     case 'video':
       content = (
