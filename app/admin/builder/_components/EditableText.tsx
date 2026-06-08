@@ -90,7 +90,7 @@ export default function EditableText({
         if (multiline && e.key === 'Enter' && (e.metaKey || e.ctrlKey)) commit()
         e.stopPropagation()
       },
-      className: `w-full bg-brand-50 border border-brand-400 rounded-lg px-2 py-1 outline-none resize-none text-inherit font-inherit leading-inherit ${className}`,
+      className: `w-full bg-transparent border-0 border-b-2 border-brand-400 outline-none resize-none p-0 ${className}`,
       style: { ...inlineStyle, minHeight: multiline ? 72 : undefined },
     }
 
