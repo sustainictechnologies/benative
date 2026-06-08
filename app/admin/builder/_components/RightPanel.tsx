@@ -1,8 +1,11 @@
 'use client'
 
+import { useState } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { motion } from 'framer-motion'
-import { Type, Image as ImageIcon, MousePointer2, AlignLeft, AlignCenter, AlignRight, List } from 'lucide-react'
+import { Type, Image as ImageIcon, MousePointer2, AlignLeft, AlignCenter, AlignRight, List, Pencil, Palette, RotateCcw } from 'lucide-react'
 import { useBuilder } from './BuilderContext'
+import ImagePickerModal from './ImagePickerModal'
 
 const FONTS = ['Inter', 'Playfair Display', 'Lora', 'DM Sans', 'Merriweather']
 
@@ -173,12 +176,24 @@ function ListControls({ blockId, listKey }: { blockId: string; listKey: string }
 
 /* ─── Image controls ─────────────────────────────────────── */
 function ImageControls({ blockId, imageKey }: { blockId: string; imageKey: string }) {
-  const { getText, updateText } = useBuilder()
+  const { getText, updateText, getImage, updateImage } = useBuilder()
+  const [showModal, setShowModal] = useState(false)
   const fit = getText(blockId, `${imageKey}-fit`, 'cover')
+  const currentUrl = getImage(blockId, imageKey, '')
 
   return (
     <div>
-      <SectionHeader icon={ImageIcon} label="Image Style" />
+      <SectionHeader icon={ImageIcon} label="Image" />
+
+      <Row>
+        <button
+          onClick={() => setShowModal(true)}
+          className="w-full flex items-center justify-center gap-2 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg transition-colors"
+        >
+          <Pencil size={12} /> Replace Image
+        </button>
+      </Row>
+
       <Row>
         <Label>Object fit</Label>
         <div className="flex gap-1.5">
@@ -193,9 +208,86 @@ function ImageControls({ blockId, imageKey }: { blockId: string; imageKey: strin
           ))}
         </div>
       </Row>
+
       <div className="px-4 pt-2 pb-3">
         <p className="text-[9px] text-stone-300 font-mono truncate">key: {imageKey}</p>
       </div>
+
+      <AnimatePresence>
+        {showModal && (
+          <ImagePickerModal
+            currentUrl={currentUrl}
+            onConfirm={url => { updateImage(blockId, imageKey, url); setShowModal(false) }}
+            onClose={() => setShowModal(false)}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+/* ─── Block theme controls ───────────────────────────────── */
+const THEME_PRESETS = [
+  { name: 'White',  bg: '#ffffff' },
+  { name: 'Cream',  bg: '#fefce8' },
+  { name: 'Stone',  bg: '#f5f5f4' },
+  { name: 'Forest', bg: '#f0fdf4' },
+  { name: 'Ocean',  bg: '#eff6ff' },
+  { name: 'Night',  bg: '#1c1917' },
+]
+
+function BlockThemeControls({ blockId }: { blockId: string }) {
+  const { getText, updateText } = useBuilder()
+  const bg = getText(blockId, '_bg-color', '')
+
+  return (
+    <div>
+      <SectionHeader icon={Palette} label="Block Theme" />
+
+      <Row>
+        <Label>Preset colours</Label>
+        <div className="grid grid-cols-6 gap-1.5 mt-1">
+          {THEME_PRESETS.map(p => (
+            <button
+              key={p.name}
+              title={p.name}
+              onClick={() => updateText(blockId, '_bg-color', p.bg)}
+              className={`w-full aspect-square rounded-lg border-2 transition-all hover:scale-110 ${
+                bg === p.bg ? 'border-brand-500 scale-110' : 'border-stone-200'
+              }`}
+              style={{ backgroundColor: p.bg }}
+            />
+          ))}
+        </div>
+      </Row>
+
+      <Row>
+        <Label>Custom background</Label>
+        <div className="flex items-center gap-2">
+          <label className="cursor-pointer">
+            <input
+              type="color"
+              value={bg || '#ffffff'}
+              onChange={e => updateText(blockId, '_bg-color', e.target.value)}
+              className="sr-only"
+            />
+            <div
+              className="w-7 h-7 rounded-lg border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform"
+              style={{ background: bg || '#ffffff' }}
+            />
+          </label>
+          <span className="text-[10px] font-mono text-stone-400 flex-1">{bg || '#ffffff'}</span>
+          {bg && (
+            <button
+              onClick={() => updateText(blockId, '_bg-color', '')}
+              title="Reset"
+              className="text-stone-300 hover:text-rose-400 transition-colors"
+            >
+              <RotateCcw size={12} />
+            </button>
+          )}
+        </div>
+      </Row>
     </div>
   )
 }
@@ -219,7 +311,7 @@ function EmptyState() {
 
 /* ─── Main Panel ─────────────────────────────────────────── */
 export default function RightPanel() {
-  const { selectedElement } = useBuilder()
+  const { selectedElement, selectedBlockId } = useBuilder()
 
   return (
     <motion.aside
@@ -244,7 +336,9 @@ export default function RightPanel() {
 
       {/* Controls */}
       <div className="flex-1 overflow-y-auto">
-        {!selectedElement && <EmptyState />}
+        {!selectedElement && !selectedBlockId && <EmptyState />}
+
+        {selectedBlockId && <BlockThemeControls blockId={selectedBlockId} />}
 
         {selectedElement?.type === 'text' && (
           <TextControls

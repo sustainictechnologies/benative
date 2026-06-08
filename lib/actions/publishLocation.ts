@@ -69,6 +69,19 @@ function toContentData(block: CanvasBlock): Record<string, unknown> {
       }))
       return { title: txt['rules-title'] ?? '', sections }
     }
+    case 'how-to-reach': {
+      let rowsMeta: { rowId: string; cols: string[] }[] = []
+      try { rowsMeta = JSON.parse(txt['reach-rows'] ?? '[]') } catch {}
+      const sections = rowsMeta.map(row => ({
+        rowId: row.rowId,
+        cols:  row.cols.map(secId => ({
+          id:    secId,
+          title: txt[`${secId}-title`] ?? '',
+          items: (() => { try { return JSON.parse(txt[`${secId}-items`] ?? '[]') } catch { return [] } })(),
+        })),
+      }))
+      return { title: txt['reach-title'] ?? '', sections }
+    }
     case 'video': {
       const raw = txt['youtube-url'] ?? ''
       return { youtube_video_id: raw ? extractYouTubeId(raw) : null }  // live reads youtube_video_id

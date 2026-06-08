@@ -138,6 +138,20 @@ export default function BuilderClient() {
               }
               break
             }
+            case 'how-to-reach': {
+              if (d.title) texts['reach-title'] = d.title
+              const reachRows = d.sections as Array<{ rowId: string; cols: Array<{ id: string; title?: string; items?: string[] }> }> | undefined
+              if (reachRows?.length) {
+                texts['reach-rows'] = JSON.stringify(
+                  reachRows.map(row => ({ rowId: row.rowId, cols: row.cols.map(c => c.id) }))
+                )
+                reachRows.forEach(row => row.cols.forEach(col => {
+                  if (col.title) texts[`${col.id}-title`] = col.title
+                  if (col.items?.length) texts[`${col.id}-items`] = JSON.stringify(col.items)
+                }))
+              }
+              break
+            }
             case 'video':
               if (d.youtube_video_id)  texts['youtube-url'] = d.youtube_video_id
               break
