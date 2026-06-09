@@ -2,9 +2,10 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
-import { Home, Search, Menu, Heart } from 'lucide-react'
+import { Search, Menu, Heart } from 'lucide-react'
 import NavLinks from '@/components/NavLinks'
 import UserButton from '@/components/UserButton'
+import BeNativeLogo from '@/components/BeNativeLogo'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,16 +21,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} bg-white text-stone-900 antialiased`}>
 
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-end pb-2 gap-5">
 
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 shrink-0">
-              <div className="w-9 h-9 bg-brand-600 rounded-xl flex items-center justify-center shadow-sm">
-                <Home size={17} className="text-white" />
-              </div>
-              <div className="leading-tight">
-                <div className="text-base font-bold text-stone-900 tracking-tight">Be Native</div>
-                <div className="text-[9px] text-brand-600 font-semibold tracking-widest uppercase -mt-0.5">Community Homestays</div>
+            <Link href="/" className="flex items-end gap-2 shrink-0">
+              <BeNativeLogo height={36} markOnly={true} />
+              <div className="leading-none pb-0.5">
+                <p className="text-base font-bold tracking-tight" style={{ color: '#2d4520' }}>BeNative</p>
+                <p className="text-[9px] font-semibold tracking-[0.18em] uppercase" style={{ color: '#2d4520' }}>Travel Beyond the Guidebook</p>
               </div>
             </Link>
 
@@ -68,14 +67,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="bg-stone-900 text-stone-400">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
-                  <Home size={15} className="text-white" />
-                </div>
-                <div>
-                  <div className="text-white font-bold text-sm">Be Native</div>
-                  <div className="text-[9px] text-brand-400 font-medium tracking-widest uppercase">Community Homestays</div>
-                </div>
+              <div className="mb-4">
+                <BeNativeLogo height={64} color="#ffffff" />
               </div>
               <p className="text-sm leading-relaxed">India's slow-travel community network. Real homes, real families, zero fees.</p>
             </div>
