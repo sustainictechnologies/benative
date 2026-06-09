@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 const links = [
   { href: '/explore', label: 'Explore Stays' },
   { href: '/map',     label: 'Map' },
-  { href: '/about',   label: 'About Us' },
+  { href: '/about',   label: 'Why BeNative Exists' },
 ]
 
 export default function NavLinks() {
