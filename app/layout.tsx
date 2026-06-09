@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <BeNativeLogo height={36} markOnly={true} />
               <div className="leading-none pb-0.5">
                 <p className="text-base font-bold tracking-tight" style={{ color: '#2d4520' }}>BeNative</p>
-                <p className="text-[9px] font-semibold tracking-[0.18em] uppercase" style={{ color: '#2d4520' }}>Travel Beyond the Guidebook</p>
+                <p className="text-[7px] font-semibold tracking-[0.15em] uppercase" style={{ color: '#2d4520' }}>Travel Beyond the Guidebook</p>
               </div>
             </Link>
 
