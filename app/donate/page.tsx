@@ -12,7 +12,7 @@ export default function DonatePage() {
         <div className="w-14 h-14 bg-brand-50 rounded-full flex items-center justify-center mx-auto">
           <Heart size={26} className="text-brand-600" />
         </div>
-        <h1 className="text-2xl font-bold text-stone-900">Support Be Native</h1>
+        <h1 className="text-2xl font-bold text-stone-900">Support Sustainable Traveling</h1>
         <p className="text-stone-500 text-sm leading-relaxed">
           Your contribution helps us keep this platform free for rural host families and conscious travellers across India.
         </p>

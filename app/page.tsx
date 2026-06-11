@@ -152,7 +152,7 @@ export default async function HomePage() {
           <p className="text-stone-800 text-sm font-semibold max-w-[480px]">
             Travel with curiosity. Leave with perspective.
           </p>
-          <div className="flex flex-col sm:flex-row items-center gap-3 mt-12">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-12">
             <span className="inline-flex items-center gap-2 bg-white border border-stone-200 rounded-full px-4 py-2 text-sm font-medium text-stone-600">
               <Home size={14} className="text-brand-600" /> Homestay
             </span>
@@ -255,7 +255,7 @@ export default async function HomePage() {
             <h2 className="text-3xl font-bold text-stone-900 flex items-center gap-2 mb-1">
               Liked Homestays
             </h2>
-            <p className="text-stone-500">Personally verified stays across rural India</p>
+            <p className="text-stone-500">Stays that travelers keep coming back to</p>
           </div>
           <Link href="/explore" className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-800 transition-colors">
             View all stays <ArrowRight size={15} />

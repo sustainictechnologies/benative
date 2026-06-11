@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={`${inter.variable} ${inter.className} bg-white text-stone-900 antialiased`}>
 
-        <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm">
+        <header className="sticky top-0 z-[1000] bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-end pb-2 gap-5">
 
             {/* Logo */}
@@ -35,10 +35,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* Right: nav links + profile + mobile menu */}
             <div className="ml-auto flex items-center gap-4 shrink-0">
               <NavLinks />
+              <UserButton />
               <div className="lg:hidden">
                 <MenuDropdown />
               </div>
-              <UserButton />
             </div>
 
           </div>
