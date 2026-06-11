@@ -4,30 +4,31 @@ import { createClient } from '@/lib/supabase/server'
 import {
   MapPin, Users, Bird, Bike, ShieldCheck, Leaf,
   ArrowRight, Phone, Mountain, Star, Heart, Sprout,
+  Home, UtensilsCrossed, Compass,
 } from 'lucide-react'
 
 /* ── Data ─────────────────────────────────────────────────── */
 
 const valueCards = [
   {
+    icon: Compass,
+    title: 'Discover',
+    desc: 'Find hidden villages, forests, and landscapes far off the beaten path.',
+  },
+  {
     icon: Users,
-    title: 'Stay With Local Families',
-    desc: 'Live with locals and experience real hospitality.',
+    title: 'Connect',
+    desc: 'Meet local families and build genuine, lasting relationships.',
   },
   {
-    icon: Leaf,
-    title: 'Support Local Communities',
-    desc: 'Your stay helps rural families and local communities.',
+    icon: Home,
+    title: 'Visit',
+    desc: 'Stay in verified homes with trusted, welcoming hosts.',
   },
   {
-    icon: ShieldCheck,
-    title: 'Safe & Verified',
-    desc: 'Verified hosts and safe stays you can trust.',
-  },
-  {
-    icon: Mountain,
-    title: 'Explore Offbeat India',
-    desc: 'Discover hidden places, nature, culture and local life.',
+    icon: Sprout,
+    title: 'Support',
+    desc: 'Your travel directly funds rural families and local communities.',
   },
 ]
 
@@ -67,10 +68,10 @@ type TrustItem =
   | { kind: 'icon'; Icon: React.ElementType; label: string; sub: string }
 
 const trustMetrics: TrustItem[] = [
-  { kind: 'symbol', symbol: '₹', label: 'No Booking Fees',   sub: 'Pay directly to hosts'  },
-  { kind: 'icon',   Icon: ShieldCheck, label: 'Verified Hosts',     sub: 'Community verified'     },
-  { kind: 'icon',   Icon: Phone,       label: 'Direct Contact',     sub: 'Call or WhatsApp'       },
-  { kind: 'icon',   Icon: Users,       label: 'Community Trusted',  sub: 'By travelers like you'  },
+  { kind: 'symbol', symbol: '₹',    label: 'No Booking Fees',   sub: 'Pay directly to hosts'      },
+  { kind: 'icon',   Icon: ShieldCheck, label: 'Verified Hosts',  sub: 'Community verified'          },
+  { kind: 'icon',   Icon: Phone,       label: 'Direct Contact',  sub: 'Call or WhatsApp'            },
+  { kind: 'icon',   Icon: Users,       label: 'Community Trusted', sub: 'By travelers like you'     },
 ]
 
 const regions = [
@@ -102,10 +103,10 @@ const regions = [
 ]
 
 const values = [
-  { icon: Sprout, label: 'Local Experiences',     sub: 'Activities, food, and stories rooted in the culture of each region.' },
-  { icon: Heart,  label: 'Support Local Families', sub: 'Your travel directly puts money into the hands of rural communities.' },
-  { icon: Leaf,   label: 'Responsible Travel',    sub: 'Travel respectfully. Preserve nature, culture, and way of life.' },
-  { icon: Users,  label: 'Real Connections',      sub: 'Real people, real stories, real hospitality — across India.' },
+  { icon: Heart,   label: 'Local Connection',   sub: 'Genuine stays with families rooted in their land.'               },
+  { icon: Leaf,    label: 'Travel Responsibly', sub: 'Respect nature, culture, and the communities you visit.'         },
+  { icon: Compass, label: 'Curated Knowledge',  sub: 'Handpicked places guided by deep local insight.'                 },
+  { icon: Users,   label: 'Community First',    sub: 'Built by and for people who travel with intention.'              },
 ]
 
 /* ── Page ─────────────────────────────────────────────────── */
@@ -151,12 +152,23 @@ export default async function HomePage() {
           <p className="text-stone-800 text-sm font-semibold max-w-[480px]">
             Travel with curiosity. Leave with perspective.
           </p>
+          <div className="flex items-center gap-3 mt-12">
+            <span className="inline-flex items-center gap-2 bg-white border border-stone-200 rounded-full px-4 py-2 text-sm font-medium text-stone-600">
+              <Home size={14} className="text-brand-600" /> Homestay
+            </span>
+            <span className="inline-flex items-center gap-2 bg-white border border-stone-200 rounded-full px-4 py-2 text-sm font-medium text-stone-600">
+              <UtensilsCrossed size={14} className="text-brand-600" /> Eat Local
+            </span>
+            <span className="inline-flex items-center gap-2 bg-white border border-stone-200 rounded-full px-4 py-2 text-sm font-medium text-stone-600">
+              <Compass size={14} className="text-brand-600" /> Native Guides
+            </span>
+          </div>
         </div>
 
         {/* Right: why choose + value cards */}
         <div>
           <h2 className="text-brand-600 font-black text-xl text-center mb-5 tracking-tight">
-            Why BeNative?
+            How BeNative Works
           </h2>
           <div className="relative grid grid-cols-2">
             {/* Centre + divider */}
@@ -164,7 +176,7 @@ export default async function HomePage() {
             <div className="absolute top-1/2 left-[25%] right-[25%] h-px bg-stone-400 -translate-y-px pointer-events-none" />
             {valueCards.map(({ icon: Icon, title, desc }) => (
               <div key={title} className="flex flex-col items-center text-center px-3 py-6">
-                <Icon size={28} className="text-brand-600 mb-4" strokeWidth={1.5} />
+                <Icon size={28} className="text-brand-600 mb-1" strokeWidth={1.5} />
                 <h3 className="font-bold text-stone-900 text-sm leading-snug min-h-[2.5rem] flex items-center justify-center mb-2">{title}</h3>
                 <p className="text-stone-400 text-xs leading-relaxed">{desc}</p>
               </div>
@@ -211,25 +223,26 @@ export default async function HomePage() {
       </section>
 
       {/* ── Trust Metrics ─────────────────────────────────────── */}
-      <section className="bg-brand-50 border-y border-brand-100 my-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <p className="text-brand-600 text-xs font-semibold uppercase tracking-widest text-center mb-6">
-            Why travelers choose Be Native
-          </p>
-          <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-brand-200">
-            {trustMetrics.map((m) => (
-              <div key={m.label} className="flex flex-col items-center text-center px-6 py-2 gap-2">
-                <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0">
-                  {m.kind === 'symbol' ? (
-                    <span className="text-brand-600 font-bold text-base">{m.symbol}</span>
-                  ) : (
-                    <m.Icon size={18} className="text-brand-600" />
-                  )}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 my-6">
+        <div className="bg-brand-100 rounded-3xl px-8 py-12 text-center">
+          <div>
+            <h2 className="text-2xl font-black text-brand-700 tracking-tight mb-2">Why travelers choose BeNative</h2>
+            <div className="w-10 h-[3px] bg-brand-400 rounded-full mx-auto mb-10" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-brand-200">
+              {trustMetrics.map((m) => (
+                <div key={m.label} className="flex flex-col items-center text-center px-6 py-2 gap-2">
+                  <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0">
+                    {m.kind === 'symbol' ? (
+                      <span className="text-brand-600 font-bold text-base">{m.symbol}</span>
+                    ) : (
+                      <m.Icon size={18} className="text-brand-600" />
+                    )}
+                  </div>
+                  <p className="text-stone-900 font-bold text-sm">{m.label}</p>
+                  <p className="text-stone-500 text-xs">{m.sub}</p>
                 </div>
-                <p className="text-stone-900 font-bold text-sm">{m.label}</p>
-                <p className="text-stone-500 text-xs">{m.sub}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -337,7 +350,7 @@ export default async function HomePage() {
             <Image src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=60" alt="" fill className="object-cover" />
           </div>
           <div className="relative z-10">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Ready to experience real India?</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Ready to experience Hidden India?</h2>
             <p className="text-white/70 mb-8 max-w-md mx-auto text-lg">Browse verified homestays across mountains, forests, villages, and coastlines. Call the host directly. Pay zero fees.</p>
             <Link
               href="/map"

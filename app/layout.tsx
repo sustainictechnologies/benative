@@ -2,12 +2,12 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
-import { Search, Menu, Heart } from 'lucide-react'
+import MenuDropdown from '@/components/MenuDropdown'
 import NavLinks from '@/components/NavLinks'
 import UserButton from '@/components/UserButton'
 import BeNativeLogo from '@/components/BeNativeLogo'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
   title: 'Be Native | Community Travel Across India',
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-white text-stone-900 antialiased`}>
+      <body className={`${inter.variable} ${inter.className} bg-white text-stone-900 antialiased`}>
 
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-end pb-2 gap-5">
@@ -27,36 +27,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/" className="flex items-end gap-2 shrink-0">
               <BeNativeLogo height={36} markOnly={true} />
               <div className="leading-none pb-0.5">
-                <p className="text-base font-bold tracking-tight" style={{ color: '#2d4520' }}>BeNative</p>
-                <p className="text-[7px] font-semibold tracking-[0.15em] uppercase" style={{ color: '#2d4520' }}>Travel Beyond the Guidebook</p>
+                <p className="text-xl font-bold tracking-tight" style={{ color: '#2d4520' }}>BeNative</p>
+                <p className="text-[6px] font-semibold tracking-[0.15em] uppercase" style={{ color: '#2d4520' }}>Travel Beyond the Guidebook</p>
               </div>
             </Link>
 
-            {/* Search bar */}
-            <div className="flex-1 max-w-sm hidden md:flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-full px-4 py-2 hover:border-brand-300 transition-colors cursor-text">
-              <Search size={14} className="text-stone-400 shrink-0" />
-              <span className="text-sm text-stone-400 flex-1 select-none">Where do you want to go?</span>
-              <div className="w-6 h-6 bg-brand-600 rounded-full flex items-center justify-center shrink-0">
-                <Search size={11} className="text-white" />
-              </div>
-            </div>
-
-            {/* Nav links */}
-            <NavLinks />
-
-            {/* Top-right icons */}
-            <div className="ml-auto flex items-center gap-2 shrink-0">
-              <Link
-                href="/favorites"
-                className="hidden sm:flex w-9 h-9 items-center justify-center rounded-full hover:bg-stone-100 transition-colors"
-                title="Favourite Homestays"
-              >
-                <Heart size={18} className="text-stone-500 hover:text-red-500 transition-colors" />
-              </Link>
+            {/* Right: nav links + profile + mobile menu */}
+            <div className="ml-auto flex items-center gap-4 shrink-0">
+              <NavLinks />
               <UserButton />
-              <button className="lg:hidden p-2 rounded-xl hover:bg-stone-100 transition-colors">
-                <Menu size={20} className="text-stone-600" />
-              </button>
+              <div className="lg:hidden">
+                <MenuDropdown />
+              </div>
             </div>
 
           </div>

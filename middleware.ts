@@ -26,6 +26,18 @@ export async function middleware(request: NextRequest) {
   // Refreshes the session token so it doesn't expire during the user's visit
   await supabase.auth.getUser()
 
+  // Protect /admin routes with separate admin cookie auth
+  const { pathname } = request.nextUrl
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin-login')) {
+    const adminAuth   = request.cookies.get('admin_auth')?.value
+    const adminSecret = process.env.ADMIN_SECRET ?? 'admin_secret_token'
+    if (adminAuth !== adminSecret) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/admin-login'
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
   return supabaseResponse
 }
 

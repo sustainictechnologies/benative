@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { motion } from 'framer-motion'
-import { Type, Image as ImageIcon, MousePointer2, AlignLeft, AlignCenter, AlignRight, List, Pencil, Palette, RotateCcw } from 'lucide-react'
+import { Type, Image as ImageIcon, MousePointer2, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, Pencil, Palette, RotateCcw } from 'lucide-react'
 import { useBuilder } from './BuilderContext'
 import ImagePickerModal from './ImagePickerModal'
 
@@ -107,8 +107,8 @@ function TextControls({ blockId, textKey }: { blockId: string; textKey: string }
       <Row>
         <Label>Alignment</Label>
         <div className="flex items-center gap-1.5">
-          {(['left', 'center', 'right'] as const).map((a, i) => {
-            const Icon = [AlignLeft, AlignCenter, AlignRight][i]
+          {(['left', 'center', 'right', 'justify'] as const).map((a, i) => {
+            const Icon = [AlignLeft, AlignCenter, AlignRight, AlignJustify][i]
             return (
               <button
                 key={a}

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { User, LogOut } from 'lucide-react'
+import { User, LogOut, Heart } from 'lucide-react'
 
 export default function UserButton() {
   const [email, setEmail]         = useState<string | null>(null)
@@ -108,6 +108,14 @@ export default function UserButton() {
             className="flex items-center gap-2.5 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
           >
             <User size={14} className="text-stone-400" /> My Profile
+          </Link>
+
+          <Link
+            href="/favorites"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+          >
+            <Heart size={14} className="text-stone-400" /> Favourites
           </Link>
 
           <div className="border-t border-stone-100" />

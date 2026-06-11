@@ -4,9 +4,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const links = [
-  { href: '/explore', label: 'Explore Stays' },
+  { href: '/explore', label: 'Discover' },
   { href: '/map',     label: 'Map' },
-  { href: '/about',   label: 'Why BeNative Exists' },
+  { href: '/about',   label: 'About Us' },
+  { href: '/blog',     label: 'Blog' },
+  { href: '/faq',     label: 'FAQ' },
+  { href: '/contact', label: 'Contact Us' },
 ]
 
 export default function NavLinks() {

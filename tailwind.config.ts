@@ -33,7 +33,13 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans:       ['Inter', 'system-ui', 'sans-serif'],
+        // Typography roles — swap the CSS variable to change the font site-wide
+        heading:    ['var(--font-heading,    var(--font-inter))', 'system-ui', 'sans-serif'],
+        subheading: ['var(--font-subheading, var(--font-inter))', 'system-ui', 'sans-serif'],
+        body:       ['var(--font-body,       var(--font-inter))', 'system-ui', 'sans-serif'],
+        ui:         ['var(--font-ui,         var(--font-inter))', 'system-ui', 'sans-serif'],
+        display:    ['var(--font-display,    var(--font-inter))', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         'card': '0 2px 20px rgba(0,0,0,0.08)',
