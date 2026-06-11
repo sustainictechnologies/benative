@@ -47,7 +47,7 @@ export default function AboutPage() {
             tourism networks.
           </p>
 
-          <p className="text-xl font-bold text-stone-900 !mt-10">
+          <p>
             BeNative exists to make that knowledge accessible.
           </p>
 
@@ -77,7 +77,7 @@ export default function AboutPage() {
             experiences with the people who know these places best.
           </p>
 
-          <p className="text-stone-800 font-semibold italic !mt-10">
+          <p>
             Everything else begins with a conversation.
           </p>
         </div>

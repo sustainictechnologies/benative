@@ -67,7 +67,7 @@ export default function UserButton() {
     return (
       <Link
         href="/login"
-        className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-stone-600 hover:text-brand-700 border border-stone-200 hover:border-brand-300 px-3 py-2 rounded-full transition-all"
+        className="flex items-center gap-1.5 text-sm font-semibold text-stone-600 hover:text-brand-700 border border-stone-200 hover:border-brand-300 px-3 py-2 rounded-full transition-all"
       >
         <User size={14} /> Login
       </Link>
@@ -79,7 +79,7 @@ export default function UserButton() {
     : email[0].toUpperCase()
 
   return (
-    <div className="relative hidden sm:block" ref={ref}>
+    <div className="relative" ref={ref}>
       {/* Avatar button */}
       <button
         onClick={() => setOpen(o => !o)}

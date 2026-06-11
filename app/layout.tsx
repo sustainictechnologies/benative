@@ -35,10 +35,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* Right: nav links + profile + mobile menu */}
             <div className="ml-auto flex items-center gap-4 shrink-0">
               <NavLinks />
-              <UserButton />
               <div className="lg:hidden">
                 <MenuDropdown />
               </div>
+              <UserButton />
             </div>
 
           </div>
