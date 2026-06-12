@@ -160,14 +160,14 @@ function LocationPicker({
       <input
         ref={inputRef}
         type="text"
-        placeholder="Search region or village…"
+        placeholder="Search…"
         value={query}
         onChange={(e) => {
           setQuery(e.target.value)
           if (!e.target.value) handleClear()
           calcPos()
         }}
-        className="bg-transparent text-white placeholder-white/50 text-sm outline-none w-40 sm:w-52"
+        className="bg-transparent text-white placeholder-white/50 text-sm outline-none w-20 sm:w-52"
       />
       {loading && (
         <div className="w-3 h-3 border border-white/40 border-t-white rounded-full animate-spin shrink-0" />
@@ -265,15 +265,21 @@ function Dropdown({
       <button
         ref={btnRef}
         onClick={() => { calcPos(); setOpen((o) => !o) }}
-        className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-all whitespace-nowrap shadow-sm
+        title={label}
+        className={`flex items-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-full border text-sm font-medium transition-all whitespace-nowrap shadow-sm
           ${isActive
             ? 'bg-white text-brand-700 border-white font-semibold'
             : 'bg-white/10 text-white border-white/30 hover:bg-white/20'
           }`}
       >
         <Icon size={14} />
-        {isActive ? `${label} (${activeCount})` : label}
-        <ChevronDown size={13} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        {/* Desktop: full label */}
+        <span className="hidden sm:inline">{isActive ? `${label} (${activeCount})` : label}</span>
+        {/* Mobile: count badge only when active */}
+        {isActive && (
+          <span className="sm:hidden text-[10px] font-bold leading-none">{activeCount}</span>
+        )}
+        <ChevronDown size={12} className={`hidden sm:block transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && createPortal(
@@ -331,39 +337,52 @@ export default function FilterBar({
 
   return (
     <div className="bg-gradient-to-r from-brand-700 to-brand-500 px-4 py-3 shadow-md" style={{ position: 'relative', zIndex: 100 }}>
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-white/80 text-xs font-semibold uppercase tracking-wider mr-1 hidden sm:block">
+      {/* Mobile: single scrollable row. Desktop: wrapping row */}
+      <div
+        className="flex items-center gap-2 sm:flex-wrap overflow-x-auto scrollbar-hide"
+      >
+        <span className="text-white/80 text-xs font-semibold uppercase tracking-wider mr-1 hidden sm:block shrink-0">
           Filter
         </span>
 
-        <LocationPicker selectedPlace={selectedPlace} onPlaceSelect={onPlaceSelect} />
+        <div className="shrink-0">
+          <LocationPicker selectedPlace={selectedPlace} onPlaceSelect={onPlaceSelect} />
+        </div>
 
-        <Dropdown label="Nature & Adventure" icon={Leaf}    options={NATURE_OPTIONS}  selected={selectedCategories} onChange={onCategoryChange} />
-        <Dropdown label="Cultural Experience" icon={Compass} options={CULTURE_OPTIONS} selected={selectedCategories} onChange={onCategoryChange} />
-        <Dropdown label="Travel Style"        icon={Users}   options={STYLE_OPTIONS}   selected={selectedCategories} onChange={onCategoryChange} />
+        <div className="shrink-0">
+          <Dropdown label="Nature & Adventure" icon={Leaf}    options={NATURE_OPTIONS}  selected={selectedCategories} onChange={onCategoryChange} />
+        </div>
+        <div className="shrink-0">
+          <Dropdown label="Cultural Experience" icon={Compass} options={CULTURE_OPTIONS} selected={selectedCategories} onChange={onCategoryChange} />
+        </div>
+        <div className="shrink-0">
+          <Dropdown label="Travel Style"        icon={Users}   options={STYLE_OPTIONS}   selected={selectedCategories} onChange={onCategoryChange} />
+        </div>
 
         <button
           onClick={() => onVerifiedChange(!verifiedOnly)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-all shadow-sm whitespace-nowrap
+          title="Verified Only"
+          className={`shrink-0 flex items-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-full border text-sm font-medium transition-all shadow-sm whitespace-nowrap
             ${verifiedOnly
               ? 'bg-white text-brand-700 border-white font-semibold'
               : 'bg-white/10 text-white border-white/30 hover:bg-white/20'
             }`}
         >
           <ShieldCheck size={14} />
-          Verified Only
+          <span className="hidden sm:inline">Verified Only</span>
         </button>
 
-        <span className="text-white/70 text-sm ml-1">
+        <span className="text-white/70 text-sm shrink-0">
           {resultCount} {resultCount === 1 ? 'stay' : 'stays'}
         </span>
 
         {hasFilters && (
           <button
             onClick={onClear}
-            className="flex items-center gap-1 text-sm text-white/80 hover:text-white ml-auto transition-colors"
+            className="shrink-0 flex items-center gap-1 text-sm text-white/80 hover:text-white ml-auto transition-colors"
           >
-            <X size={13} /> Clear
+            <X size={13} />
+            <span className="hidden sm:inline">Clear</span>
           </button>
         )}
       </div>

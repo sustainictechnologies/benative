@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import {
   MapPin, Users, Bird, Bike, ShieldCheck, Leaf,
-  ArrowRight, Phone, Mountain, Star, Heart, Sprout,
+  ArrowRight, Phone, Star, Heart, Sprout,
   Home, UtensilsCrossed, Compass,
 } from 'lucide-react'
 
@@ -74,33 +74,6 @@ const trustMetrics: TrustItem[] = [
   { kind: 'icon',   Icon: Users,       label: 'Community Trusted', sub: 'By travelers like you'     },
 ]
 
-const regions = [
-  {
-    name: 'Konkan Coast',
-    state: 'Maharashtra',
-    img: 'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=500&q=70',
-  },
-  {
-    name: 'Western Ghats',
-    state: 'Karnataka · Goa',
-    img: 'https://images.unsplash.com/photo-1516912481808-3406841bd33c?w=500&q=70',
-  },
-  {
-    name: 'Spiti Valley',
-    state: 'Himachal Pradesh',
-    img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=500&q=70',
-  },
-  {
-    name: 'Coorg Hills',
-    state: 'Karnataka',
-    img: 'https://images.unsplash.com/photo-1545158535-c3f7168c28b6?w=500&q=70',
-  },
-  {
-    name: 'Rajasthan',
-    state: 'Desert & Forts',
-    img: 'https://images.unsplash.com/photo-1477587458883-47145ed31b23?w=500&q=70',
-  },
-]
 
 const values = [
   { icon: Heart,   label: 'Local Connection',   sub: 'Genuine stays with families rooted in their land.'               },
@@ -228,9 +201,16 @@ export default async function HomePage() {
           <div>
             <h2 className="text-2xl font-black text-brand-700 tracking-tight mb-2">Why travelers choose BeNative</h2>
             <div className="w-10 h-[3px] bg-brand-400 rounded-full mx-auto mb-10" />
-            <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-brand-200">
+            <div className="relative grid grid-cols-2 lg:grid-cols-4">
+              {/* Mobile 2×2: centre cross */}
+              <div className="lg:hidden absolute left-1/2 top-[10%] bottom-[10%] w-px bg-brand-200 -translate-x-px pointer-events-none" />
+              <div className="lg:hidden absolute top-1/2 left-[10%] right-[10%] h-px bg-brand-200 -translate-y-px pointer-events-none" />
+              {/* Desktop 4-col: three vertical dividers */}
+              <div className="hidden lg:block absolute left-1/4 top-[15%] bottom-[15%] w-px bg-brand-200 -translate-x-px pointer-events-none" />
+              <div className="hidden lg:block absolute left-2/4 top-[15%] bottom-[15%] w-px bg-brand-200 -translate-x-px pointer-events-none" />
+              <div className="hidden lg:block absolute left-3/4 top-[15%] bottom-[15%] w-px bg-brand-200 -translate-x-px pointer-events-none" />
               {trustMetrics.map((m) => (
-                <div key={m.label} className="flex flex-col items-center text-center px-6 py-2 gap-2">
+                <div key={m.label} className="flex flex-col items-center text-center px-6 py-4 gap-2">
                   <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0">
                     {m.kind === 'symbol' ? (
                       <span className="text-brand-600 font-bold text-base">{m.symbol}</span>
@@ -255,7 +235,7 @@ export default async function HomePage() {
             <h2 className="text-3xl font-bold text-stone-900 flex items-center gap-2 mb-1">
               Liked Homestays
             </h2>
-            <p className="text-stone-500">Stays that travelers keep coming back to</p>
+            <p className="text-stone-500">Where hospitality feels like home</p>
           </div>
           <Link href="/explore" className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-800 transition-colors">
             View all stays <ArrowRight size={15} />
