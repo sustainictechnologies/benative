@@ -36,7 +36,7 @@ export default function WhatsAppContactButton({ hostName, phone, callingWindow }
   const [revealed, setRevealed] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
-  const msgAvailability = `Hello ${hostName}, I found your homestay on Be Native and wanted to check availability.`
+  const msgAvailability = `Hello ${hostName}, I found your homestay on BeNative and wanted to check availability.`
 
   return (
     <div className="rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 p-5 space-y-4">

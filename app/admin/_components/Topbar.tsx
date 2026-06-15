@@ -51,7 +51,7 @@ export default function Topbar({ title, subtitle }: Props) {
             JA
           </div>
           <div className="hidden sm:block">
-            <p className="text-xs font-semibold text-stone-800 leading-none">Be Native Admin</p>
+            <p className="text-xs font-semibold text-stone-800 leading-none">BeNative Admin</p>
             <p className="text-[10px] text-stone-400 mt-0.5">Super Admin</p>
           </div>
         </div>

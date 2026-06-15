@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 
 interface FoodItem {
   id: string
@@ -47,7 +48,7 @@ export default function FoodBlock({ data }: Props) {
               {item.image_url && (
                 <div className="relative w-24 h-20 shrink-0">
                   <Image
-                    src={item.image_url}
+                    src={supabaseImgUrl(item.image_url, { width: 300, quality: 70 })}
                     alt={item.name || 'Food'}
                     fill
                     className="object-cover"

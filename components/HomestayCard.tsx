@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, ShieldCheck, Phone } from 'lucide-react'
 import type { HomestayWithCategories } from '@/types/blocks.types'
+import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 
 interface Props {
   homestay: HomestayWithCategories
@@ -17,7 +18,7 @@ export default function HomestayCard({ homestay: h }: Props) {
       <div className="relative w-full aspect-[3/2] bg-stone-100 overflow-hidden">
         {h.cover_image_url ? (
           <Image
-            src={h.cover_image_url}
+            src={supabaseImgUrl(h.cover_image_url, { width: 600, quality: 75 })}
             alt={h.title}
             fill
             className="object-cover transition-transform duration-300 hover:scale-105"

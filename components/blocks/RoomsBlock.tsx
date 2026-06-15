@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 
 interface Room {
   id: string
@@ -30,7 +31,7 @@ export default function RoomsBlock({ data }: Props) {
             {room.image_url && (
               <div className="relative w-28 h-24 shrink-0">
                 <Image
-                  src={room.image_url}
+                  src={supabaseImgUrl(room.image_url, { width: 300, quality: 70 })}
                   alt={room.name || 'Room'}
                   fill
                   className="object-cover"

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { saveCategories } from '../actions'
+import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 
 interface Homestay {
   id:                string
@@ -20,9 +21,23 @@ interface Homestay {
   is_verified:       boolean
   has_location:      boolean
   created_at:        string
+  updated_at:        string
   cover_image_url:   string | null
   block_count:       number
   category_slugs:    string[]
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 2)   return 'just now'
+  if (mins < 60)  return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24)   return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  if (days < 30)  return `${days}d ago`
+  const months = Math.floor(days / 30)
+  return `${months}mo ago`
 }
 
 interface Category {
@@ -285,7 +300,7 @@ export default function HomestaysClient({ homestays }: Props) {
                     <div className="w-12 h-12 rounded-xl overflow-hidden bg-stone-100 shrink-0">
                       {h.cover_image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={h.cover_image_url} alt={h.title} className="w-full h-full object-cover" />
+                        <img src={supabaseImgUrl(h.cover_image_url, { width: 150, quality: 65 })} alt={h.title} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-stone-300 text-xl">🏡</div>
                       )}
@@ -293,6 +308,7 @@ export default function HomestaysClient({ homestays }: Props) {
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-stone-900 truncate">{h.title}</p>
                       <p className="text-xs text-stone-400 truncate">by {h.host_name}</p>
+                      <p className="text-[10px] text-stone-300 mt-0.5">Updated {timeAgo(h.updated_at)}</p>
                       {/* Category tags */}
                       {h.category_slugs.length > 0 ? (
                         <div className="flex flex-wrap gap-1 mt-1">

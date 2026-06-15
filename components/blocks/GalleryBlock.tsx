@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 
 type Ratio = 'square' | 'landscape' | 'portrait'
 
@@ -57,7 +58,7 @@ export default function GalleryBlock({ data }: Props) {
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={i}
-                src={photo.url}
+                src={supabaseImgUrl(photo.url, { width: 800, quality: 75 })}
                 alt={`Gallery photo ${i + 1}`}
                 onClick={() => setSelected(i)}
                 className={`w-full object-cover rounded-xl cursor-pointer hover:opacity-90 transition-opacity ${RATIO_CLASS[ratio]} ${
@@ -101,7 +102,7 @@ export default function GalleryBlock({ data }: Props) {
           {/* Image */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={photos[selected].url}
+            src={supabaseImgUrl(photos[selected].url, { width: 1600, quality: 85, resize: 'contain' })}
             alt={`Gallery photo ${selected + 1}`}
             onClick={e => e.stopPropagation()}
             className="max-h-[85vh] max-w-[90vw] object-contain rounded-xl shadow-2xl"

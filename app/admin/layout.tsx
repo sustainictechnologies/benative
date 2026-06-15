@@ -3,8 +3,8 @@ import Sidebar from './_components/Sidebar'
 import AdminSessionGuard from './_components/AdminSessionGuard'
 
 export const metadata: Metadata = {
-  title: 'Be Native Admin',
-  description: 'Be Native — Admin Dashboard',
+  title: 'BeNative Admin',
+  description: 'BeNative — Admin Dashboard',
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -12,7 +12,7 @@ export default async function HomestaysPage() {
       .from('homestays')
       .select(`
         id, title, slug, host_name, village_name, location_district,
-        is_verified, latitude, longitude, created_at, cover_image_url,
+        is_verified, latitude, longitude, created_at, updated_at, cover_image_url,
         homestay_blocks ( id )
       `)
       .order('created_at', { ascending: false }),
@@ -43,6 +43,7 @@ export default async function HomestaysPage() {
     is_verified:       h.is_verified,
     has_location:      h.latitude != null && h.longitude != null,
     created_at:        h.created_at,
+    updated_at:        h.updated_at ?? h.created_at,
     cover_image_url:   h.cover_image_url ?? null,
     block_count:       (h.homestay_blocks ?? []).length,
     category_slugs:    assignmentMap[h.id] ?? [],

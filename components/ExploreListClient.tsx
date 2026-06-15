@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { MapPin, ShieldCheck, Star, X } from 'lucide-react'
 import type { HomestayWithCategories } from '@/types/blocks.types'
 import FilterBar, { type NominatimPlace } from './FilterSidebar'
+import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 
 interface Props {
   homestays: HomestayWithCategories[]
@@ -99,7 +100,7 @@ export default function ExploreListClient({ homestays, initialCategory }: Props)
                 <div className="relative h-52 bg-stone-100 overflow-hidden">
                   {h.cover_image_url ? (
                     <Image
-                      src={h.cover_image_url}
+                      src={supabaseImgUrl(h.cover_image_url, { width: 600, quality: 75 })}
                       alt={h.title}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-500"

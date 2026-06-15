@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Heart } from 'lucide-react'
 
 export const metadata = {
-  title: 'Donate | Be Native',
+  title: 'Donate | BeNative',
 }
 
 export default function DonatePage() {

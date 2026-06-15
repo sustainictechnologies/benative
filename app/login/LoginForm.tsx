@@ -65,7 +65,7 @@ export default function LoginForm() {
               <Home size={22} className="text-white" />
             </div>
             <div>
-              <div className="text-xl font-bold text-stone-900">Be Native</div>
+              <div className="text-xl font-bold text-stone-900">BeNative</div>
               <div className="text-[10px] text-brand-600 font-semibold tracking-widest uppercase">Community Homestays</div>
             </div>
           </Link>
@@ -98,7 +98,7 @@ export default function LoginForm() {
               <p className="text-stone-500 text-sm mb-6">
                 {mode === 'login'
                   ? 'Login to view host contact details.'
-                  : 'Join Be Native to connect directly with local hosts.'}
+                  : 'Join BeNative to connect directly with local hosts.'}
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">

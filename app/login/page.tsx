@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import LoginForm from './LoginForm'
 
 export const metadata: Metadata = {
-  title: 'Login · Be Native',
+  title: 'Login · BeNative',
 }
 
 export default function LoginPage() {

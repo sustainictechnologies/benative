@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import type { HostStoryBlockData } from '@/types/blocks.types'
+import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 
 interface Props {
   data: HostStoryBlockData & {
@@ -51,7 +52,7 @@ export default function HostStoryBlock({ data }: Props) {
         <div className="shrink-0 flex justify-center md:justify-start">
           <div className={`relative w-20 h-20 overflow-hidden bg-stone-100 ${shapeClass}`}>
             <Image
-              src={data.host_image_url}
+              src={supabaseImgUrl(data.host_image_url, { width: 200, quality: 75 })}
               alt={data.story_title ?? 'Host photo'}
               fill
               className={`object-cover ${positionClass}`}
