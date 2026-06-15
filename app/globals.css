@@ -11,3 +11,9 @@
     display: none;
   }
 }
+
+/* Leaflet controls default to z-index 1000, same as the navbar — push them below */
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 800 !important;
+}
