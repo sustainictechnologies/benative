@@ -7,17 +7,14 @@ interface TransformOptions {
 }
 
 /**
- * Converts a Supabase storage URL to use the built-in image transform endpoint.
- * Non-Supabase URLs are returned unchanged.
+ * Returns the original Supabase storage URL unchanged.
+ * Transform params are kept in the signature so they can be enabled later
+ * when upgrading to a Supabase plan that supports image transformations.
  */
 export function supabaseImgUrl(
   url: string | null | undefined,
-  options: TransformOptions = {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _options: TransformOptions = {}
 ): string {
-  if (!url) return ''
-  if (!url.includes('/storage/v1/object/public/')) return url
-
-  const { width = 800, quality = 75, resize = 'cover' } = options
-  const base = url.replace('/storage/v1/object/public/', '/storage/v1/render/v1/public/')
-  return `${base}?width=${width}&quality=${quality}&resize=${resize}`
+  return url ?? ''
 }
