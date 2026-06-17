@@ -1,14 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
-import ExploreListClient from '@/components/ExploreListClient'
+import DiscoverClient from '@/components/discover/DiscoverClient'
 import type { HomestayWithCategories } from '@/types/blocks.types'
 
-export const revalidate = 300 // revalidate every 5 minutes
+export const revalidate = 60
 
-export default async function ExplorePage({
-  searchParams,
-}: {
-  searchParams: { category?: string }
-}) {
+export default async function ExplorePage() {
   const supabase = createClient()
 
   const { data: rawHomestays } = await supabase
@@ -17,7 +13,7 @@ export default async function ExplorePage({
       id, title, slug, location_district, village_name,
       host_name, is_verified, latitude, longitude,
       calling_window, languages_spoken, cover_image_url,
-      homestay_categories ( categories ( id, name, slug ) )
+      homestay_tags ( tags ( id, name, slug ) )
     `)
     .order('created_at', { ascending: false })
 
@@ -33,16 +29,11 @@ export default async function ExplorePage({
     longitude: h.longitude,
     calling_window: h.calling_window,
     languages_spoken: h.languages_spoken ?? [],
-    categories: (h.homestay_categories ?? [])
-      .map((hc: any) => hc.categories)
+    categories: (h.homestay_tags ?? [])
+      .map((ht: any) => ht.tags)
       .filter(Boolean),
     cover_image_url: h.cover_image_url ?? null,
   }))
 
-  return (
-    <ExploreListClient
-      homestays={homestays}
-      initialCategory={searchParams.category ?? null}
-    />
-  )
+  return <DiscoverClient homestays={homestays} />
 }

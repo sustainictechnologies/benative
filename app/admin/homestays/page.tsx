@@ -18,15 +18,15 @@ export default async function HomestaysPage() {
       .order('created_at', { ascending: false }),
 
     supabase
-      .from('homestay_categories')
-      .select('homestay_id, categories ( id, slug )'),
+      .from('homestay_tags')
+      .select('homestay_id, tags ( id, slug )'),
   ])
 
-  // Build a map: homestay_id → category slugs[]
+  // Build a map: homestay_id → tag slugs[]
   const assignmentMap: Record<string, string[]> = {}
   for (const row of (assignments ?? []) as any[]) {
     const hid  = row.homestay_id
-    const slug = row.categories?.slug
+    const slug = row.tags?.slug
     if (hid && slug) {
       if (!assignmentMap[hid]) assignmentMap[hid] = []
       assignmentMap[hid].push(slug)

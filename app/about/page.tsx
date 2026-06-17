@@ -13,9 +13,6 @@ export default function AboutPage() {
           <h1 className="text-4xl sm:text-5xl font-bold text-stone-900 leading-tight mb-6">
             Why BeNative Exists
           </h1>
-          <p className="text-lg text-stone-500 leading-relaxed max-w-2xl mx-auto italic">
-            Most places are easier to find than they are to understand.
-          </p>
         </div>
       </section>
 
@@ -23,9 +20,10 @@ export default function AboutPage() {
       <section className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-20">
         <div className="prose prose-stone max-w-none text-stone-600 leading-relaxed space-y-5">
           <p>
-            You can locate a remote village on a map. You can identify a trail, a lake, or a
-            mountain range from a satellite image. What is much harder to find is the local
-            knowledge that gives those places meaning.
+            Most places are easier to find than they are to understand. You can locate a remote
+            village on a map. You can identify a trail, a lake, or a mountain range from a
+            satellite image. What is much harder to find is the local knowledge that gives those
+            places meaning.
           </p>
 
           <div className="pl-6 border-l-2 border-stone-300 space-y-2 text-stone-500 italic my-2">

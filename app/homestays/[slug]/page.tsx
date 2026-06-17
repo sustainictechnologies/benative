@@ -21,7 +21,7 @@ const getHomestay = cache(async (slug: string) => {
       id, title, slug, village_name, location_district, is_verified,
       host_name, contact_phone, calling_window, languages_spoken,
       address, whatsapp_number, email, youtube_video_id,
-      homestay_categories ( categories ( id, name, slug ) ),
+      homestay_tags ( tags ( id, name, slug ) ),
       homestay_blocks ( id, block_type, sort_order, content_data )
     `)
     .eq('slug', slug)
@@ -50,8 +50,8 @@ export default async function HomestayPage({ params }: Props) {
   if (!homestay) notFound()
 
   const categories: { id: number; name: string; slug: string }[] = (
-    homestay.homestay_categories ?? []
-  ).map((hc: any) => hc.categories).filter(Boolean)
+    homestay.homestay_tags ?? []
+  ).map((ht: any) => ht.tags).filter(Boolean)
 
   const blocks: HomestayBlock[] = (homestay.homestay_blocks ?? [])
     .sort((a: any, b: any) => a.sort_order - b.sort_order)

@@ -3,83 +3,59 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-const ALL_CATEGORIES = [
-  { slug: 'bird-watching',        name: 'Bird Watching' },
-  { slug: 'waterfalls-nearby',    name: 'Waterfalls Nearby' },
-  { slug: 'forest-stay',          name: 'Forest Stay' },
-  { slug: 'river-side',           name: 'River Side' },
-  { slug: 'beach-side',           name: 'Beach Side' },
-  { slug: 'mountain-view',        name: 'Mountain View' },
-  { slug: 'sunrise-point',        name: 'Sunrise Point' },
-  { slug: 'sunset-point',         name: 'Sunset Point' },
-  { slug: 'farm-stay',            name: 'Farm Stay' },
-  { slug: 'mango-orchard',        name: 'Mango Orchard' },
-  { slug: 'cashew-farm',          name: 'Cashew Farm' },
-  { slug: 'fishing-village',      name: 'Fishing Village Experience' },
-  { slug: 'konkani-food',         name: 'Konkani Food' },
-  { slug: 'local-festivals',      name: 'Local Festivals' },
-  { slug: 'folk-culture',         name: 'Folk Culture' },
-  { slug: 'traditional-house',    name: 'Traditional House' },
-  { slug: 'village-lifestyle',    name: 'Village Lifestyle' },
-  { slug: 'agri-immersion',       name: 'Agri Immersion' },
-  { slug: 'temple-trails',        name: 'Temple Trails' },
-  { slug: 'solo-friendly',        name: 'Solo Friendly' },
-  { slug: 'solo-female-friendly', name: 'Solo Female Safe' },
-  { slug: 'family-friendly',      name: 'Family Friendly' },
-  { slug: 'rider-friendly',       name: 'Rider Friendly' },
-  { slug: 'backpacker-friendly',  name: 'Backpacker Friendly' },
-  { slug: 'group-stay',           name: 'Group Stay' },
-  { slug: 'couple-friendly',      name: 'Couple Friendly' },
-]
+// All valid taxonomy slugs — tags must already exist in the `tags` table
+// (seeded by supabase/migrate_to_tags.sql)
+const VALID_SLUGS = new Set([
+  // Layer 1: Travel Intent
+  'nature_habitat', 'rural_immersion', 'long_stay_retreat', 'transit_pitstop',
+  // Layer 2: Environment / Landscape
+  'env_forest_border', 'env_riverside', 'env_coastal', 'env_mountain_valley',
+  'env_agricultural', 'env_rocky_plateau', 'env_sacred_grove', 'env_wetland',
+  // Layer 3: Practical Requirements
+  'spec_gated_parking', 'spec_basic_toolkit', 'spec_pet_friendly',
+  'spec_wildlife_secure', 'spec_stable_network', 'spec_shared_kitchen',
+  'spec_power_backup', 'spec_laundry_access', 'spec_native_guide',
+  'spec_plastic_free', 'spec_western_toilet', 'spec_hot_water',
+  'spec_no_stairs_access', 'spec_quiet_work_setup', 'spec_solo_female_friendly',
+])
 
 export async function saveCategories(homestayId: string, selectedSlugs: string[]) {
   const supabase = createClient()
 
-  // Ensure selected categories exist in DB with the correct slug values
-  if (selectedSlugs.length > 0) {
-    const needed = ALL_CATEGORIES.filter(c => selectedSlugs.includes(c.slug))
-    if (needed.length > 0) {
-      await supabase
-        .from('categories')
-        .upsert(needed.map(c => ({ name: c.name, slug: c.slug })), { onConflict: 'name' })
-      // Ignore upsert errors silently — categories may already exist with correct slugs
-    }
-  }
+  // Only keep known slugs
+  const cleanSlugs = selectedSlugs.filter(s => VALID_SLUGS.has(s))
 
-  // Clear existing assignments
+  // Delete existing tag assignments
   const { error: delErr } = await supabase
-    .from('homestay_categories')
+    .from('homestay_tags')
     .delete()
     .eq('homestay_id', homestayId)
 
-  if (delErr) return { error: `Failed to update: ${delErr.message}` }
+  if (delErr) return { error: `Failed to clear tags: ${delErr.message}` }
 
-  // Nothing selected — clearing is all we needed
-  if (selectedSlugs.length === 0) {
+  if (cleanSlugs.length === 0) {
     revalidatePath('/admin/homestays')
     revalidatePath('/explore')
     return { success: true, count: 0 }
   }
 
-  // Fetch the IDs we just ensured exist
-  const { data: cats, error: catErr } = await supabase
-    .from('categories')
+  // Look up tag IDs by slug
+  const { data: tags, error: tagErr } = await supabase
+    .from('tags')
     .select('id, slug')
-    .in('slug', selectedSlugs)
+    .in('slug', cleanSlugs)
 
-  if (catErr) return { error: `Category lookup failed: ${catErr.message}` }
-  if (!cats || cats.length === 0) {
-    return { error: 'Categories not found in database. Contact support.' }
-  }
+  if (tagErr)              return { error: `Tag lookup failed: ${tagErr.message}` }
+  if (!tags?.length)       return { error: 'Tags not found — run migrate_to_tags.sql first.' }
 
-  // Insert new assignments
+  // Insert junction rows
   const { error: insErr } = await supabase
-    .from('homestay_categories')
-    .insert(cats.map((c: any) => ({ homestay_id: homestayId, category_id: c.id })))
+    .from('homestay_tags')
+    .insert(tags.map((t: any) => ({ homestay_id: homestayId, tag_id: t.id })))
 
   if (insErr) return { error: `Save failed: ${insErr.message}` }
 
   revalidatePath('/admin/homestays')
   revalidatePath('/explore')
-  return { success: true, count: cats.length }
+  return { success: true, count: tags.length }
 }

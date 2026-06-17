@@ -13,7 +13,7 @@ export default async function MapPage() {
       id, title, slug, location_district, village_name,
       host_name, is_verified, latitude, longitude,
       calling_window, languages_spoken, cover_image_url,
-      homestay_categories ( categories ( id, name, slug ) )
+      homestay_tags ( tags ( id, name, slug ) )
     `)
     .order('created_at', { ascending: false })
 
@@ -29,8 +29,8 @@ export default async function MapPage() {
     longitude: h.longitude,
     calling_window: h.calling_window,
     languages_spoken: h.languages_spoken ?? [],
-    categories: (h.homestay_categories ?? [])
-      .map((hc: any) => hc.categories)
+    categories: (h.homestay_tags ?? [])
+      .map((ht: any) => ht.tags)
       .filter(Boolean),
     cover_image_url: h.cover_image_url ?? null,
   }))

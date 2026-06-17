@@ -50,65 +50,56 @@ interface Props {
   homestays: Homestay[]
 }
 
-/* ── Category groups matching FilterSidebar ──────────────────── */
-const NATURE_SLUGS = [
-  'bird-watching','waterfalls-nearby','forest-stay','river-side','beach-side',
-  'mountain-view','sunrise-point','sunset-point','farm-stay','mango-orchard',
-  'cashew-farm','fishing-village',
+/* ── Taxonomy data ───────────────────────────────────────────── */
+const INTENT_DATA = [
+  { slug: 'nature_habitat',    name: 'Nature & Habitats'   },
+  { slug: 'rural_immersion',   name: 'Rural Immersion'     },
+  { slug: 'long_stay_retreat', name: 'Long-Stay Retreats'  },
+  { slug: 'transit_pitstop',   name: 'On-the-Move Transit' },
 ]
-const CULTURE_SLUGS = [
-  'konkani-food','local-festivals','folk-culture',
-  'traditional-house','village-lifestyle','agri-immersion','temple-trails',
+const LANDSCAPE_DATA = [
+  { slug: 'env_forest_border',   name: 'Forest Borders & Buffers'        },
+  { slug: 'env_riverside',       name: 'Riverside & Backwaters'          },
+  { slug: 'env_coastal',         name: 'Untouched Coastal Villages'      },
+  { slug: 'env_mountain_valley', name: 'Mountain Passes & High Valleys'  },
+  { slug: 'env_agricultural',    name: 'Active Farm Belts & Plantations' },
+  { slug: 'env_rocky_plateau',   name: 'Plateaus & Rocky Terrains'       },
+  { slug: 'env_sacred_grove',    name: 'Sacred Groves & Hidden Orchards' },
+  { slug: 'env_wetland',         name: 'Lakeside & Wetland Fringes'      },
 ]
-const STYLE_SLUGS = [
-  'solo-friendly','solo-female-friendly','family-friendly','rider-friendly',
-  'backpacker-friendly','group-stay','couple-friendly',
-]
-
-function groupLabel(slug: string) {
-  if (NATURE_SLUGS.includes(slug))  return 'Nature & Adventure'
-  if (CULTURE_SLUGS.includes(slug)) return 'Cultural Experience'
-  if (STYLE_SLUGS.includes(slug))   return 'Travel Style'
-  return 'Other'
-}
-
-/* ── Category panel ──────────────────────────────────────────── */
-/* ── Static category data (matches categories_extended.sql) ─── */
-const CATEGORY_DATA: { slug: string; name: string }[] = [
-  // Nature & Adventure
-  { slug: 'bird-watching',     name: 'Bird Watching'             },
-  { slug: 'waterfalls-nearby', name: 'Waterfalls Nearby'         },
-  { slug: 'forest-stay',       name: 'Forest Stay'               },
-  { slug: 'river-side',        name: 'River Side'                },
-  { slug: 'beach-side',        name: 'Beach Side'                },
-  { slug: 'mountain-view',     name: 'Mountain View'             },
-  { slug: 'sunrise-point',     name: 'Sunrise Point'             },
-  { slug: 'sunset-point',      name: 'Sunset Point'              },
-  { slug: 'farm-stay',         name: 'Farm Stay'                 },
-  { slug: 'mango-orchard',     name: 'Mango Orchard'             },
-  { slug: 'cashew-farm',       name: 'Cashew Farm'               },
-  { slug: 'fishing-village',   name: 'Fishing Village Experience'},
-  // Cultural Experience
-  { slug: 'konkani-food',       name: 'Konkani Food'      },
-  { slug: 'local-festivals',    name: 'Local Festivals'   },
-  { slug: 'folk-culture',       name: 'Folk Culture'      },
-  { slug: 'traditional-house',  name: 'Traditional House' },
-  { slug: 'village-lifestyle',  name: 'Village Lifestyle' },
-  { slug: 'agri-immersion',     name: 'Agri Immersion'    },
-  { slug: 'temple-trails',      name: 'Temple Trails'     },
-  // Travel Style
-  { slug: 'solo-friendly',         name: 'Solo Friendly'        },
-  { slug: 'solo-female-friendly',  name: 'Solo Female Safe'     },
-  { slug: 'family-friendly',       name: 'Family Friendly'      },
-  { slug: 'rider-friendly',        name: 'Rider Friendly'       },
-  { slug: 'backpacker-friendly',   name: 'Backpacker Friendly'  },
-  { slug: 'group-stay',            name: 'Group Stay'           },
-  { slug: 'couple-friendly',       name: 'Couple Friendly'      },
+const PRACTICAL_DATA = [
+  { slug: 'spec_gated_parking',        name: 'Gated Parking'           },
+  { slug: 'spec_basic_toolkit',        name: 'Basic Toolkit Available' },
+  { slug: 'spec_pet_friendly',         name: 'Pet-Friendly Compound'   },
+  { slug: 'spec_wildlife_secure',      name: 'Wildlife-Proof Safety'   },
+  { slug: 'spec_stable_network',       name: 'Stable Network'          },
+  { slug: 'spec_shared_kitchen',       name: 'Shared Kitchen'          },
+  { slug: 'spec_power_backup',         name: 'Power Backup'            },
+  { slug: 'spec_laundry_access',       name: 'Laundry Access'          },
+  { slug: 'spec_native_guide',         name: 'Native Guide Available'  },
+  { slug: 'spec_plastic_free',         name: 'Plastic-Free Stay'       },
+  { slug: 'spec_western_toilet',       name: 'Western-Style Toilet'    },
+  { slug: 'spec_hot_water',            name: 'Hot Water / Geyser'      },
+  { slug: 'spec_no_stairs_access',     name: 'No-Stairs Access'        },
+  { slug: 'spec_quiet_work_setup',     name: 'Quiet Work Setup'        },
+  { slug: 'spec_solo_female_friendly', name: 'Solo-Female Friendly'    },
 ]
 
-const slugToName = Object.fromEntries(CATEGORY_DATA.map(c => [c.slug, c.name]))
+const INTENT_SLUGS_SET   = new Set(INTENT_DATA.map(i => i.slug))
+const LANDSCAPE_SLUGS_SET = new Set(LANDSCAPE_DATA.map(l => l.slug))
+const PRACTICAL_SLUGS_SET = new Set(PRACTICAL_DATA.map(p => p.slug))
 
-function CategoryPanel({
+const ALL_SLUG_NAMES = Object.fromEntries([
+  ...INTENT_DATA,
+  ...LANDSCAPE_DATA,
+  ...PRACTICAL_DATA,
+].map(c => [c.slug, c.name]))
+
+const slugToName = (slug: string) =>
+  ALL_SLUG_NAMES[slug] ?? slug.replace(/-/g, ' ')
+
+/* ── Taxonomy panel (replaces CategoryPanel) ─────────────────── */
+function TaxonomyPanel({
   homestayId,
   initialSlugs,
   onClose,
@@ -119,19 +110,28 @@ function CategoryPanel({
   onClose:      () => void
   onSaved:      () => void
 }) {
-  const [selected, setSelected] = useState<string[]>(initialSlugs)
-  const [saving,   setSaving]   = useState(false)
-  const [saved,    setSaved]    = useState(false)
-  const [error,    setError]    = useState<string | null>(null)
+  const [intentSlug,    setIntentSlug]    = useState<string | null>(
+    initialSlugs.find(s => INTENT_SLUGS_SET.has(s)) ?? null
+  )
+  const [landscapeSlugs, setLandscapeSlugs] = useState<string[]>(
+    initialSlugs.filter(s => LANDSCAPE_SLUGS_SET.has(s))
+  )
+  const [practicalSlugs, setPracticalSlugs] = useState<string[]>(
+    initialSlugs.filter(s => PRACTICAL_SLUGS_SET.has(s))
+  )
+  const [saving, setSaving] = useState(false)
+  const [saved,  setSaved]  = useState(false)
+  const [error,  setError]  = useState<string | null>(null)
 
-  const groups = [
-    { label: 'Nature & Adventure',  slugs: NATURE_SLUGS  },
-    { label: 'Cultural Experience', slugs: CULTURE_SLUGS },
-    { label: 'Travel Style',        slugs: STYLE_SLUGS   },
-  ]
+  function toggleLandscape(slug: string) {
+    setLandscapeSlugs(prev =>
+      prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]
+    )
+    setSaved(false)
+  }
 
-  function toggle(slug: string) {
-    setSelected(prev =>
+  function togglePractical(slug: string) {
+    setPracticalSlugs(prev =>
       prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]
     )
     setSaved(false)
@@ -140,6 +140,11 @@ function CategoryPanel({
   async function handleSave() {
     setSaving(true)
     setError(null)
+    const selected = [
+      ...(intentSlug ? [intentSlug] : []),
+      ...landscapeSlugs,
+      ...practicalSlugs,
+    ]
     const result = await saveCategories(homestayId, selected)
     setSaving(false)
     if (result.error) {
@@ -150,43 +155,95 @@ function CategoryPanel({
     }
   }
 
-  const visibleCats = (slugs: string[]) =>
-    CATEGORY_DATA.filter(c => slugs.includes(c.slug))
+  const totalSelected =
+    (intentSlug ? 1 : 0) + landscapeSlugs.length + practicalSlugs.length
 
   return (
     <div className="col-span-full px-5 py-4 bg-stone-50 border-t border-stone-100">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-stone-500">Assign Categories</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-stone-500">Assign Taxonomy</p>
         <button onClick={onClose} className="text-stone-400 hover:text-stone-600">
           <X size={14} />
         </button>
       </div>
-      <div className="grid sm:grid-cols-3 gap-4 mb-4">
-        {groups.map(group => (
-          <div key={group.label}>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">
-              {group.label}
-            </p>
-            <div className="space-y-1.5">
-              {visibleCats(group.slugs).map(cat => (
-                <label
-                  key={cat.slug}
-                  className="flex items-center gap-2 cursor-pointer group/cat"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(cat.slug)}
-                    onChange={() => toggle(cat.slug)}
-                    className="w-3.5 h-3.5 rounded border-stone-300 text-brand-600 focus:ring-brand-500 accent-brand-600"
-                  />
-                  <span className="text-xs text-stone-600 group-hover/cat:text-stone-900 transition-colors">
-                    {cat.name}
-                  </span>
-                </label>
-              ))}
-            </div>
+
+      <div className="grid sm:grid-cols-3 gap-6 mb-4">
+        {/* Layer 1: Travel Intent (single select) */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">
+            Layer 1 · Travel Intent
+          </p>
+          <div className="space-y-1.5">
+            {INTENT_DATA.map(intent => (
+              <label key={intent.slug} className="flex items-center gap-2 cursor-pointer group/r">
+                <input
+                  type="radio"
+                  name={`intent-${homestayId}`}
+                  value={intent.slug}
+                  checked={intentSlug === intent.slug}
+                  onChange={() => { setIntentSlug(intent.slug); setSaved(false) }}
+                  className="w-3.5 h-3.5 border-stone-300 accent-brand-600 cursor-pointer"
+                />
+                <span className="text-xs text-stone-600 group-hover/r:text-stone-900 transition-colors">
+                  {intent.name}
+                </span>
+              </label>
+            ))}
+            {intentSlug && (
+              <button
+                type="button"
+                onClick={() => { setIntentSlug(null); setSaved(false) }}
+                className="text-[10px] text-stone-400 hover:text-rose-500 transition-colors mt-0.5"
+              >
+                Clear intent
+              </button>
+            )}
           </div>
-        ))}
+        </div>
+
+        {/* Layer 2: Landscape (multi-select) */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">
+            Layer 2 · Landscape
+          </p>
+          <div className="space-y-1.5">
+            {LANDSCAPE_DATA.map(l => (
+              <label key={l.slug} className="flex items-center gap-2 cursor-pointer group/c">
+                <input
+                  type="checkbox"
+                  checked={landscapeSlugs.includes(l.slug)}
+                  onChange={() => toggleLandscape(l.slug)}
+                  className="w-3.5 h-3.5 rounded border-stone-300 accent-brand-600 cursor-pointer"
+                />
+                <span className="text-xs text-stone-600 group-hover/c:text-stone-900 transition-colors">
+                  {l.name}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Layer 3: Practical Requirements (multi-select) */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">
+            Layer 3 · Practical Requirements
+          </p>
+          <div className="space-y-1.5">
+            {PRACTICAL_DATA.map(p => (
+              <label key={p.slug} className="flex items-center gap-2 cursor-pointer group/p">
+                <input
+                  type="checkbox"
+                  checked={practicalSlugs.includes(p.slug)}
+                  onChange={() => togglePractical(p.slug)}
+                  className="w-3.5 h-3.5 rounded border-stone-300 accent-brand-600 cursor-pointer"
+                />
+                <span className="text-xs text-stone-600 group-hover/p:text-stone-900 transition-colors">
+                  {p.name}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
@@ -200,9 +257,9 @@ function CategoryPanel({
           ) : saved ? (
             <Check size={12} />
           ) : null}
-          {saved ? 'Saved!' : saving ? 'Saving…' : 'Save Categories'}
+          {saved ? 'Saved!' : saving ? 'Saving…' : 'Save Taxonomy'}
         </button>
-        <span className="text-xs text-stone-400">{selected.length} selected</span>
+        <span className="text-xs text-stone-400">{totalSelected} selected</span>
         {error && <span className="text-xs text-red-500">{error}</span>}
       </div>
     </div>
@@ -314,7 +371,7 @@ export default function HomestaysClient({ homestays }: Props) {
                         <div className="flex flex-wrap gap-1 mt-1">
                           {h.category_slugs.slice(0, 3).map(slug => (
                             <span key={slug} className="text-[9px] bg-brand-50 text-brand-700 px-1.5 py-0.5 rounded-full font-medium border border-brand-100">
-                              {slugToName[slug] ?? slug.replace(/-/g, ' ')}
+                              {slugToName(slug)}
                             </span>
                           ))}
                           {h.category_slugs.length > 3 && (
@@ -379,7 +436,7 @@ export default function HomestaysClient({ homestays }: Props) {
                         {/* Categories */}
                         <button
                           onClick={() => setExpandedId(expandedId === h.id ? null : h.id)}
-                          title={h.category_slugs.length > 0 ? `Edit ${h.category_slugs.length} categories` : 'Assign Categories'}
+                          title={h.category_slugs.length > 0 ? `Edit ${h.category_slugs.length} tags` : 'Assign Taxonomy'}
                           className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
                             expandedId === h.id
                               ? 'bg-brand-100 text-brand-600'
@@ -423,9 +480,9 @@ export default function HomestaysClient({ homestays }: Props) {
                   </div>
                 </div>
 
-                {/* Category panel */}
+                {/* Taxonomy panel */}
                 {expandedId === h.id && (
-                  <CategoryPanel
+                  <TaxonomyPanel
                     homestayId={h.id}
                     initialSlugs={h.category_slugs}
                     onClose={() => setExpandedId(null)}

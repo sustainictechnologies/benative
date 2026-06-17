@@ -93,7 +93,7 @@ export default async function HomePage() {
     .select(`
       id, title, slug, village_name, location_district, is_verified,
       cover_image_url,
-      homestay_categories ( categories ( name, slug ) )
+      homestay_tags ( tags ( name, slug ) )
     `)
     .limit(6)
 
@@ -104,7 +104,7 @@ export default async function HomePage() {
     village_name: h.village_name,
     location_district: h.location_district,
     is_verified: h.is_verified,
-    categories: (h.homestay_categories ?? []).map((hc: any) => hc.categories).filter(Boolean),
+    categories: (h.homestay_tags ?? []).map((ht: any) => ht.tags).filter(Boolean),
     cover_image_url: h.cover_image_url ?? null,
   }))
 
