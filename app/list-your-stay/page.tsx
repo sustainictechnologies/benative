@@ -25,12 +25,12 @@ export default function ListYourStayPage() {
             <Home size={12} /> For Host Families
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold text-stone-900 leading-tight mb-4">
-            Share your home.<br />
-            <span className="text-brand-600">Welcome the world.</span>
+            Your home has a story<br />
+            Let the right travelers <br />
+            <span className="text-brand-600"> discover it.</span>
           </h1>
           <p className="text-lg text-stone-500 leading-relaxed max-w-xl mx-auto">
-            Join India's slow-travel community. List your homestay on BeNative and connect directly with
-            conscious travelers — at zero cost to you.
+            Join India's slow-travel community and welcome guests who value authenticity, local culture, and meaningful experiences.
           </p>
         </div>
       </section>
@@ -40,10 +40,12 @@ export default function ListYourStayPage() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {perks.map(({ icon: Icon, title, body }) => (
             <div key={title} className="bg-white rounded-2xl p-5 border border-stone-100 shadow-card">
-              <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center mb-3">
-                <Icon size={18} className="text-brand-600" />
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
+                  <Icon size={18} className="text-brand-600" />
+                </div>
+                <h3 className="font-semibold text-stone-900 text-sm">{title}</h3>
               </div>
-              <h3 className="font-semibold text-stone-900 text-sm mb-1">{title}</h3>
               <p className="text-xs text-stone-500 leading-relaxed">{body}</p>
             </div>
           ))}

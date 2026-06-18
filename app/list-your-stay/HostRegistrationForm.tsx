@@ -195,7 +195,7 @@ export default function HostRegistrationForm() {
       </button>
 
       <p className="text-center text-xs text-stone-400">
-        We'll review your request and contact you within 48 hours. No fees. No contracts.
+        Once reviewed, we'll contact you.
       </p>
     </form>
   )
