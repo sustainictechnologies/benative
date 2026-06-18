@@ -40,10 +40,10 @@ export default function PlaceCard({ homestay: h, isHighlighted, onMouseEnter, on
       </div>
 
       {/* Name + location */}
-      <div className="px-3 py-2.5">
-        <p className="font-serif text-[14px] text-stone-900 leading-snug line-clamp-1">{h.title}</p>
-        <p className="flex items-center gap-1 text-[11px] text-stone-400 mt-0.5 truncate">
-          <MapPin size={10} className="shrink-0" />
+      <div className="px-2 py-2">
+        <p className="font-serif text-[12px] text-stone-900 leading-snug line-clamp-1">{h.title}</p>
+        <p className="flex items-center gap-0.5 text-[10px] text-stone-400 mt-0.5 truncate">
+          <MapPin size={9} className="shrink-0" />
           {h.village_name}, {h.location_district}
         </p>
       </div>

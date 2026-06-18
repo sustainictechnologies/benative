@@ -81,19 +81,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Contact */}
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 py-20 text-center">
-        <h2 className="text-2xl font-bold text-stone-900 mb-4">Get in touch</h2>
-        <p className="text-stone-500 mb-2">
-          Want to list your homestay, report an issue, or just say hello?
-        </p>
-        <a
-          href="mailto:sustainic.technologies@gmail.com"
-          className="text-brand-600 hover:text-brand-800 font-medium transition-colors"
-        >
-          sustainic.technologies@gmail.com
-        </a>
-      </section>
     </>
   )
 }

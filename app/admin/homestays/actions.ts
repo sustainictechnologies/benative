@@ -35,7 +35,7 @@ export async function saveCategories(homestayId: string, selectedSlugs: string[]
 
   if (cleanSlugs.length === 0) {
     revalidatePath('/admin/homestays')
-    revalidatePath('/explore')
+    revalidatePath('/discover')
     return { success: true, count: 0 }
   }
 
@@ -56,6 +56,6 @@ export async function saveCategories(homestayId: string, selectedSlugs: string[]
   if (insErr) return { error: `Save failed: ${insErr.message}` }
 
   revalidatePath('/admin/homestays')
-  revalidatePath('/explore')
+  revalidatePath('/discover')
   return { success: true, count: tags.length }
 }

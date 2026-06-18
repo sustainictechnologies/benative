@@ -126,7 +126,8 @@ export default async function HomePage() {
           <p className="text-stone-800 text-sm font-semibold max-w-[480px]">
             Travel with curiosity. Leave with perspective.
           </p>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-12">
+          {/* Desktop: pill badges */}
+          <div className="hidden sm:flex flex-row items-center gap-3 mt-12">
             <span className="inline-flex items-center gap-2 bg-white border border-stone-200 rounded-full px-4 py-2 text-sm font-medium text-stone-600">
               <Home size={14} className="text-brand-600" /> Homestay
             </span>
@@ -136,6 +137,31 @@ export default async function HomePage() {
             <span className="inline-flex items-center gap-2 bg-white border border-stone-200 rounded-full px-4 py-2 text-sm font-medium text-stone-600">
               <Compass size={14} className="text-brand-600" /> Native Guides
             </span>
+          </div>
+
+          {/* Mobile: editorial horizontal list */}
+          <div className="sm:hidden mt-10">
+            <h2 className="text-brand-600 font-black text-lg mb-4">The BeNative Experience</h2>
+            <div className="divide-y divide-stone-100">
+              {[
+                { icon: Home, title: 'Homestays', desc: 'Stay with local families and experience everyday life.', href: '/discover' },
+                { icon: UtensilsCrossed, title: 'Eat Local', desc: 'Discover regional food traditions and local kitchens.', href: '/discover' },
+                { icon: Compass, title: 'Native Guides', desc: 'Explore with people who know the landscape best.', href: '/discover' },
+              ].map(({ icon: Icon, title, desc, href }) => (
+                <div key={title} className="flex items-center gap-4 py-4">
+                  <div className="w-14 h-14 rounded-2xl bg-brand-50 flex items-center justify-center shrink-0">
+                    <Icon size={26} className="text-brand-600" strokeWidth={1.5} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-stone-900 text-sm">{title}</p>
+                    <p className="text-stone-500 text-xs leading-snug mt-0.5">{desc}</p>
+                  </div>
+                  <Link href="/discover" className="text-brand-600 text-sm font-semibold shrink-0 flex items-center gap-0.5">
+                    Discover <ArrowRight size={13} />
+                  </Link>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -163,7 +189,7 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-black text-stone-900 tracking-tight">Explore Homestays</h2>
-          <Link href="/explore" className="text-sm font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+          <Link href="/discover" className="text-sm font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
             View all <ArrowRight size={14} />
           </Link>
         </div>
@@ -171,7 +197,7 @@ export default async function HomePage() {
         {categories.map(({ icon: Icon, label, desc, bg, slug }) => (
           <Link
             key={label}
-            href={`/explore?category=${slug}`}
+            href={`/discover?category=${slug}`}
             className="group relative rounded-2xl overflow-hidden aspect-[4/3]"
           >
             <Image
@@ -238,12 +264,12 @@ export default async function HomePage() {
             </h2>
             <p className="text-stone-500">Where hospitality feels like home</p>
           </div>
-          <Link href="/explore" className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-800 transition-colors">
+          <Link href="/discover" className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-800 transition-colors">
             View all stays <ArrowRight size={15} />
           </Link>
         </div>
 
-        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {homestays.length > 0 ? homestays.map((h) => (
             <Link
               key={h.id}

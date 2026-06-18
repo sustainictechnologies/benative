@@ -5,30 +5,42 @@ import { SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react'
 import type { PracticalFilters } from './types'
 
 const PRACTICAL_ITEMS = [
-  { slug: 'spec_stable_network',      name: 'Stable Network'          },
-  { slug: 'spec_gated_parking',       name: 'Gated Parking'           },
-  { slug: 'spec_basic_toolkit',       name: 'Basic Toolkit'           },
-  { slug: 'spec_pet_friendly',        name: 'Pet-Friendly'            },
-  { slug: 'spec_wildlife_secure',     name: 'Wildlife-Proof Safety'   },
-  { slug: 'spec_shared_kitchen',      name: 'Shared Kitchen'          },
-  { slug: 'spec_power_backup',        name: 'Power Backup'            },
-  { slug: 'spec_laundry_access',      name: 'Laundry Access'          },
-  { slug: 'spec_native_guide',        name: 'Native Guide'            },
-  { slug: 'spec_plastic_free',        name: 'Plastic-Free Stay'       },
-  { slug: 'spec_western_toilet',      name: 'Western Toilet'          },
-  { slug: 'spec_hot_water',           name: 'Hot Water / Geyser'      },
-  { slug: 'spec_no_stairs_access',    name: 'No-Stairs Access'        },
-  { slug: 'spec_quiet_work_setup',    name: 'Quiet Work Setup'        },
-  { slug: 'spec_solo_female_friendly',name: 'Solo-Female Friendly'    },
+  { slug: 'spec_stable_network',       name: 'Stable Network'        },
+  { slug: 'spec_gated_parking',        name: 'Gated Parking'         },
+  { slug: 'spec_basic_toolkit',        name: 'Basic Toolkit'         },
+  { slug: 'spec_pet_friendly',         name: 'Pet-Friendly'          },
+  { slug: 'spec_wildlife_secure',      name: 'Wildlife-Proof Safety' },
+  { slug: 'spec_shared_kitchen',       name: 'Shared Kitchen'        },
+  { slug: 'spec_power_backup',         name: 'Power Backup'          },
+  { slug: 'spec_laundry_access',       name: 'Laundry Access'        },
+  { slug: 'spec_native_guide',         name: 'Native Guide'          },
+  { slug: 'spec_plastic_free',         name: 'Plastic-Free Stay'     },
+  { slug: 'spec_western_toilet',       name: 'Western Toilet'        },
+  { slug: 'spec_hot_water',            name: 'Hot Water / Geyser'    },
+  { slug: 'spec_no_stairs_access',     name: 'No-Stairs Access'      },
+  { slug: 'spec_quiet_work_setup',     name: 'Quiet Work Setup'      },
+  { slug: 'spec_solo_female_friendly', name: 'Solo-Female Friendly'  },
 ]
 
 interface Props {
   filters: PracticalFilters
   availableLanguages: string[]
   onChange: (filters: PracticalFilters) => void
+  filteredCount: number
+  locationLabel?: string
+  totalActiveFilters?: number
+  onReset?: () => void
 }
 
-export default function PracticalFiltersDrawer({ filters, availableLanguages, onChange }: Props) {
+export default function PracticalFiltersDrawer({
+  filters,
+  availableLanguages,
+  onChange,
+  filteredCount,
+  locationLabel,
+  totalActiveFilters,
+  onReset,
+}: Props) {
   const [isOpen, setIsOpen] = useState(false)
 
   const activeCount =
@@ -50,59 +62,58 @@ export default function PracticalFiltersDrawer({ filters, availableLanguages, on
     onChange({ ...filters, practicalSlugs: next })
   }
 
-  const summaryParts = [
-    filters.verifiedOnly ? 'Verified only' : null,
-    ...filters.practicalSlugs.map(
-      (s) => PRACTICAL_ITEMS.find((p) => p.slug === s)?.name ?? s
-    ),
-    ...filters.languages,
-  ].filter(Boolean) as string[]
-
   return (
-    <div className="border-b border-stone-100">
-      <div className="flex items-center gap-4 px-4 sm:px-6 py-3">
-        <div className="hidden sm:block shrink-0">
-          <p className="text-[10px] tracking-[0.16em] uppercase text-stone-400 font-medium leading-none">
-            Practical Requirements →
+    <div className="bg-white">
+      {/* Summary bar */}
+      <div className="max-w-7xl mx-auto flex items-center gap-4 px-4 sm:px-6 py-2.5">
+        {/* Count + location */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-stone-900 leading-none">
+            {filteredCount} {filteredCount === 1 ? 'stay' : 'stays'} found
           </p>
-          <p className="text-[11px] text-stone-400 mt-0.5 leading-none">Tell us what matters to you</p>
+          {locationLabel && (
+            <p className="text-xs text-stone-400 mt-0.5 leading-none truncate">
+              Showing stays in {locationLabel}
+            </p>
+          )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsOpen((o) => !o)}
-          className="flex-1 flex items-center gap-2 border border-stone-200 px-3 py-2 text-left hover:border-stone-300 transition-colors duration-200"
-        >
-          <SlidersHorizontal size={14} className="text-stone-400 shrink-0" />
-          {activeCount > 0 ? (
-            <span className="text-sm text-stone-600 truncate">
-              {summaryParts.join(', ')}
-            </span>
-          ) : (
-            <span className="text-sm text-stone-400">
-              Filter by requirements, languages…
-            </span>
-          )}
-        </button>
+        {/* Reset filters */}
+        {(totalActiveFilters ?? activeCount) > 0 && onReset && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="text-xs text-brand-600 font-medium hover:text-brand-800 transition-colors shrink-0"
+          >
+            Reset filters
+          </button>
+        )}
 
+        {/* Filters button */}
         <button
           type="button"
           onClick={() => setIsOpen((o) => !o)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 border border-stone-200 text-sm text-stone-600 hover:text-brand-700 hover:border-brand-400 transition-colors duration-200 shrink-0 whitespace-nowrap"
+          className={`inline-flex items-center gap-1.5 text-sm font-medium border rounded-full px-3.5 py-1.5 transition-colors shrink-0 ${
+            activeCount > 0 || isOpen
+              ? 'bg-brand-700 border-brand-700 text-white'
+              : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300'
+          }`}
         >
-          Show Filters
-          {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          {!isOpen && <SlidersHorizontal size={13} />}
+          {isOpen ? 'Done' : 'Filters'}
           {activeCount > 0 && (
-            <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-brand-700 text-white text-[10px] font-medium">
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-white text-brand-700 text-[10px] font-bold">
               {activeCount}
             </span>
           )}
+          {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
       </div>
 
+      {/* Expanded filter panel */}
       {isOpen && (
-        <div className="px-4 sm:px-6 pb-4 flex flex-col gap-4">
-          {/* Practical requirements — 3-column grid */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-4 flex flex-col gap-4 border-t border-stone-100 pt-3">
+          {/* Practical requirements */}
           <div>
             <p className="text-[10px] tracking-[0.15em] uppercase text-stone-400 mb-2">Requirements</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">

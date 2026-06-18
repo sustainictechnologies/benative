@@ -1,4 +1,4 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
@@ -6,6 +6,7 @@ import MenuDropdown from '@/components/MenuDropdown'
 import NavLinks from '@/components/NavLinks'
 import UserButton from '@/components/UserButton'
 import BeNativeLogo from '@/components/BeNativeLogo'
+import PageViewTracker from '@/components/PageViewTracker'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
 
+        <PageViewTracker />
         <main>{children}</main>
 
         <footer className="bg-stone-900 text-stone-400">
@@ -63,7 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* Nav links */}
             <div>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/explore" className="font-semibold text-white hover:text-stone-300 transition-colors">Discover</Link></li>
+                <li><Link href="/discover" className="font-semibold text-white hover:text-stone-300 transition-colors">Discover</Link></li>
                 <li><Link href="/map" className="font-semibold text-white hover:text-stone-300 transition-colors">Map</Link></li>
                 <li><Link href="/about" className="font-semibold text-white hover:text-stone-300 transition-colors">About Us</Link></li>
                 <li><Link href="/blog" className="font-semibold text-white hover:text-stone-300 transition-colors">Blog</Link></li>
