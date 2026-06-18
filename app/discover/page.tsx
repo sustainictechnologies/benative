@@ -4,7 +4,7 @@ import type { HomestayWithCategories } from '@/types/blocks.types'
 
 export const revalidate = 60
 
-export default async function DiscoverPage() {
+export default async function DiscoverPage({ searchParams }: { searchParams: { intent?: string } }) {
   const supabase = createClient()
 
   const { data: rawHomestays } = await supabase
@@ -35,5 +35,5 @@ export default async function DiscoverPage() {
     cover_image_url: h.cover_image_url ?? null,
   }))
 
-  return <DiscoverClient homestays={homestays} />
+  return <DiscoverClient homestays={homestays} initialIntentSlug={searchParams.intent} />
 }

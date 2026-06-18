@@ -35,31 +35,31 @@ const valueCards = [
 const categories = [
   {
     icon: Bird,
-    label: 'Bird Watching',
+    label: 'Nature & Habitats',
     desc: 'For those who find peace in every flutter.',
     bg: '/bird_waching.jpg',
-    slug: 'bird-watching',
+    slug: 'nature_habitat',
   },
   {
     icon: Bike,
-    label: 'Rider Friendly',
+    label: 'On-the-Move Transit',
     desc: 'Built for explorers who ride free.',
     bg: '/Rider_Friendly.jpeg',
-    slug: 'rider-friendly',
+    slug: 'transit_pitstop',
   },
   {
     icon: ShieldCheck,
-    label: 'Solo Female Safe',
+    label: 'Long-Stay Retreats',
     desc: 'Safe, respectful and welcoming stays.',
     bg: '/Solo_Female_Safe.jpeg',
-    slug: 'solo-female-friendly',
+    slug: 'long_stay_retreat',
   },
   {
     icon: Leaf,
-    label: 'Agri Immersion',
+    label: 'Rural Immersion',
     desc: 'Live the village life. Get your hands dirty.',
     bg: '/Agri_Immersion.jpeg',
-    slug: 'agri-immersion',
+    slug: 'rural_immersion',
   },
 ]
 
@@ -156,9 +156,7 @@ export default async function HomePage() {
                     <p className="font-bold text-stone-900 text-sm">{title}</p>
                     <p className="text-stone-500 text-xs leading-snug mt-0.5">{desc}</p>
                   </div>
-                  <Link href="/discover" className="text-brand-600 text-sm font-semibold shrink-0 flex items-center gap-0.5">
-                    Discover <ArrowRight size={13} />
-                  </Link>
+                  <span className="text-stone-400 text-xs shrink-0">Coming soon...</span>
                 </div>
               ))}
             </div>
@@ -197,7 +195,7 @@ export default async function HomePage() {
         {categories.map(({ icon: Icon, label, desc, bg, slug }) => (
           <Link
             key={label}
-            href={`/discover?category=${slug}`}
+            href={`/discover?intent=${slug}`}
             className="group relative rounded-2xl overflow-hidden aspect-[4/3]"
           >
             <Image
