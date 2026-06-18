@@ -2,10 +2,10 @@
 
 // @ts-ignore
 import 'leaflet/dist/leaflet.css'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import type { HomestayWithCategories } from '@/types/blocks.types'
 
 const INDIA_CENTER: [number, number] = [20.5, 78.5]
@@ -28,7 +28,6 @@ function makeDotIcon(highlighted: boolean) {
   })
 }
 
-// Flies to bounds whenever the filtered homestay list changes
 function BoundsFitter({ homestays }: { homestays: HomestayWithCategories[] }) {
   const map = useMap()
 
@@ -45,14 +44,32 @@ function BoundsFitter({ homestays }: { homestays: HomestayWithCategories[] }) {
   return null
 }
 
+function BoundsReporter({ onBoundsChange }: { onBoundsChange: (b: L.LatLngBounds) => void }) {
+  const map = useMapEvents({
+    moveend: () => onBoundsChange(map.getBounds()),
+    zoomend: () => onBoundsChange(map.getBounds()),
+    load:    () => onBoundsChange(map.getBounds()),
+  })
+
+  useEffect(() => {
+    onBoundsChange(map.getBounds())
+  }, [map, onBoundsChange])
+
+  return null
+}
+
 interface Props {
   homestays: HomestayWithCategories[]
   highlightedId?: string | null
   onMarkerClick?: (id: string) => void
+  onBoundsChange?: (bounds: L.LatLngBounds) => void
 }
 
-export default function DiscoverMap({ homestays, highlightedId, onMarkerClick }: Props) {
-  const valid = homestays.filter((h) => h.latitude != null && h.longitude != null)
+export default function DiscoverMap({ homestays, highlightedId, onMarkerClick, onBoundsChange }: Props) {
+  const valid = useMemo(
+    () => homestays.filter((h) => h.latitude != null && h.longitude != null),
+    [homestays]
+  )
 
   return (
     <MapContainer
@@ -68,6 +85,7 @@ export default function DiscoverMap({ homestays, highlightedId, onMarkerClick }:
       />
 
       <BoundsFitter homestays={valid} />
+      {onBoundsChange && <BoundsReporter onBoundsChange={onBoundsChange} />}
 
       {valid.map((h) => (
         <Marker

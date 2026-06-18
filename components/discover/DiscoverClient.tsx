@@ -1,7 +1,8 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
+import type L from 'leaflet'
 import { SlidersHorizontal, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import TravelIntentFilter from './TravelIntentFilter'
 import LandscapeFilterRail from './LandscapeFilterRail'
@@ -41,14 +42,22 @@ const DiscoverMap = dynamic(() => import('./DiscoverMap'), {
 
 interface Props {
   homestays: HomestayWithCategories[]
+  initialIntentSlug?: string
 }
 
-export default function DiscoverClient({ homestays }: Props) {
-  const [selectedIntent, setSelectedIntent]       = useState<TravelIntent | null>(null)
+export default function DiscoverClient({ homestays, initialIntentSlug }: Props) {
+  const [selectedIntent, setSelectedIntent] = useState<TravelIntent | null>(
+    () => TRAVEL_INTENTS.find((i) => i.slug === initialIntentSlug) ?? null
+  )
   const [selectedLandscapes, setSelectedLandscapes] = useState<Landscape[]>([])
   const [practicalFilters, setPracticalFilters]   = useState<PracticalFilters>(EMPTY_PRACTICAL_FILTERS)
   const [highlightedId, setHighlightedId]         = useState<string | null>(null)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [mapBounds, setMapBounds]                 = useState<L.LatLngBounds | null>(null)
+
+  const handleBoundsChange = useCallback((bounds: L.LatLngBounds) => {
+    setMapBounds(bounds)
+  }, [])
 
   function toggleLandscape(landscape: Landscape) {
     setSelectedLandscapes((prev) =>
@@ -101,6 +110,13 @@ export default function DiscoverClient({ homestays }: Props) {
     return top ? `${top[0]} district` : undefined
   }, [filtered])
 
+  const visibleHomestays = useMemo(() => {
+    if (!mapBounds) return filtered
+    return filtered.filter(
+      (h) => h.latitude != null && h.longitude != null && mapBounds.contains([h.latitude, h.longitude])
+    )
+  }, [filtered, mapBounds])
+
   const totalActiveFilters =
     (selectedIntent ? 1 : 0) +
     selectedLandscapes.length +
@@ -131,7 +147,7 @@ export default function DiscoverClient({ homestays }: Props) {
         <div className="flex items-center gap-4 px-4 py-2.5 border-b border-stone-100">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-stone-900 leading-none">
-              {filtered.length} {filtered.length === 1 ? 'stay' : 'stays'} found
+              {visibleHomestays.length} {visibleHomestays.length === 1 ? 'stay' : 'stays'} found
             </p>
             {locationLabel && (
               <p className="text-xs text-stone-400 mt-0.5 leading-none truncate">
@@ -288,7 +304,7 @@ export default function DiscoverClient({ homestays }: Props) {
                 filters={practicalFilters}
                 availableLanguages={availableLanguages}
                 onChange={setPracticalFilters}
-                filteredCount={filtered.length}
+                filteredCount={visibleHomestays.length}
                 locationLabel={locationLabel}
                 totalActiveFilters={totalActiveFilters}
                 onReset={() => {
@@ -300,7 +316,7 @@ export default function DiscoverClient({ homestays }: Props) {
             </div>
             <div className="md:flex-1 md:overflow-y-auto">
               <PlaceGrid
-                homestays={filtered}
+                homestays={visibleHomestays}
                 highlightedId={highlightedId}
                 onHover={setHighlightedId}
               />
@@ -314,6 +330,7 @@ export default function DiscoverClient({ homestays }: Props) {
                 homestays={filtered}
                 highlightedId={highlightedId}
                 onMarkerClick={setHighlightedId}
+                onBoundsChange={handleBoundsChange}
               />
             </div>
           </div>
