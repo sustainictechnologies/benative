@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { CheckCircle, Loader2, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { sendListingEmails } from './actions'
 
 const STAY_TYPES = [
   'Room in family home',
@@ -56,7 +57,7 @@ export default function HostRegistrationForm() {
       .insert({
         host_name:   form.host_name,
         phone:       form.phone,
-        email:       form.email || null,
+        email:       form.email,
         village:     form.village,
         district:    form.district,
         state:       form.state,
@@ -66,10 +67,18 @@ export default function HostRegistrationForm() {
       })
       // no .select() — anon role can insert but not read back (RLS)
 
+    if (dbError) {
+      console.error('host_applications insert error:', dbError)
+      setLoading(false)
+      setError('Something went wrong. Please try again or email us directly at sustainic.technologies@gmail.com')
+      return
+    }
+
+    const emailResult = await sendListingEmails(form)
     setLoading(false)
 
-    if (dbError) {
-      setError('Something went wrong. Please try again or email us directly at sustainic.technologies@gmail.com')
+    if (emailResult?.error) {
+      setError(emailResult.error)
       return
     }
 
@@ -113,8 +122,8 @@ export default function HostRegistrationForm() {
 
       {/* Email */}
       <div>
-        <label className={labelCls}>Email (optional)</label>
-        <input className={inputCls} placeholder="your@email.com" type="email" value={form.email}
+        <label className={labelCls}>Email *</label>
+        <input required className={inputCls} placeholder="your@email.com" type="email" value={form.email}
           onChange={(e) => set('email', e.target.value)} />
       </div>
 

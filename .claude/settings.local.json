@@ -3,7 +3,8 @@
     "allow": [
       "Bash(Get-ChildItem -Path \"d:\\\\HomeStay\\\\home_stay_web\" -Force)",
       "Bash(Select-Object Name, PSIsContainer)",
-      "Bash(Format-Table -AutoSize)"
+      "Bash(Format-Table -AutoSize)",
+      "Bash(grep -E \"\\\\.tsx$\")"
     ]
   }
 }

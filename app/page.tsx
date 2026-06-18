@@ -198,10 +198,10 @@ export default async function HomePage() {
 
       {/* ── Trust Metrics ─────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 my-6">
-        <div className="bg-brand-100 rounded-3xl px-8 py-12 text-center">
+        <div className="bg-brand-100 rounded-3xl px-8 py-6 text-center">
           <div>
             <h2 className="text-2xl font-black text-brand-700 tracking-tight mb-2">Why travelers choose BeNative</h2>
-            <div className="w-10 h-[3px] bg-brand-400 rounded-full mx-auto mb-10" />
+            <div className="w-10 h-[3px] bg-brand-400 rounded-full mx-auto mb-5" />
             <div className="relative grid grid-cols-2 lg:grid-cols-4">
               {/* Mobile 2×2: centre cross */}
               <div className="lg:hidden absolute left-1/2 top-[10%] bottom-[10%] w-px bg-brand-200 -translate-x-px pointer-events-none" />
@@ -307,7 +307,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── Values strip ─────────────────────────────────────── */}
-      <section className="border-t border-stone-100 bg-stone-50">
+      <section className="max-w-7xl mx-auto border-t border-stone-100 bg-stone-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {values.map(({ icon: Icon, label, sub }) => (
             <div key={label} className="flex items-start gap-4">
