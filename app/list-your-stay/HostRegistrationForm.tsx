@@ -65,7 +65,6 @@ export default function HostRegistrationForm() {
         rooms:       parseInt(form.rooms),
         description: form.description,
       })
-      // no .select() — anon role can insert but not read back (RLS)
 
     if (dbError) {
       console.error('host_applications insert error:', dbError)

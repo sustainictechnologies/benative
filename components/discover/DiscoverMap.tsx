@@ -2,9 +2,8 @@
 
 // @ts-ignore
 import 'leaflet/dist/leaflet.css'
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
-import Link from 'next/link'
 import { useEffect, useMemo } from 'react'
 import type { HomestayWithCategories } from '@/types/blocks.types'
 
@@ -93,27 +92,7 @@ export default function DiscoverMap({ homestays, highlightedId, onMarkerClick, o
           position={[h.latitude, h.longitude]}
           icon={makeDotIcon(highlightedId === h.id)}
           eventHandlers={{ click: () => onMarkerClick?.(h.id) }}
-        >
-          <Popup maxWidth={200}>
-            <div className="min-w-[160px] py-1">
-              <p className="font-semibold text-sm text-stone-900 leading-tight">{h.title}</p>
-              <p className="text-[11px] text-stone-500 mt-0.5">
-                {h.village_name}, {h.location_district}
-              </p>
-              {h.categories.length > 0 && (
-                <p className="text-[11px] text-stone-400 mt-1">
-                  {h.categories.slice(0, 2).map((c) => c.name).join(' · ')}
-                </p>
-              )}
-              <Link
-                href={`/homestays/${h.slug}`}
-                className="inline-block mt-2 text-xs font-medium text-brand-600 hover:text-brand-800 transition-colors"
-              >
-                View homestay →
-              </Link>
-            </div>
-          </Popup>
-        </Marker>
+        />
       ))}
     </MapContainer>
   )
