@@ -11,14 +11,31 @@ interface Props {
   homestays: HomestayWithCategories[]
   highlightedId?: string | null
   onHover?: (id: string | null) => void
+  isLoading?: boolean
 }
 
-export default function PlaceGrid({ homestays, highlightedId, onHover }: Props) {
+export default function PlaceGrid({ homestays, highlightedId, onHover, isLoading }: Props) {
   const [page, setPage] = useState(0)
   const totalPages = Math.ceil(homestays.length / PAGE_SIZE)
   const visible = homestays.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   useEffect(() => { setPage(0) }, [homestays.length])
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="flex flex-col bg-white border border-stone-100 rounded-xl overflow-hidden animate-pulse">
+            <div className="aspect-[4/3] bg-stone-100" />
+            <div className="px-2 py-2 space-y-1.5">
+              <div className="h-3 bg-stone-100 rounded w-3/4" />
+              <div className="h-2.5 bg-stone-100 rounded w-1/2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col">

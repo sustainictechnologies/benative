@@ -1,8 +1,10 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import type L from 'leaflet'
+
+interface MapBounds { south: number; north: number; west: number; east: number }
 import { SlidersHorizontal, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import TravelIntentFilter from './TravelIntentFilter'
 import LandscapeFilterRail from './LandscapeFilterRail'
@@ -12,6 +14,7 @@ import { SketchIcon } from './icons'
 import { TRAVEL_INTENTS, LANDSCAPES } from './mockData'
 import { EMPTY_PRACTICAL_FILTERS, type TravelIntent, type Landscape, type PracticalFilters } from './types'
 import type { HomestayWithCategories } from '@/types/blocks.types'
+import { createClient } from '@/lib/supabase/client'
 
 const PRACTICAL_ITEMS = [
   { slug: 'spec_stable_network',       name: 'Stable Network'        },
@@ -31,6 +34,9 @@ const PRACTICAL_ITEMS = [
   { slug: 'spec_solo_female_friendly', name: 'Solo-Female Friendly'  },
 ]
 
+// India's full bounding box — used before the map reports its actual bounds
+const INDIA_BOUNDS = { south: 8.0, north: 37.5, west: 68.0, east: 97.5 }
+
 const DiscoverMap = dynamic(() => import('./DiscoverMap'), {
   ssr: false,
   loading: () => (
@@ -41,22 +47,48 @@ const DiscoverMap = dynamic(() => import('./DiscoverMap'), {
 })
 
 interface Props {
-  homestays: HomestayWithCategories[]
   initialIntentSlug?: string
 }
 
-export default function DiscoverClient({ homestays, initialIntentSlug }: Props) {
-  const [selectedIntent, setSelectedIntent] = useState<TravelIntent | null>(
+export default function DiscoverClient({ initialIntentSlug }: Props) {
+  const supabase = useMemo(() => createClient(), [])
+
+  // ── Filter state ────────────────────────────────────────────────
+  const [selectedIntent, setSelectedIntent]       = useState<TravelIntent | null>(
     () => TRAVEL_INTENTS.find((i) => i.slug === initialIntentSlug) ?? null
   )
   const [selectedLandscapes, setSelectedLandscapes] = useState<Landscape[]>([])
-  const [practicalFilters, setPracticalFilters]   = useState<PracticalFilters>(EMPTY_PRACTICAL_FILTERS)
-  const [highlightedId, setHighlightedId]         = useState<string | null>(null)
+  const [practicalFilters, setPracticalFilters]     = useState<PracticalFilters>(EMPTY_PRACTICAL_FILTERS)
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
+
+  // ── UI state ────────────────────────────────────────────────────
+  const [highlightedId, setHighlightedId]     = useState<string | null>(null)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
-  const [mapBounds, setMapBounds]                 = useState<L.LatLngBounds | null>(null)
+
+  // ── Data state ──────────────────────────────────────────────────
+  const [homestays, setHomestays]               = useState<HomestayWithCategories[]>([])
+  const [availableLanguages, setAvailableLanguages] = useState<string[]>([])
+  const [isLoading, setIsLoading]               = useState(true)
 
   const handleBoundsChange = useCallback((bounds: L.LatLngBounds) => {
-    setMapBounds(bounds)
+    const next: MapBounds = {
+      south: bounds.getSouth(),
+      north: bounds.getNorth(),
+      west:  bounds.getWest(),
+      east:  bounds.getEast(),
+    }
+    setMapBounds((prev) => {
+      if (
+        prev &&
+        Math.abs(prev.south - next.south) < 0.0001 &&
+        Math.abs(prev.north - next.north) < 0.0001 &&
+        Math.abs(prev.west  - next.west)  < 0.0001 &&
+        Math.abs(prev.east  - next.east)  < 0.0001
+      ) {
+        return prev
+      }
+      return next
+    })
   }, [])
 
   function toggleLandscape(landscape: Landscape) {
@@ -85,37 +117,97 @@ export default function DiscoverClient({ homestays, initialIntentSlug }: Props) 
     }))
   }
 
-  const availableLanguages = useMemo(
-    () => Array.from(new Set(homestays.flatMap((h) => h.languages_spoken))).sort(),
-    [homestays]
-  )
+  // ── Effect 1: fetch available languages once on mount ───────────
+  // Runs independently of filters — gives the language pill options
+  useEffect(() => {
+    supabase
+      .from('homestays')
+      .select('languages_spoken')
+      .then(({ data }) => {
+        if (data) {
+          const langs = Array.from(
+            new Set(data.flatMap((h: any) => h.languages_spoken ?? []))
+          ).sort() as string[]
+          setAvailableLanguages(langs)
+        }
+      })
+  }, [])
 
-  const filtered = useMemo(() => {
-    return homestays.filter((h) => {
-      const catSlugs = h.categories.map((c) => c.slug)
-      if (selectedIntent && !catSlugs.includes(selectedIntent.slug)) return false
-      if (selectedLandscapes.length > 0 && !selectedLandscapes.some((l) => catSlugs.includes(l.slug))) return false
-      if (practicalFilters.practicalSlugs.length > 0 && !practicalFilters.practicalSlugs.some((s) => catSlugs.includes(s))) return false
-      if (practicalFilters.verifiedOnly && !h.is_verified) return false
-      if (practicalFilters.languages.length > 0 && !practicalFilters.languages.some((l) => h.languages_spoken.includes(l))) return false
-      return true
-    })
-  }, [homestays, selectedIntent, selectedLandscapes, practicalFilters])
+  // ── Effect 2: call RPC whenever filters or map bounds change ─────
+  // 300ms debounce prevents spamming DB while user drags map or
+  // rapidly toggles filters on a slow mobile connection
+  useEffect(() => {
+    let cancelled = false
+    setIsLoading(true)
 
+    const timer = setTimeout(async () => {
+      const south = mapBounds?.south ?? INDIA_BOUNDS.south
+      const north = mapBounds?.north ?? INDIA_BOUNDS.north
+      const west  = mapBounds?.west  ?? INDIA_BOUNDS.west
+      const east  = mapBounds?.east  ?? INDIA_BOUNDS.east
+
+      const { data, error } = await supabase.rpc('filter_homestays_spatial', {
+        min_lat:         south,
+        max_lat:         north,
+        min_lng:         west,
+        max_lng:         east,
+        intent_slug:     selectedIntent?.slug ?? null,
+        landscape_slugs: selectedLandscapes.map((l) => l.slug),
+        practical_slugs: practicalFilters.practicalSlugs,
+      })
+
+      if (cancelled) return
+      if (error) { setIsLoading(false); return }
+
+      // verifiedOnly + language filters are not RPC params —
+      // applied client-side on the small already-bounded result set
+      let results: any[] = data ?? []
+      if (practicalFilters.verifiedOnly) {
+        results = results.filter((h) => h.is_verified)
+      }
+      if (practicalFilters.languages.length > 0) {
+        results = results.filter((h) =>
+          practicalFilters.languages.some((l) => (h.languages_spoken ?? []).includes(l))
+        )
+      }
+
+      setHomestays(
+        results.map((h) => ({
+          id:                h.id,
+          title:             h.title,
+          slug:              h.slug,
+          location_district: h.location_district,
+          village_name:      h.village_name,
+          host_name:         h.host_name,
+          is_verified:       h.is_verified,
+          latitude:          h.latitude,
+          longitude:         h.longitude,
+          calling_window:    h.calling_window,
+          languages_spoken:  h.languages_spoken ?? [],
+          categories:        [],   // filtering is now server-side; not needed in client
+          cover_image_url:   h.cover_image_url ?? null,
+        }))
+      )
+      setIsLoading(false)
+    }, 300)
+
+    // Cleanup: cancel in-flight logic if filters change before timer fires
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [selectedIntent, selectedLandscapes, practicalFilters, mapBounds])
+
+  // ── Derived values ──────────────────────────────────────────────
   const locationLabel = useMemo(() => {
-    if (filtered.length === 0) return undefined
+    if (homestays.length === 0) return undefined
     const counts: Record<string, number> = {}
-    filtered.forEach((h) => { if (h.location_district) counts[h.location_district] = (counts[h.location_district] ?? 0) + 1 })
+    homestays.forEach((h) => {
+      if (h.location_district) counts[h.location_district] = (counts[h.location_district] ?? 0) + 1
+    })
     const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
     return top ? `${top[0]} district` : undefined
-  }, [filtered])
-
-  const visibleHomestays = useMemo(() => {
-    if (!mapBounds) return filtered
-    return filtered.filter(
-      (h) => h.latitude != null && h.longitude != null && mapBounds.contains([h.latitude, h.longitude])
-    )
-  }, [filtered, mapBounds])
+  }, [homestays])
 
   const totalActiveFilters =
     (selectedIntent ? 1 : 0) +
@@ -147,9 +239,9 @@ export default function DiscoverClient({ homestays, initialIntentSlug }: Props) 
         <div className="flex items-center gap-4 px-4 py-2.5 border-b border-stone-100">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-stone-900 leading-none">
-              {visibleHomestays.length} {visibleHomestays.length === 1 ? 'stay' : 'stays'} found
+              {isLoading ? 'Searching…' : `${homestays.length} ${homestays.length === 1 ? 'stay' : 'stays'} found`}
             </p>
-            {locationLabel && (
+            {!isLoading && locationLabel && (
               <p className="text-xs text-stone-400 mt-0.5 leading-none truncate">
                 Showing stays in {locationLabel}
               </p>
@@ -304,7 +396,7 @@ export default function DiscoverClient({ homestays, initialIntentSlug }: Props) 
                 filters={practicalFilters}
                 availableLanguages={availableLanguages}
                 onChange={setPracticalFilters}
-                filteredCount={visibleHomestays.length}
+                filteredCount={homestays.length}
                 locationLabel={locationLabel}
                 totalActiveFilters={totalActiveFilters}
                 onReset={() => {
@@ -316,9 +408,10 @@ export default function DiscoverClient({ homestays, initialIntentSlug }: Props) 
             </div>
             <div className="md:flex-1 md:overflow-y-auto">
               <PlaceGrid
-                homestays={visibleHomestays}
+                homestays={homestays}
                 highlightedId={highlightedId}
                 onHover={setHighlightedId}
+                isLoading={isLoading}
               />
             </div>
           </div>
@@ -327,7 +420,7 @@ export default function DiscoverClient({ homestays, initialIntentSlug }: Props) 
           <div className="w-full h-[300px] p-3 md:h-auto md:w-2/5 md:p-3 md:shrink-0">
             <div className="h-full rounded-xl overflow-hidden">
               <DiscoverMap
-                homestays={filtered}
+                homestays={homestays}
                 highlightedId={highlightedId}
                 onMarkerClick={setHighlightedId}
                 onBoundsChange={handleBoundsChange}
