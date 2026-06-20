@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${inter.className} bg-white text-stone-900 antialiased`}>
+      <body className={`${inter.variable} ${inter.className} bg-white text-stone-900 antialiased flex flex-col min-h-screen`}>
 
         <header className="sticky top-0 z-[1000] bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-end pb-2 gap-5">
@@ -46,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </header>
 
         <PageViewTracker />
-        <main>{children}</main>
+        <main className="flex-1">{children}</main>
 
         <footer className="bg-stone-900 text-stone-400">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-6 grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -100,7 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
-            <p className="text-xs text-stone-600">© 2026 BeNative · Sustainic Technologies</p>
+            <p className="text-xs text-stone-600">© 2026 BeNative</p>
           </div>
         </footer>
 

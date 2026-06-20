@@ -3,9 +3,9 @@
 import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import type L from 'leaflet'
+import { SlidersHorizontal, ChevronDown, ChevronUp, Check } from 'lucide-react'
 
 interface MapBounds { south: number; north: number; west: number; east: number }
-import { SlidersHorizontal, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import TravelIntentFilter from './TravelIntentFilter'
 import LandscapeFilterRail from './LandscapeFilterRail'
 import PracticalFiltersDrawer from './PracticalFiltersDrawer'
@@ -217,7 +217,7 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
     practicalFilters.practicalSlugs.length
 
   return (
-    <div className="flex flex-col bg-white md:overflow-hidden md:h-[calc(100dvh-64px)]">
+    <div className="flex flex-col bg-white">
 
       {/* ── Desktop filter bars (Layer 1 + 2) ── */}
       <div className="hidden md:block shrink-0 bg-white relative z-[500]">
@@ -385,50 +385,45 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
       </div>
 
       {/* ── Split: mobile=column (cards then map), desktop=row (60/40) ── */}
-      <div className="flex flex-1 md:overflow-hidden">
-        <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row md:overflow-hidden">
+      <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row">
 
-          {/* List panel */}
-          <div className="w-full md:w-3/5 flex flex-col md:border-r border-stone-100 md:shrink-0">
-            {/* Layer 3 desktop only */}
-            <div className="hidden md:block shrink-0 relative z-[500]">
-              <PracticalFiltersDrawer
-                filters={practicalFilters}
-                availableLanguages={availableLanguages}
-                onChange={setPracticalFilters}
-                filteredCount={homestays.length}
-                locationLabel={locationLabel}
-                totalActiveFilters={totalActiveFilters}
-                onReset={() => {
-                  setSelectedIntent(null)
-                  setSelectedLandscapes([])
-                  setPracticalFilters(EMPTY_PRACTICAL_FILTERS)
-                }}
-              />
-            </div>
-            <div className="md:flex-1 md:overflow-y-auto">
-              <PlaceGrid
-                homestays={homestays}
-                highlightedId={highlightedId}
-                onHover={setHighlightedId}
-                isLoading={isLoading}
-              />
-            </div>
+        {/* List panel — natural height drives the row */}
+        <div className="w-full md:w-3/5 flex flex-col md:border-r border-stone-100">
+          <div className="hidden md:block shrink-0 relative z-[500]">
+            <PracticalFiltersDrawer
+              filters={practicalFilters}
+              availableLanguages={availableLanguages}
+              onChange={setPracticalFilters}
+              filteredCount={homestays.length}
+              locationLabel={locationLabel}
+              totalActiveFilters={totalActiveFilters}
+              onReset={() => {
+                setSelectedIntent(null)
+                setSelectedLandscapes([])
+                setPracticalFilters(EMPTY_PRACTICAL_FILTERS)
+              }}
+            />
           </div>
-
-          {/* Map panel */}
-          <div className="w-full h-[300px] p-3 md:h-auto md:w-2/5 md:p-3 md:shrink-0">
-            <div className="h-full rounded-xl overflow-hidden">
-              <DiscoverMap
-                homestays={homestays}
-                highlightedId={highlightedId}
-                onMarkerClick={setHighlightedId}
-                onBoundsChange={handleBoundsChange}
-              />
-            </div>
-          </div>
-
+          <PlaceGrid
+            homestays={homestays}
+            highlightedId={highlightedId}
+            onHover={setHighlightedId}
+            isLoading={isLoading}
+          />
         </div>
+
+        {/* Map panel — mobile: 300px, desktop: fixed 520px */}
+        <div className="w-full h-[300px] p-3 md:w-2/5 md:h-[520px] md:shrink-0">
+          <div className="h-full rounded-xl overflow-hidden">
+            <DiscoverMap
+              homestays={homestays}
+              highlightedId={highlightedId}
+              onMarkerClick={setHighlightedId}
+              onBoundsChange={handleBoundsChange}
+            />
+          </div>
+        </div>
+
       </div>
     </div>
   )
