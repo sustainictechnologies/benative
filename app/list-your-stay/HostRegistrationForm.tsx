@@ -35,6 +35,7 @@ export default function HostRegistrationForm() {
     stay_type: '',
     rooms: '',
     description: '',
+    drive_link: '',
   })
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -64,6 +65,7 @@ export default function HostRegistrationForm() {
         stay_type:   form.stay_type,
         rooms:       parseInt(form.rooms),
         description: form.description,
+        drive_link:  form.drive_link,
       })
 
     if (dbError) {
@@ -165,6 +167,22 @@ export default function HostRegistrationForm() {
           <input required className={inputCls} placeholder="e.g. 2" type="number" min="1" max="50"
             value={form.rooms} onChange={(e) => set('rooms', e.target.value)} />
         </div>
+      </div>
+
+      {/* Drive Link */}
+      <div>
+        <label className={labelCls}>Share Your Homestay Photos *</label>
+        <input
+          required
+          className={inputCls}
+          placeholder="Google Drive Folder Link"
+          type="url"
+          value={form.drive_link}
+          onChange={(e) => set('drive_link', e.target.value)}
+        />
+        <p className="text-[11px] text-stone-400 mt-1">
+          Create a Google Drive folder with your homestay photos, set sharing to "Anyone with the link can view", and paste the link above.
+        </p>
       </div>
 
       {/* Description */}

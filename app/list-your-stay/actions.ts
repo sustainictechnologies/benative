@@ -22,6 +22,7 @@ interface ListingData {
   stay_type: string
   rooms: string
   description: string
+  drive_link: string
 }
 
 export async function sendListingEmails(data: ListingData) {
@@ -43,6 +44,8 @@ export async function sendListingEmails(data: ListingData) {
           ``,
           `About the home:`,
           data.description,
+          ``,
+          `Photos (Drive) : ${data.drive_link}`,
         ].join('\n'),
       }),
       transporter.sendMail({
