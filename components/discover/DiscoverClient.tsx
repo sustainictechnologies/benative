@@ -387,8 +387,8 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
       {/* ── Split: mobile=column (cards then map), desktop=row (60/40) ── */}
       <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row">
 
-        {/* List panel — natural height drives the row */}
-        <div className="w-full md:w-3/5 flex flex-col md:border-r border-stone-100">
+        {/* List panel — below map on mobile, left on desktop */}
+        <div className="w-full md:w-3/5 flex flex-col md:border-r border-stone-100 order-2 md:order-1">
           <div className="hidden md:block shrink-0 relative z-[500]">
             <PracticalFiltersDrawer
               filters={practicalFilters}
@@ -412,8 +412,8 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
           />
         </div>
 
-        {/* Map panel — mobile: 300px, desktop: fixed 520px */}
-        <div className="w-full h-[300px] p-3 md:w-2/5 md:h-[520px] md:shrink-0">
+        {/* Map panel — top on mobile, right on desktop */}
+        <div className="w-full h-[300px] p-3 md:w-2/5 md:h-[520px] md:shrink-0 order-1 md:order-2">
           <div className="h-full rounded-xl overflow-hidden">
             <DiscoverMap
               homestays={homestays}

@@ -2,7 +2,7 @@
 
 // @ts-ignore
 import 'leaflet/dist/leaflet.css'
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { useEffect, useMemo } from 'react'
 import type { HomestayWithCategories } from '@/types/blocks.types'
@@ -27,21 +27,6 @@ function makeDotIcon(highlighted: boolean) {
   })
 }
 
-function BoundsFitter({ homestays }: { homestays: HomestayWithCategories[] }) {
-  const map = useMap()
-
-  useEffect(() => {
-    if (homestays.length === 0) return
-    if (homestays.length === 1) {
-      map.flyTo([homestays[0].latitude, homestays[0].longitude], 12, { duration: 0.8 })
-      return
-    }
-    const bounds = L.latLngBounds(homestays.map((h) => [h.latitude, h.longitude]))
-    map.flyToBounds(bounds, { padding: [48, 48], maxZoom: 13, duration: 0.8 })
-  }, [homestays, map])
-
-  return null
-}
 
 function BoundsReporter({ onBoundsChange }: { onBoundsChange: (b: L.LatLngBounds) => void }) {
   const map = useMapEvents({
@@ -83,7 +68,6 @@ export default function DiscoverMap({ homestays, highlightedId, onMarkerClick, o
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <BoundsFitter homestays={valid} />
       {onBoundsChange && <BoundsReporter onBoundsChange={onBoundsChange} />}
 
       {valid.map((h) => (
