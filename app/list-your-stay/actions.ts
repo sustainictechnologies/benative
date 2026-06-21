@@ -16,7 +16,9 @@ interface ListingData {
   host_name: string
   phone: string
   email: string
+  address: string
   village: string
+  taluka: string
   district: string
   state: string
   stay_type: string
@@ -38,7 +40,8 @@ export async function sendListingEmails(data: ListingData) {
           `Host Name : ${data.host_name}`,
           `Phone     : ${data.phone}`,
           `Email     : ${data.email}`,
-          `Location  : ${data.village}, ${data.district}, ${data.state}`,
+          `Address   : ${data.address}`,
+          `Location  : ${data.village}, ${data.taluka}, ${data.district}, ${data.state}`,
           `Stay Type : ${data.stay_type}`,
           `Rooms     : ${data.rooms}`,
           ``,
@@ -60,7 +63,7 @@ export async function sendListingEmails(data: ListingData) {
           `We'll reach out to you on ${data.phone} within 48 hours.`,
           ``,
           `Here's a summary of what you submitted:`,
-          `  Location  : ${data.village}, ${data.district}, ${data.state}`,
+          `  Location  : ${data.village}, ${data.taluka}, ${data.district}, ${data.state}`,
           `  Stay Type : ${data.stay_type}`,
           `  Rooms     : ${data.rooms}`,
           ``,

@@ -29,7 +29,9 @@ export default function HostRegistrationForm() {
     host_name: '',
     phone: '',
     email: '',
+    address: '',
     village: '',
+    taluka: '',
     district: '',
     state: '',
     stay_type: '',
@@ -59,7 +61,9 @@ export default function HostRegistrationForm() {
         host_name:   form.host_name,
         phone:       form.phone,
         email:       form.email,
+        address:     form.address,
         village:     form.village,
+        taluka:      form.taluka,
         district:    form.district,
         state:       form.state,
         stay_type:   form.stay_type,
@@ -128,17 +132,33 @@ export default function HostRegistrationForm() {
           onChange={(e) => set('email', e.target.value)} />
       </div>
 
-      {/* Village + District */}
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <label className={labelCls}>Village / Town *</label>
-          <input required className={inputCls} placeholder="e.g. Malvan" value={form.village}
-            onChange={(e) => set('village', e.target.value)} />
-        </div>
-        <div>
-          <label className={labelCls}>District *</label>
-          <input required className={inputCls} placeholder="e.g. Sindhudurg" value={form.district}
-            onChange={(e) => set('district', e.target.value)} />
+      {/* Full Address */}
+      <div>
+        <label className={labelCls}>Address *</label>
+        <textarea required rows={3} className={inputCls} value={form.address}
+          placeholder="House no., street, landmark…"
+          onChange={(e) => set('address', e.target.value)} />
+      </div>
+
+      {/* Village / Taluka / District */}
+      <div>
+        <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-3">Address</p>
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div>
+            <label className={labelCls}>Village / Town *</label>
+            <input required className={inputCls} placeholder="e.g. Malvan" value={form.village}
+              onChange={(e) => set('village', e.target.value)} />
+          </div>
+          <div>
+            <label className={labelCls}>Taluka *</label>
+            <input required className={inputCls} placeholder="e.g. Malvan" value={form.taluka}
+              onChange={(e) => set('taluka', e.target.value)} />
+          </div>
+          <div>
+            <label className={labelCls}>District *</label>
+            <input required className={inputCls} placeholder="e.g. Sindhudurg" value={form.district}
+              onChange={(e) => set('district', e.target.value)} />
+          </div>
         </div>
       </div>
 
