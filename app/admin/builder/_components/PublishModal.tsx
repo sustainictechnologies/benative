@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { X, MapPin, Navigation, Check, Loader2, User, Phone, Mail, Home, Globe } from 'lucide-react'
+import { X, MapPin, Navigation, Check, Loader2, User, Phone, Mail, Home, Globe, Pencil } from 'lucide-react'
 import { publishHomestay, type PublishPayload } from '@/lib/actions/publishLocation'
 import { createClient } from '@/lib/supabase/client'
 import type { CanvasBlock } from './BuilderTypes'
@@ -16,7 +16,7 @@ const LocationPickerMap = dynamic(() => import('./LocationPickerMap'), {
   ),
 })
 
-type Mode   = 'map' | 'gps'
+type Mode   = 'map' | 'gps' | 'coords'
 type Status = 'idle' | 'locating' | 'saving' | 'done' | 'error'
 
 interface BuilderData {
@@ -61,6 +61,9 @@ export default function PublishModal({ open, onClose, builderData }: Props) {
   const [lng, setLng]       = useState<number | null>(null)
   const [status, setStatus] = useState<Status>('idle')
   const [errMsg, setErrMsg] = useState('')
+  const [latInput, setLatInput] = useState('')
+  const [lngInput, setLngInput] = useState('')
+  const [coordErr, setCoordErr] = useState('')
 
   const slug = useMemo(() => toSlug(builderData.title), [builderData.title])
 
@@ -124,7 +127,7 @@ export default function PublishModal({ open, onClose, builderData }: Props) {
     else                  { setStatus('done') }
   }, [lat, lng, slug, builderData])
 
-  const reset = () => { setLat(null); setLng(null); setStatus('idle'); setErrMsg(''); setMode('map') }
+  const reset = () => { setLat(null); setLng(null); setStatus('idle'); setErrMsg(''); setMode('map'); setLatInput(''); setLngInput(''); setCoordErr('') }
 
   if (!slug) return null  // no title set yet
 
@@ -194,10 +197,21 @@ export default function PublishModal({ open, onClose, builderData }: Props) {
 
             {/* Mode tabs */}
             <div className="flex border-y border-stone-100 shrink-0">
-              {([['map', '🗺️ Pick on Map'], ['gps', '📍 Use My Location']] as const).map(([m, label]) => (
+              {([
+                ['map',    '🗺️ Map'],
+                ['gps',    '📍 My GPS'],
+                ['coords', '📌 Coordinates'],
+              ] as const).map(([m, label]) => (
                 <button
                   key={m}
-                  onClick={() => setMode(m)}
+                  onClick={() => {
+                    setMode(m)
+                    if (m === 'coords') {
+                      setLatInput(lat !== null ? String(lat) : '')
+                      setLngInput(lng !== null ? String(lng) : '')
+                      setCoordErr('')
+                    }
+                  }}
                   className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${
                     mode === m
                       ? 'text-brand-700 border-b-2 border-brand-600 bg-brand-50'
@@ -248,12 +262,71 @@ export default function PublishModal({ open, onClose, builderData }: Props) {
               </div>
             )}
 
+            {/* Coordinates input panel */}
+            {mode === 'coords' && (
+              <div className="mx-5 my-3 space-y-3 shrink-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
+                  Enter latitude &amp; longitude
+                </p>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <label className="text-[10px] text-stone-400 font-semibold block mb-1">Latitude</label>
+                    <input
+                      type="number"
+                      value={latInput}
+                      onChange={e => { setLatInput(e.target.value); setCoordErr('') }}
+                      placeholder="e.g. 16.7050"
+                      step="any"
+                      className="w-full text-xs border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-400 text-stone-700 placeholder:text-stone-300 font-mono"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-[10px] text-stone-400 font-semibold block mb-1">Longitude</label>
+                    <input
+                      type="number"
+                      value={lngInput}
+                      onChange={e => { setLngInput(e.target.value); setCoordErr('') }}
+                      placeholder="e.g. 74.2433"
+                      step="any"
+                      className="w-full text-xs border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-400 text-stone-700 placeholder:text-stone-300 font-mono"
+                    />
+                  </div>
+                </div>
+                {coordErr && <p className="text-xs text-rose-500">{coordErr}</p>}
+                <button
+                  onClick={() => {
+                    const la = parseFloat(latInput)
+                    const lo = parseFloat(lngInput)
+                    if (isNaN(la) || la < -90  || la > 90)  { setCoordErr('Latitude must be between -90 and 90');    return }
+                    if (isNaN(lo) || lo < -180 || lo > 180) { setCoordErr('Longitude must be between -180 and 180'); return }
+                    setLat(la); setLng(lo)
+                    setMode('map')
+                  }}
+                  className="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <MapPin size={13} /> Set Location on Map
+                </button>
+                <p className="text-[10px] text-stone-400 text-center">
+                  You can copy coordinates from Google Maps — right-click any point and copy the numbers shown.
+                </p>
+              </div>
+            )}
+
             {/* Coordinates pill */}
-            {lat !== null && lng !== null && (
+            {lat !== null && lng !== null && mode !== 'coords' && (
               <div className="mx-5 mt-2 flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-xl px-3 py-1.5 text-xs text-stone-500 shrink-0">
                 <MapPin size={11} className="text-brand-600 shrink-0" />
                 <span className="font-mono">{lat.toFixed(6)}, {lng.toFixed(6)}</span>
-                <button onClick={() => { setLat(null); setLng(null) }} className="ml-auto text-stone-300 hover:text-rose-500">
+                <button
+                  onClick={() => {
+                    setLatInput(String(lat)); setLngInput(String(lng)); setCoordErr(''); setMode('coords')
+                  }}
+                  title="Edit coordinates"
+                  className="ml-auto text-stone-300 hover:text-brand-500 transition-colors"
+                >
+                  <Pencil size={10} />
+                </button>
+                <button onClick={() => { setLat(null); setLng(null) }} title="Clear" className="text-stone-300 hover:text-rose-500 transition-colors">
                   <X size={10} />
                 </button>
               </div>

@@ -55,7 +55,7 @@ export default function HostStoryBlock({ data }: Props) {
               src={supabaseImgUrl(data.host_image_url, { width: 200, quality: 75 })}
               alt={data.story_title ?? 'Host photo'}
               fill
-              className={`object-cover ${positionClass}`}
+              className="object-cover"
               sizes="80px"
               style={zoom !== 1 ? { transform: `scale(${zoom})`, transformOrigin: origin } : undefined}
             />

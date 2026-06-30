@@ -1,11 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import type { CanvasBlock } from '../BuilderTypes'
 import { ShieldCheck, MapPin, Ban, ScrollText, Globe2, X, Plus, LayoutGrid, Type, Image as ImageIcon, List, Navigation } from 'lucide-react'
 import EditableImage from '../EditableImage'
 import EditableText from '../EditableText'
 import ActivityLogBlock from './ActivityLogBlock'
+import ImagePickerModal from '../ImagePickerModal'
 import { useBuilder } from '../BuilderContext'
 import type { LayoutRow, LayoutCell, CellType } from '../BuilderContext'
 
@@ -236,102 +238,75 @@ const ORIGIN_MAP: Record<string, string> = {
   'bottom-right':'100% 100%',
 }
 
-function HostPhotoEditor({ id }: { id: string }) {
-  const { getText, updateText, previewMode } = useBuilder()
-  const [hovered, setHovered] = useState(false)
+const HOST_PHOTO_DEFAULT = 'https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=120&q=70'
 
-  const shape    = getText(id, 'host-shape',    'circle')
+function HostPhotoEditor({ id }: { id: string }) {
+  const { getText, updateText, getImage, updateImage, previewMode } = useBuilder()
+  const [showModal, setShowModal] = useState(false)
+
+  const shape    = getText(id, 'host-shape',    'circle') as 'circle' | 'rounded' | 'square'
   const position = getText(id, 'host-position', 'center')
   const zoom     = parseFloat(getText(id, 'host-zoom', '1'))
+  const src      = getImage(id, 'host-photo', HOST_PHOTO_DEFAULT)
 
-  return (
-    <div
-      className="relative shrink-0"
-      onMouseEnter={() => { if (!previewMode) setHovered(true)  }}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {/* Photo */}
-      <div className={`w-20 h-20 border-2 border-stone-200 overflow-hidden ${SHAPE_CLASS[shape] ?? 'rounded-full'}`}>
-        <div
-          className="w-full h-full"
-          style={{ transform: zoom !== 1 ? `scale(${zoom})` : undefined, transformOrigin: ORIGIN_MAP[position] ?? '50% 50%' }}
-        >
-          <EditableImage
-            blockId={id} imageKey="host-photo"
-            defaultUrl="https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=120&q=70"
-            wrapperClassName="w-full h-full"
-            className={`w-full h-full object-cover ${POSITION_CLASS[position] ?? 'object-center'}`}
+  const imgStyle = zoom !== 1
+    ? { transform: `scale(${zoom})`, transformOrigin: ORIGIN_MAP[position] ?? '50% 50%' }
+    : undefined
+
+  if (previewMode) {
+    return (
+      <div className="shrink-0 flex justify-center md:justify-start">
+        <div className={`w-20 h-20 overflow-hidden bg-stone-100 ${SHAPE_CLASS[shape] ?? 'rounded-full'}`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={src} alt="Host"
+            className="w-full h-full object-cover"
+            style={imgStyle}
           />
         </div>
       </div>
+    )
+  }
 
-      {/* Controls panel */}
-      {hovered && (
+  return (
+    <>
+      <div className="shrink-0 flex flex-col items-center gap-1.5">
         <div
-          className="absolute left-full top-0 ml-2.5 z-30 bg-white border border-stone-200 rounded-xl shadow-xl p-3 space-y-2.5 w-28"
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
+          className={`relative group w-20 h-20 overflow-hidden border-2 border-stone-200 bg-stone-100 cursor-pointer ${SHAPE_CLASS[shape] ?? 'rounded-full'}`}
+          onClick={() => setShowModal(true)}
         >
-          {/* Shape */}
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1.5">Shape</p>
-            <div className="flex gap-1">
-              {SHAPE_OPTIONS.map(s => (
-                <button
-                  key={s.value}
-                  title={s.title}
-                  onClick={() => updateText(id, 'host-shape', s.value)}
-                  className={`flex-1 py-1 text-sm rounded-lg font-bold transition-colors ${
-                    shape === s.value
-                      ? 'bg-brand-100 text-brand-700'
-                      : 'bg-stone-50 text-stone-400 hover:bg-stone-100'
-                  }`}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Crop position */}
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1.5">Crop area</p>
-            <div className="grid grid-cols-3 gap-0.5">
-              {POSITION_GRID.flat().map(pos => (
-                <button
-                  key={pos}
-                  title={pos}
-                  onClick={() => updateText(id, 'host-position', pos)}
-                  className={`h-6 rounded flex items-center justify-center transition-colors ${
-                    position === pos ? 'bg-brand-500' : 'bg-stone-100 hover:bg-stone-200'
-                  }`}
-                >
-                  <div className={`w-1.5 h-1.5 rounded-full ${position === pos ? 'bg-white' : 'bg-stone-400'}`} />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Zoom */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400">Zoom</p>
-              <span className="text-[9px] font-semibold text-brand-600">{zoom.toFixed(1)}×</span>
-            </div>
-            <input
-              type="range"
-              min="1" max="3" step="0.1"
-              value={zoom}
-              onChange={e => updateText(id, 'host-zoom', e.target.value)}
-              className="w-full h-1.5 rounded-full accent-brand-600 cursor-pointer"
-            />
-            <div className="flex justify-between text-[8px] text-stone-300 mt-0.5">
-              <span>1×</span><span>3×</span>
-            </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={src} alt="Host"
+            className="w-full h-full object-cover"
+            style={imgStyle}
+          />
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <span className="text-white text-[10px] font-bold">Replace</span>
           </div>
         </div>
-      )}
-    </div>
+        <span className="text-[9px] text-stone-400">Click to replace &amp; crop</span>
+      </div>
+
+      <AnimatePresence>
+        {showModal && (
+          <ImagePickerModal
+            currentUrl={src}
+            onConfirm={() => {}}
+            onClose={() => setShowModal(false)}
+            withCrop
+            cropInitial={{ shape, zoom, position }}
+            onConfirmWithCrop={(url, crop) => {
+              updateImage(id, 'host-photo', url)
+              updateText(id, 'host-shape',    crop.shape)
+              updateText(id, 'host-zoom',     String(crop.zoom))
+              updateText(id, 'host-position', crop.position)
+              setShowModal(false)
+            }}
+          />
+        )}
+      </AnimatePresence>
+    </>
   )
 }
 
