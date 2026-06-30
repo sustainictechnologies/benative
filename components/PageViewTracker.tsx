@@ -13,6 +13,8 @@ export default function PageViewTracker() {
       path: pathname,
       referrer: document.referrer || null,
       user_agent: navigator.userAgent,
+    }).then(({ error }) => {
+      if (error) console.error('[PageViewTracker] insert error:', error)
     })
   }, [pathname])
 
