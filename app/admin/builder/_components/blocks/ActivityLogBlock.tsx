@@ -17,6 +17,14 @@ export interface ActivityItem {
 
 const DEFAULT_IDS = ['birding', 'farm', 'monsoon']
 
+const EMOJI_OPTIONS = [
+  '🌿','🌾','🌲','🌳','🌴','🍃','🌺','🌸','🌻','🌼',
+  '🦜','🦋','🐝','🐠','🐟','🦅','🦚','🐘','🦁','🐆',
+  '🏕️','🏔️','🗻','🌋','🏞️','🏖️','🌊','🌅','⛺','🛶',
+  '🎣','🚴','🥾','🧘','🏹','🎨','🎭','🎊','🔥','⭐',
+  '🍛','🫖','🌙','☀️','🌧️','❄️','🎯','🏺','📷','🎵',
+]
+
 function defaultSelected(): ActivityItem[] {
   return DEFAULT_IDS.map(id => {
     const a = ALL_ACTIVITIES.find(x => x.id === id)!
@@ -48,6 +56,7 @@ export default function ActivityLogBlock({ blockId }: Props) {
   const [showPicker, setShowPicker]         = useState(false)
   const [customList, setCustomList]         = useState<ActivityItem[]>([])
   const [showCreate, setShowCreate]         = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [newLabel, setNewLabel]             = useState('')
   const [newDesc, setNewDesc]               = useState('')
   const [newEmoji, setNewEmoji]             = useState('🎯')
@@ -127,7 +136,7 @@ export default function ActivityLogBlock({ blockId }: Props) {
     }
   }
 
-  const resetForm = () => { setNewLabel(''); setNewDesc(''); setNewEmoji('🎯'); setNewIconUrl(''); setFormErr(''); setShowCreate(false) }
+  const resetForm = () => { setNewLabel(''); setNewDesc(''); setNewEmoji('🎯'); setNewIconUrl(''); setFormErr(''); setShowCreate(false); setShowEmojiPicker(false) }
 
   // Close picker on outside click
   useEffect(() => {
@@ -210,13 +219,31 @@ export default function ActivityLogBlock({ blockId }: Props) {
                       <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">New Activity</p>
 
                       <div className="flex gap-2">
-                        <input
-                          value={newEmoji}
-                          onChange={e => setNewEmoji(e.target.value)}
-                          className="w-12 border border-stone-200 rounded-lg px-2 py-1.5 text-center text-sm focus:outline-none focus:border-brand-400"
-                          placeholder="🎯"
-                          maxLength={2}
-                        />
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setShowEmojiPicker(v => !v)}
+                            className="w-12 h-[30px] border border-stone-200 rounded-lg text-center text-sm hover:border-brand-400 transition-colors bg-stone-50"
+                          >
+                            {newEmoji}
+                          </button>
+                          {showEmojiPicker && (
+                            <div className="absolute left-0 top-9 z-10 w-64 bg-white border border-stone-200 rounded-xl shadow-xl p-2">
+                              <div className="grid grid-cols-10 gap-0.5">
+                                {EMOJI_OPTIONS.map(e => (
+                                  <button
+                                    key={e}
+                                    type="button"
+                                    onClick={() => { setNewEmoji(e); setShowEmojiPicker(false) }}
+                                    className={`w-6 h-6 flex items-center justify-center rounded text-base hover:bg-brand-50 transition-colors ${newEmoji === e ? 'bg-brand-100' : ''}`}
+                                  >
+                                    {e}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                         <input
                           value={newLabel}
                           onChange={e => setNewLabel(e.target.value)}
