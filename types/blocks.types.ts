@@ -10,7 +10,7 @@ export interface HostStoryBlockData {
 }
 
 export interface BirdingLogBlockData {
-  highlight_species: string[]
+  highlight_species: (string | { id: string; label: string; emoji: string; desc: string; iconUrl?: string })[]
   best_watching_hours: string
   nearby_hotspot_trail: string
 }

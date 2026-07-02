@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Eye, EyeOff, Undo2, Redo2, Smartphone, Monitor, Save, Leaf, Check } from 'lucide-react'
+import { Eye, EyeOff, Undo2, Redo2, Smartphone, Monitor, Save, Leaf, Check, Share2 } from 'lucide-react'
 import Link from 'next/link'
 
 interface Props {
@@ -13,11 +13,12 @@ interface Props {
   onSave?: () => void
   savedAt?: Date | null
   onPublish?: () => void
+  onSharePreview?: () => void
 }
 
 export default function BuilderTopbar({
   previewMode, viewport, blockCount,
-  onTogglePreview, onViewportChange, onSave, savedAt, onPublish,
+  onTogglePreview, onViewportChange, onSave, savedAt, onPublish, onSharePreview,
 }: Props) {
   const [justSaved, setJustSaved] = useState(false)
 
@@ -102,6 +103,14 @@ export default function BuilderTopbar({
       >
         {justSaved ? <Check size={12} /> : <Save size={12} />}
         <span className="hidden sm:inline">{justSaved ? 'Saved!' : 'Save Draft'}</span>
+      </button>
+
+      <button
+        onClick={onSharePreview}
+        className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold bg-stone-700 hover:bg-stone-600 text-stone-200 transition-colors shadow-sm shrink-0"
+      >
+        <Share2 size={12} />
+        <span className="hidden sm:inline">Share Preview</span>
       </button>
 
       <button

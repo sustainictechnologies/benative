@@ -25,6 +25,7 @@ import LeftPanel from './LeftPanel'
 import Canvas from './Canvas'
 import RightPanel from './RightPanel'
 import PublishModal from './PublishModal'
+import PreviewShareModal from './PreviewShareModal'
 
 /* ─── Helpers ────────────────────────────────────────────── */
 function makeId() {
@@ -57,6 +58,7 @@ export default function BuilderClient() {
   const [pageAddress, setPageAddress]       = useState('Khed, Ratnagiri, Maharashtra')
   const [savedAt, setSavedAt]               = useState<Date | null>(null)
   const [showPublish, setShowPublish]           = useState(false)
+  const [showPreviewShare, setShowPreviewShare] = useState(false)
   const [selectedElement, setSelectedElement]   = useState<SelectedElement | null>(null)
 
   const searchParams  = useSearchParams()
@@ -573,6 +575,7 @@ export default function BuilderClient() {
             onViewportChange={setViewport}
             onSave={handleSave}
             savedAt={savedAt}
+            onSharePreview={() => setShowPreviewShare(true)}
             onPublish={() => setShowPublish(true)}
           />
 
@@ -603,6 +606,13 @@ export default function BuilderClient() {
             {!previewMode && <RightPanel />}
           </div>
         </div>
+
+        <PreviewShareModal
+          open={showPreviewShare}
+          onClose={() => setShowPreviewShare(false)}
+          blocks={blocks}
+          slug={editSlug}
+        />
 
         <PublishModal
           open={showPublish}

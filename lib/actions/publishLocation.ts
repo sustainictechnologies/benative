@@ -28,7 +28,7 @@ function extractYouTubeId(raw: string): string {
 }
 
 /** Map a builder CanvasBlock → homestay_blocks content_data (field names match live block components) */
-function toContentData(block: CanvasBlock): Record<string, unknown> {
+export function toContentData(block: CanvasBlock): Record<string, unknown> {
   const img = block.props.images ?? {}
   const txt = block.props.texts  ?? {}
 
@@ -48,10 +48,10 @@ function toContentData(block: CanvasBlock): Record<string, unknown> {
         story_text:           txt['story-body']      ?? null,
       }
     case 'activity-log': {
-      let species: string[] = []
-      try { species = JSON.parse(txt['activities'] ?? '[]') } catch {}
+      let activities: unknown[] = []
+      try { activities = JSON.parse(txt['activities'] ?? '[]') } catch {}
       return {
-        highlight_species:    species,
+        highlight_species:    activities,
         best_watching_hours:  txt['best-hours'] ?? '',
         nearby_hotspot_trail: txt['hotspot']    ?? '',
       }
