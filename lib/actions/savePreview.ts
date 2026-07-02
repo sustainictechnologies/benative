@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { CanvasBlock } from '@/app/admin/builder/_components/BuilderTypes'
-import { toContentData } from './publishLocation'
+import { toContentData } from '@/lib/blockSerializer'
 
 export async function savePreview(
   blocks: CanvasBlock[],
