@@ -148,3 +148,51 @@ export function toContentData(block: CanvasBlock): Record<string, unknown> {
       return {}
   }
 }
+
+const STYLE_SUFFIXES = ['-font', '-size', '-color', '-bold', '-italic', '-align', '-fit', '-bullet']
+
+/** Full serialization including styles, layout rows, and sub-texts */
+export function serializeBlock(block: CanvasBlock): Record<string, unknown> {
+  const content  = toContentData(block)
+  const txt      = block.props.texts  ?? {}
+  const imgMap   = block.props.images ?? {}
+
+  // Styles
+  const styles: Record<string, string> = {}
+  for (const [k, v] of Object.entries(txt)) {
+    if (STYLE_SUFFIXES.some(s => k.endsWith(s))) styles[k] = v
+  }
+  if (Object.keys(styles).length > 0) (content as any).styles = styles
+
+  // Layout rows
+  const layoutRowsRaw = txt['layout-rows']
+  if (layoutRowsRaw) {
+    try {
+      const rows = JSON.parse(layoutRowsRaw)
+      const allCellIds: string[] = rows.flatMap((r: any) => (r.cells ?? []).map((c: any) => c.id as string))
+      const cells: Record<string, string> = {}
+      const layoutImages: Record<string, string> = {}
+      for (const cellId of allCellIds) {
+        if (txt[cellId])            cells[cellId] = txt[cellId]
+        if (txt[`${cellId}-items`]) cells[`${cellId}-items`] = txt[`${cellId}-items`]
+        STYLE_SUFFIXES.forEach(s => { if (txt[`${cellId}${s}`]) cells[`${cellId}${s}`] = txt[`${cellId}${s}`] })
+        if (imgMap[cellId]) layoutImages[cellId] = imgMap[cellId]
+      }
+      if (rows.length > 0) (content as any).layout = { rows, cells, images: layoutImages }
+    } catch {}
+  }
+
+  // Sub-texts
+  const subTextsRaw = txt['sub-texts']
+  if (subTextsRaw) {
+    try {
+      const ids = JSON.parse(subTextsRaw) as string[]
+      const sub_texts = ids
+        .filter(id => txt[id] !== undefined)
+        .map(id => ({ id, content: txt[id] ?? '' }))
+      if (sub_texts.length > 0) (content as any).sub_texts = sub_texts
+    } catch {}
+  }
+
+  return content
+}

@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { CanvasBlock } from '@/app/admin/builder/_components/BuilderTypes'
-import { toContentData } from '@/lib/blockSerializer'
+import { serializeBlock } from '@/lib/blockSerializer'
 
 export async function savePreview(
   blocks: CanvasBlock[],
@@ -12,7 +12,7 @@ export async function savePreview(
 
   const blocksData = blocks.map(block => ({
     type:         block.type,
-    content_data: toContentData(block),
+    content_data: serializeBlock(block),
   }))
 
   // If slug provided, update existing preview for this homestay
