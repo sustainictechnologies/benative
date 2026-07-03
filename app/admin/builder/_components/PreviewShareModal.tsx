@@ -6,13 +6,16 @@ import type { CanvasBlock } from './BuilderTypes'
 import { savePreview } from '@/lib/actions/savePreview'
 
 interface Props {
-  open:   boolean
-  onClose: () => void
-  blocks:  CanvasBlock[]
-  slug?:   string | null
+  open:      boolean
+  onClose:   () => void
+  blocks:    CanvasBlock[]
+  slug?:     string | null
+  pageName?:      string
+  pageAddress?:   string
+  pageLanguages?: string[]
 }
 
-export default function PreviewShareModal({ open, onClose, blocks, slug }: Props) {
+export default function PreviewShareModal({ open, onClose, blocks, slug, pageName, pageAddress, pageLanguages }: Props) {
   const [loading, setLoading]   = useState(false)
   const [token, setToken]       = useState<string | null>(null)
   const [copied, setCopied]     = useState(false)
@@ -26,7 +29,11 @@ export default function PreviewShareModal({ open, onClose, blocks, slug }: Props
 
   const handleGenerate = async () => {
     setLoading(true); setError(null)
-    const result = await savePreview(blocks, slug)
+    const result = await savePreview(blocks, slug, {
+      title:     pageName     ?? '',
+      address:   pageAddress  ?? '',
+      languages: pageLanguages ?? [],
+    })
     if ('error' in result) {
       setError(result.error)
     } else {

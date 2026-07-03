@@ -612,6 +612,9 @@ export default function BuilderClient() {
           onClose={() => setShowPreviewShare(false)}
           blocks={blocks}
           slug={editSlug}
+          pageName={pageName}
+          pageAddress={pageAddress}
+          pageLanguages={pageLanguages}
         />
 
         <PublishModal
