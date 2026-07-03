@@ -26,6 +26,8 @@ import Canvas from './Canvas'
 import RightPanel from './RightPanel'
 import PublishModal from './PublishModal'
 import PreviewShareModal from './PreviewShareModal'
+import ImportFromFormModal from './ImportFromFormModal'
+import type { GeneratedBlocks } from '@/lib/actions/generateWithAI'
 
 /* ─── Helpers ────────────────────────────────────────────── */
 function makeId() {
@@ -59,6 +61,7 @@ export default function BuilderClient() {
   const [savedAt, setSavedAt]               = useState<Date | null>(null)
   const [showPublish, setShowPublish]           = useState(false)
   const [showPreviewShare, setShowPreviewShare] = useState(false)
+  const [showImportForm, setShowImportForm]     = useState(false)
   const [selectedElement, setSelectedElement]   = useState<SelectedElement | null>(null)
 
   const searchParams  = useSearchParams()
@@ -306,6 +309,15 @@ export default function BuilderClient() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  const handleImported = useCallback((data: GeneratedBlocks) => {
+    skipSnapshotRef.current = true
+    setBlocks(data.blocks)
+    setPageName(data.pageName)
+    setPageAddress(data.pageAddress)
+    setPageLanguages(data.pageLanguages)
+    setSelectedId(null)
   }, [])
 
   const handleSave = useCallback(() => {
@@ -575,6 +587,7 @@ export default function BuilderClient() {
             onViewportChange={setViewport}
             onSave={handleSave}
             savedAt={savedAt}
+            onImportForm={() => setShowImportForm(true)}
             onSharePreview={() => setShowPreviewShare(true)}
             onPublish={() => setShowPublish(true)}
           />
@@ -606,6 +619,12 @@ export default function BuilderClient() {
             {!previewMode && <RightPanel />}
           </div>
         </div>
+
+        <ImportFromFormModal
+          open={showImportForm}
+          onClose={() => setShowImportForm(false)}
+          onImported={handleImported}
+        />
 
         <PreviewShareModal
           open={showPreviewShare}

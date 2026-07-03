@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Eye, EyeOff, Undo2, Redo2, Smartphone, Monitor, Save, Leaf, Check, Share2 } from 'lucide-react'
+import { Eye, EyeOff, Undo2, Redo2, Smartphone, Monitor, Save, Leaf, Check, Share2, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
 interface Props {
@@ -14,11 +14,12 @@ interface Props {
   savedAt?: Date | null
   onPublish?: () => void
   onSharePreview?: () => void
+  onImportForm?: () => void
 }
 
 export default function BuilderTopbar({
   previewMode, viewport, blockCount,
-  onTogglePreview, onViewportChange, onSave, savedAt, onPublish, onSharePreview,
+  onTogglePreview, onViewportChange, onSave, savedAt, onPublish, onSharePreview, onImportForm,
 }: Props) {
   const [justSaved, setJustSaved] = useState(false)
 
@@ -90,6 +91,15 @@ export default function BuilderTopbar({
       >
         {previewMode ? <EyeOff size={12} /> : <Eye size={12} />}
         <span className="hidden sm:inline">{previewMode ? 'Edit' : 'Preview'}</span>
+      </button>
+
+      {/* AI Import */}
+      <button
+        onClick={onImportForm}
+        className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white transition-colors shadow-sm shrink-0"
+      >
+        <Sparkles size={12} />
+        <span className="hidden sm:inline">AI Import</span>
       </button>
 
       {/* Save / Publish */}
