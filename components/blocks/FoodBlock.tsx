@@ -120,16 +120,15 @@ export default function FoodBlock({ data }: Props) {
             <div key={item.id} className="rounded-2xl border border-stone-100 mb-3 last:mb-0 overflow-hidden">
               {/* Mobile: full-width image on top */}
               {item.image_url && (
-                <div className="relative w-full h-32 sm:hidden">
+                <div className="sm:hidden">
                   <Image
                     src={supabaseImgUrl(item.image_url, { width: 600, quality: 75 })}
                     alt={item.name || 'Food'}
-                    fill
-                    className="object-cover"
-                    sizes="100vw"
+                    width={600}
+                    height={128}
+                    className="w-full h-32 object-cover"
                     style={{
                       objectPosition: `${item.cx ?? '50'}% ${item.cy ?? '50'}%`,
-                      ...(parseFloat(item.cz ?? '1') !== 1 ? { transform: `scale(${item.cz})`, transformOrigin: `${item.cx ?? '50'}% ${item.cy ?? '50'}%` } : {}),
                     }}
                   />
                 </div>
