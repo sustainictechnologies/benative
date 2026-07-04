@@ -121,6 +121,9 @@ export function toContentData(block: CanvasBlock): Record<string, unknown> {
           desc:      txt[`${fid}-desc`]        ?? '',
           emoji:     txt[`${fid}-emoji`]       ?? '',
           tags:      (txt[`${fid}-tags`] ?? '').split(',').map((t: string) => t.trim()).filter(Boolean),
+          cx:        txt[`${fid}-cx`]          ?? '50',
+          cy:        txt[`${fid}-cy`]          ?? '50',
+          cz:        txt[`${fid}-cz`]          ?? '1',
         })),
         highlights: highlightIds.map(hid => ({
           id:       hid,

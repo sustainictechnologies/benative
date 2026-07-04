@@ -188,7 +188,7 @@ export default function BuilderClient() {
               if (d.title)          texts['food-title'] = d.title
               if (d.description)    texts['food-desc']  = d.description
               if (d.hero_image_url) images['food-hero'] = d.hero_image_url
-              const foodItems = (d.items ?? []) as Array<{ id?: string; image_url?: string; name?: string; desc?: string; emoji?: string; tags?: string[] }>
+              const foodItems = (d.items ?? []) as Array<{ id?: string; image_url?: string; name?: string; desc?: string; emoji?: string; tags?: string[]; cx?: string; cy?: string; cz?: string }>
               const foodIds = foodItems.map((item, i) => item.id ?? `fd-${i}`)
               if (foodIds.length) texts['food-meta'] = JSON.stringify(foodIds)
               foodItems.forEach((item, i) => {
@@ -198,6 +198,9 @@ export default function BuilderClient() {
                 if (item.desc)         texts[`${fid}-desc`]  = item.desc
                 if (item.emoji)        texts[`${fid}-emoji`] = item.emoji
                 if (item.tags?.length) texts[`${fid}-tags`]  = item.tags.join(', ')
+                if (item.cx)           texts[`${fid}-cx`]    = item.cx
+                if (item.cy)           texts[`${fid}-cy`]    = item.cy
+                if (item.cz)           texts[`${fid}-cz`]    = item.cz
               })
               const highlights = (d.highlights ?? []) as Array<{ id?: string; icon?: string; label?: string; sublabel?: string }>
               const hids = highlights.map((h, i) => h.id ?? `fh-${i}`)

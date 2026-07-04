@@ -17,6 +17,9 @@ interface FoodItem {
   desc:      string
   emoji?:    string
   tags?:     string[]
+  cx?:       string
+  cy?:       string
+  cz?:       string
 }
 
 interface Props {
@@ -143,6 +146,13 @@ export default function FoodBlock({ data }: Props) {
                     fill
                     className="object-cover"
                     sizes="144px"
+                    style={{
+                      objectPosition: `${item.cx ?? '50'}% ${item.cy ?? '50'}%`,
+                      ...(parseFloat(item.cz ?? '1') !== 1 ? {
+                        transform: `scale(${item.cz})`,
+                        transformOrigin: `${item.cx ?? '50'}% ${item.cy ?? '50'}%`,
+                      } : {}),
+                    }}
                   />
                 </div>
               )}
