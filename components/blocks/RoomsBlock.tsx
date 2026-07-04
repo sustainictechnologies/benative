@@ -70,7 +70,7 @@ export default function RoomsBlock({ data }: Props) {
         {rooms.map(room => (
           <div key={room.id} className="rounded-xl border border-stone-200 overflow-hidden bg-white">
             {room.image_url && (
-              <div className="relative aspect-[4/3] w-full">
+              <div className="relative aspect-[16/9] sm:aspect-[4/3] w-full">
                 <Image
                   src={supabaseImgUrl(room.image_url, { width: 400, quality: 75 })}
                   alt={room.name || 'Room'}

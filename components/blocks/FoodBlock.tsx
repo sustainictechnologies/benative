@@ -120,7 +120,7 @@ export default function FoodBlock({ data }: Props) {
             <div key={item.id} className="rounded-2xl border border-stone-100 mb-3 last:mb-0 overflow-hidden">
               {/* Mobile: full-width image on top */}
               {item.image_url && (
-                <div className="relative w-full h-44 sm:hidden">
+                <div className="relative w-full h-32 sm:hidden">
                   <Image
                     src={supabaseImgUrl(item.image_url, { width: 600, quality: 75 })}
                     alt={item.name || 'Food'}
@@ -135,7 +135,7 @@ export default function FoodBlock({ data }: Props) {
                 </div>
               )}
               {/* Content row */}
-              <div className="flex items-center gap-4 p-3">
+              <div className="flex items-start gap-3 p-3">
                 <FoodItemIcon value={item.emoji ?? ''} />
                 <div className="flex-1 min-w-0 space-y-1">
                   {item.name && <p className="text-base font-bold text-stone-900">{item.name}</p>}
