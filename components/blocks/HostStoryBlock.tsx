@@ -67,10 +67,18 @@ export default function HostStoryBlock({ data }: Props) {
           <h2 className="text-base font-semibold text-stone-900">{data.story_title}</h2>
         )}
         {data.story_text && (
-          <p className="text-sm text-stone-600 leading-relaxed">{data.story_text}</p>
+          <div className="space-y-3">
+            {(data.story_text ?? '').split('\n').filter(p => p.trim()).map((para, i) => (
+              <p key={i} className="text-sm text-stone-600 leading-relaxed">{para}</p>
+            ))}
+          </div>
         )}
         {data.sub_texts?.map(st => st.content && (
-          <p key={st.id} className="text-sm text-stone-600 leading-relaxed">{st.content}</p>
+          <div key={st.id} className="space-y-3">
+            {(st.content ?? '').split('\n').filter(p => p.trim()).map((para, i) => (
+              <p key={i} className="text-sm text-stone-600 leading-relaxed">{para}</p>
+            ))}
+          </div>
         ))}
       </div>
     </div>

@@ -100,7 +100,11 @@ export default function FoodBlock({ data }: Props) {
           <h2 className="text-2xl font-bold text-stone-900 leading-tight">{data.title}</h2>
         )}
         {data.description && (
-          <p className="text-sm text-stone-500 leading-relaxed">{data.description}</p>
+          <div className="space-y-2">
+            {(data.description ?? '').split('\n').filter(p => p.trim()).map((para, i) => (
+              <p key={i} className="text-sm text-stone-500 leading-relaxed">{para}</p>
+            ))}
+          </div>
         )}
       </div>
 
@@ -114,7 +118,9 @@ export default function FoodBlock({ data }: Props) {
               <FoodItemIcon value={item.emoji ?? ''} />
               <div className="flex-1 min-w-0 space-y-1">
                 {item.name && <p className="text-base font-bold text-stone-900">{item.name}</p>}
-                {item.desc && <p className="text-sm text-stone-500">{item.desc}</p>}
+                {item.desc && (item.desc ?? '').split('\n').filter(p => p.trim()).map((para, i) => (
+                  <p key={i} className="text-sm text-stone-500">{para}</p>
+                ))}
                 {item.tags && item.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {item.tags.map(tag => (

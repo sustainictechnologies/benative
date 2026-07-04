@@ -43,17 +43,20 @@ function LayoutRenderer({ block }: { block: HomestayBlock }) {
             if (cell.type === 'text') {
               const text = layout.cells?.[cell.id] ?? ''
               if (!text) return <div key={cell.id} />
+              const cellStyle: React.CSSProperties = {
+                fontFamily: styles[`${cell.id}-font`]  || undefined,
+                fontSize:   styles[`${cell.id}-size`]  ? `${styles[`${cell.id}-size`]}px` : undefined,
+                color:      styles[`${cell.id}-color`] || undefined,
+                fontWeight: styles[`${cell.id}-bold`]   === 'true' ? 'bold'   : undefined,
+                fontStyle:  styles[`${cell.id}-italic`] === 'true' ? 'italic' : undefined,
+                textAlign:  (styles[`${cell.id}-align`] || undefined) as React.CSSProperties['textAlign'],
+              }
               return (
-                <p key={cell.id} className="text-sm text-stone-600 leading-relaxed"
-                  style={{
-                    fontFamily: styles[`${cell.id}-font`]  || undefined,
-                    fontSize:   styles[`${cell.id}-size`]  ? `${styles[`${cell.id}-size`]}px` : undefined,
-                    color:      styles[`${cell.id}-color`] || undefined,
-                    fontWeight: styles[`${cell.id}-bold`]   === 'true' ? 'bold'   : undefined,
-                    fontStyle:  styles[`${cell.id}-italic`] === 'true' ? 'italic' : undefined,
-                    textAlign:  (styles[`${cell.id}-align`] || undefined) as React.CSSProperties['textAlign'],
-                  }}
-                >{text}</p>
+                <div key={cell.id} className="space-y-2">
+                  {text.split('\n').filter(p => p.trim()).map((para, i) => (
+                    <p key={i} className="text-sm text-stone-600 leading-relaxed" style={cellStyle}>{para}</p>
+                  ))}
+                </div>
               )
             }
             if (cell.type === 'image') {
@@ -97,22 +100,23 @@ function SubTexts({ block }: { block: HomestayBlock }) {
 
   return (
     <div className="mt-3 space-y-2">
-      {subTexts.map(st => (
-        <p
-          key={st.id}
-          className="text-sm text-stone-600 leading-relaxed"
-          style={{
-            fontFamily: styles[`${st.id}-font`]  || undefined,
-            fontSize:   styles[`${st.id}-size`]  ? `${styles[`${st.id}-size`]}px` : undefined,
-            color:      styles[`${st.id}-color`] || undefined,
-            fontWeight: styles[`${st.id}-bold`]   === 'true' ? 'bold'   : undefined,
-            fontStyle:  styles[`${st.id}-italic`] === 'true' ? 'italic' : undefined,
-            textAlign:  (styles[`${st.id}-align`] || undefined) as React.CSSProperties['textAlign'],
-          }}
-        >
-          {st.content}
-        </p>
-      ))}
+      {subTexts.map(st => {
+        const stStyle: React.CSSProperties = {
+          fontFamily: styles[`${st.id}-font`]  || undefined,
+          fontSize:   styles[`${st.id}-size`]  ? `${styles[`${st.id}-size`]}px` : undefined,
+          color:      styles[`${st.id}-color`] || undefined,
+          fontWeight: styles[`${st.id}-bold`]   === 'true' ? 'bold'   : undefined,
+          fontStyle:  styles[`${st.id}-italic`] === 'true' ? 'italic' : undefined,
+          textAlign:  (styles[`${st.id}-align`] || undefined) as React.CSSProperties['textAlign'],
+        }
+        return (
+          <div key={st.id} className="space-y-2">
+            {(st.content ?? '').split('\n').filter(p => p.trim()).map((para, i) => (
+              <p key={i} className="text-sm text-stone-600 leading-relaxed" style={stStyle}>{para}</p>
+            ))}
+          </div>
+        )
+      })}
     </div>
   )
 }

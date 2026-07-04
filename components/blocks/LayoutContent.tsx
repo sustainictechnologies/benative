@@ -54,9 +54,11 @@ function TextCell({ content, cellId, cells }: { content: string; cellId: string;
   }
 
   return (
-    <p className="text-sm text-stone-600 leading-relaxed" style={style}>
-      {content}
-    </p>
+    <div className="space-y-2">
+      {(content ?? '').split('\n').filter(p => p.trim()).map((para, i) => (
+        <p key={i} className="text-sm text-stone-600 leading-relaxed" style={style}>{para}</p>
+      ))}
+    </div>
   )
 }
 

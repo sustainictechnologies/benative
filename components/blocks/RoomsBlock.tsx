@@ -41,7 +41,11 @@ export default function RoomsBlock({ data }: Props) {
           <div className="w-8 h-0.5 bg-green-600 mt-2 rounded-full" />
         </div>
         {data.description && (
-          <p className="text-sm text-stone-500 leading-relaxed">{data.description}</p>
+          <div className="space-y-2">
+            {(data.description ?? '').split('\n').filter(p => p.trim()).map((para, i) => (
+              <p key={i} className="text-sm text-stone-500 leading-relaxed">{para}</p>
+            ))}
+          </div>
         )}
 
         {/* Stat pills */}

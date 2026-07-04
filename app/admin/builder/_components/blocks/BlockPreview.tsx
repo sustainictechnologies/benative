@@ -328,7 +328,7 @@ function HostStoryPreview({ id }: { id: string }) {
             blockId={id} textKey="story-body"
             defaultValue="We've farmed this land for three generations. In 2012, we opened our home to travelers — not as a business, but as a way of sharing the life we love."
             multiline
-            className="text-sm text-stone-600 leading-relaxed w-full"
+            className="text-sm text-stone-600 leading-relaxed w-full whitespace-pre-wrap"
             as="p"
           />
         </div>
@@ -966,7 +966,7 @@ function RoomsPreview({ id }: { id: string }) {
           blockId={id} textKey="rooms-desc"
           defaultValue="Simple, clean and comfortable rooms surrounded by nature – perfect for a relaxing stay."
           multiline
-          className="text-sm text-stone-500 leading-relaxed block"
+          className="text-sm text-stone-500 leading-relaxed block whitespace-pre-wrap"
           as="p"
         />
 
@@ -1297,7 +1297,7 @@ function FoodPreview({ id }: { id: string }) {
           blockId={id} textKey="food-desc"
           defaultValue="Fresh, home-cooked meals prepared with local ingredients and traditional family recipes."
           multiline
-          className="text-sm text-stone-500 leading-relaxed block"
+          className="text-sm text-stone-500 leading-relaxed block whitespace-pre-wrap"
           as="p"
         />
       </div>
@@ -1536,7 +1536,7 @@ function TextCell({ blockId, cellId }: { blockId: string; cellId: string }) {
         blockId={blockId} textKey={cellId}
         defaultValue="Click to write…"
         multiline
-        className="text-sm text-stone-600 leading-relaxed w-full min-h-[2rem]"
+        className="text-sm text-stone-600 leading-relaxed w-full min-h-[2rem] whitespace-pre-wrap"
         as="p"
       />
     </div>
@@ -1627,7 +1627,7 @@ function LayoutSection({ blockId }: { blockId: string }) {
             blockId={blockId} textKey={id}
             defaultValue="Click to write…"
             multiline
-            className="text-sm text-stone-600 leading-relaxed w-full"
+            className="text-sm text-stone-600 leading-relaxed w-full whitespace-pre-wrap"
             as="p"
           />
         </div>
