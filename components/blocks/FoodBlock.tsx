@@ -117,29 +117,48 @@ export default function FoodBlock({ data }: Props) {
           {items.map(item => {
             const iconMeta = FOOD_ICON_MAP[(item.emoji ?? '').toLowerCase().trim()]
             return (
-            <div key={item.id} className="flex items-center gap-4 p-3 rounded-2xl border border-stone-100 mb-3 last:mb-0">
-              <FoodItemIcon value={item.emoji ?? ''} />
-              <div className="flex-1 min-w-0 space-y-1">
-                {item.name && <p className="text-base font-bold text-stone-900">{item.name}</p>}
-                {item.desc && (item.desc ?? '').split('\n').filter(p => p.trim()).map((para, i) => (
-                  <p key={i} className="text-sm text-stone-500">{para}</p>
-                ))}
-                {item.tags && item.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {item.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="text-xs px-2 py-0.5 rounded-full font-medium border"
-                        style={iconMeta
-                          ? { backgroundColor: iconMeta.tagBg, color: iconMeta.tagText, borderColor: iconMeta.tagBorder }
-                          : { backgroundColor: '#f0fdf4', color: '#16a34a', borderColor: '#bbf7d0' }}
-                      >{tag}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
+            <div key={item.id} className="rounded-2xl border border-stone-100 mb-3 last:mb-0 overflow-hidden">
+              {/* Mobile: full-width image on top */}
               {item.image_url && (
-                <div className="relative w-36 h-28 rounded-2xl overflow-hidden shrink-0">
+                <div className="relative w-full h-44 sm:hidden">
+                  <Image
+                    src={supabaseImgUrl(item.image_url, { width: 600, quality: 75 })}
+                    alt={item.name || 'Food'}
+                    fill
+                    className="object-cover"
+                    sizes="100vw"
+                    style={{
+                      objectPosition: `${item.cx ?? '50'}% ${item.cy ?? '50'}%`,
+                      ...(parseFloat(item.cz ?? '1') !== 1 ? { transform: `scale(${item.cz})`, transformOrigin: `${item.cx ?? '50'}% ${item.cy ?? '50'}%` } : {}),
+                    }}
+                  />
+                </div>
+              )}
+              {/* Content row */}
+              <div className="flex items-center gap-4 p-3">
+                <FoodItemIcon value={item.emoji ?? ''} />
+                <div className="flex-1 min-w-0 space-y-1">
+                  {item.name && <p className="text-base font-bold text-stone-900">{item.name}</p>}
+                  {item.desc && (item.desc ?? '').split('\n').filter(p => p.trim()).map((para, i) => (
+                    <p key={i} className="text-sm text-stone-500">{para}</p>
+                  ))}
+                  {item.tags && item.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {item.tags.map(tag => (
+                        <span
+                          key={tag}
+                          className="text-xs px-2 py-0.5 rounded-full font-medium border"
+                          style={iconMeta
+                            ? { backgroundColor: iconMeta.tagBg, color: iconMeta.tagText, borderColor: iconMeta.tagBorder }
+                            : { backgroundColor: '#f0fdf4', color: '#16a34a', borderColor: '#bbf7d0' }}
+                        >{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Desktop: image on right */}
+                {item.image_url && (
+                <div className="relative w-36 h-28 rounded-2xl overflow-hidden shrink-0 hidden sm:block">
                   <Image
                     src={supabaseImgUrl(item.image_url, { width: 300, quality: 75 })}
                     alt={item.name || 'Food'}
@@ -156,6 +175,7 @@ export default function FoodBlock({ data }: Props) {
                   />
                 </div>
               )}
+              </div>
             </div>
           )
           })}
