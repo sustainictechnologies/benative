@@ -69,6 +69,9 @@ export default function HostStoryBlock({ data }: Props) {
         {data.story_text && (
           <p className="text-sm text-stone-600 leading-relaxed">{data.story_text}</p>
         )}
+        {data.sub_texts?.map(st => st.content && (
+          <p key={st.id} className="text-sm text-stone-600 leading-relaxed">{st.content}</p>
+        ))}
       </div>
     </div>
   )

@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import type { CanvasBlock } from '../BuilderTypes'
-import { ShieldCheck, MapPin, Ban, ScrollText, Globe2, X, Plus, LayoutGrid, Type, Image as ImageIcon, List, Navigation } from 'lucide-react'
+import { ShieldCheck, MapPin, Ban, ScrollText, Globe2, X, Plus, LayoutGrid, Type, Image as ImageIcon, List, Navigation, Fish, Utensils, Sun, Heart, Leaf, Home, Sprout, Coffee, Wheat, Disc2, Salad, BedDouble, Users, Beef, Drumstick, Egg, ChefHat, Flame, Apple, Soup, Pizza, Sandwich, Carrot, Cherry, Cookie } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import EditableImage from '../EditableImage'
 import EditableText from '../EditableText'
 import ActivityLogBlock from './ActivityLogBlock'
@@ -900,13 +901,15 @@ function GalleryPreview({ id }: { id: string }) {
 
 /* ─── 7. ROOMS ───────────────────────────────────────────── */
 const ROOM_IMG_DEFAULTS = [
-  'https://images.unsplash.com/photo-1540518614846-7eded433c457?w=300&q=60',
-  'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=300&q=60',
+  'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&q=70',
+  'https://images.unsplash.com/photo-1540518614846-7eded433c457?w=400&q=70',
+  'https://images.unsplash.com/photo-1586611292717-f828b167408c?w=400&q=70',
 ]
 
 const DEFAULT_ROOMS = [
-  { name: 'Garden Room',  guests: '2 guests · 1 bed',  price: '₹2,400 / night' },
-  { name: 'Forest Suite', guests: '4 guests · 2 beds', price: '₹3,800 / night' },
+  { name: 'Garden View Room', guests: '2 Guests' },
+  { name: 'Family Room',      guests: '3 – 4 Guests' },
+  { name: 'Cottage Room',     guests: '2 Guests' },
 ]
 
 function RoomsPreview({ id }: { id: string }) {
@@ -916,7 +919,6 @@ function RoomsPreview({ id }: { id: string }) {
   const getIds = (): string[] => {
     try { return JSON.parse(getText(id, 'rooms-meta', '[]')) } catch { return [] }
   }
-
   const saveIds = (next: string[]) => updateText(id, 'rooms-meta', JSON.stringify(next))
 
   useEffect(() => {
@@ -924,9 +926,8 @@ function RoomsPreview({ id }: { id: string }) {
       const ids = DEFAULT_ROOMS.map((_, i) => `rm-${Date.now() + i}`)
       saveIds(ids)
       ids.forEach((rid, i) => {
-        updateText(id, `${rid}-name`,    DEFAULT_ROOMS[i].name)
-        updateText(id, `${rid}-guests`,  DEFAULT_ROOMS[i].guests)
-        updateText(id, `${rid}-price`,   DEFAULT_ROOMS[i].price)
+        updateText(id, `${rid}-name`,   DEFAULT_ROOMS[i].name)
+        updateText(id, `${rid}-guests`, DEFAULT_ROOMS[i].guests)
       })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -934,8 +935,7 @@ function RoomsPreview({ id }: { id: string }) {
 
   const ids = getIds()
 
-  const addRoom = () => saveIds([...ids, `rm-${Date.now()}`])
-
+  const addRoom  = () => saveIds([...ids, `rm-${Date.now()}`])
   const removeRoom = (roomId: string) => {
     saveIds(ids.filter(i => i !== roomId))
     updateImage(id, roomId, null)
@@ -944,21 +944,61 @@ function RoomsPreview({ id }: { id: string }) {
 
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-5" style={theme}>
-      <div className="flex items-center justify-between">
+
+      {/* Header */}
+      <div className="space-y-3">
         <EditableText
-          blockId={id} textKey="rooms-title"
-          defaultValue="Rooms & Accommodation"
-          className="text-base font-semibold text-stone-900"
-          as="h2"
+          blockId={id} textKey="rooms-label"
+          defaultValue="ROOMS & STAY"
+          className="text-xs font-bold uppercase tracking-widest text-green-700 block"
+          as="p"
         />
-        {!previewMode && (
-          <button
-            onClick={addRoom}
-            className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-full transition-colors"
-          >
-            <Plus size={12} /> Add Room
-          </button>
-        )}
+        <div>
+          <EditableText
+            blockId={id} textKey="rooms-title"
+            defaultValue="Comfortable Rooms, Peaceful Stay"
+            className="text-2xl font-bold text-stone-900 block leading-tight"
+            as="h2"
+          />
+          <div className="w-8 h-0.5 bg-green-600 mt-2 rounded-full" />
+        </div>
+        <EditableText
+          blockId={id} textKey="rooms-desc"
+          defaultValue="Simple, clean and comfortable rooms surrounded by nature – perfect for a relaxing stay."
+          multiline
+          className="text-sm text-stone-500 leading-relaxed block"
+          as="p"
+        />
+
+        {/* Stat pills */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-full px-3 py-1.5">
+            <BedDouble size={13} className="text-green-700 shrink-0" />
+            <EditableText
+              blockId={id} textKey="rooms-count-stat"
+              defaultValue="3 Rooms"
+              className="text-xs font-semibold text-stone-700"
+              as="span"
+            />
+          </div>
+          <div className="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-full px-3 py-1.5">
+            <Users size={13} className="text-green-700 shrink-0" />
+            <EditableText
+              blockId={id} textKey="rooms-guests-stat"
+              defaultValue="Up to 8 Guests"
+              className="text-xs font-semibold text-stone-700"
+              as="span"
+            />
+          </div>
+          {!previewMode && (
+            <button
+              onClick={addRoom}
+              className="ml-auto flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-full transition-colors"
+            >
+              <Plus size={12} /> Add Room
+            </button>
+          )}
+        </div>
       </div>
 
       {ids.length === 0 && !previewMode && (
@@ -967,11 +1007,12 @@ function RoomsPreview({ id }: { id: string }) {
         </p>
       )}
 
-      <div className="space-y-3">
+      {/* 3-column card grid */}
+      <div className="grid grid-cols-3 gap-3">
         {ids.map((roomId, i) => (
-          <div key={roomId} className="relative group/room border border-stone-100 rounded-xl overflow-hidden flex">
+          <div key={roomId} className="relative group/room rounded-xl border border-stone-200 overflow-hidden bg-white">
             {/* Image */}
-            <div className="w-28 h-24 shrink-0 relative">
+            <div className="aspect-[4/3] relative w-full">
               <EditableImage
                 blockId={id} imageKey={roomId}
                 defaultUrl={ROOM_IMG_DEFAULTS[i % ROOM_IMG_DEFAULTS.length]}
@@ -979,47 +1020,34 @@ function RoomsPreview({ id }: { id: string }) {
                 className="w-full h-full object-cover"
               />
             </div>
-
-            {/* Details */}
-            <div className="flex-1 py-2.5 px-3 space-y-1 min-w-0">
+            {/* Info */}
+            <div className="p-3 space-y-1">
               <EditableText
                 blockId={id} textKey={`${roomId}-name`}
                 defaultValue="Room Name"
-                className="text-sm font-semibold text-stone-900 w-full"
+                className="text-sm font-bold text-stone-900 block"
                 as="p"
               />
-              <EditableText
-                blockId={id} textKey={`${roomId}-guests`}
-                defaultValue="2 guests · 1 bed"
-                className="text-xs text-stone-500 w-full"
-                as="p"
-              />
-              <EditableText
-                blockId={id} textKey={`${roomId}-price`}
-                defaultValue="₹2,400 / night"
-                className="text-sm font-bold text-brand-600 w-full"
-                as="p"
-              />
-              <EditableText
-                blockId={id} textKey={`${roomId}-details`}
-                defaultValue="Add details (AC, view, bed type…)"
-                className="text-xs text-stone-400 w-full"
-                as="p"
-              />
+              <div className="flex items-center gap-1.5">
+                <Users size={11} className="text-stone-400 shrink-0" />
+                <EditableText
+                  blockId={id} textKey={`${roomId}-guests`}
+                  defaultValue="2 Guests"
+                  className="text-xs text-stone-500"
+                  as="span"
+                />
+              </div>
             </div>
-
-            {/* Delete button */}
             {!previewMode && (
               <button
                 onClick={e => { e.stopPropagation(); removeRoom(roomId) }}
                 className="absolute top-1.5 right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/room:opacity-100 transition-opacity text-[10px] z-10"
-              >
-                ×
-              </button>
+              >×</button>
             )}
           </div>
         ))}
       </div>
+
     </div>
   )
 }
@@ -1062,15 +1090,142 @@ function ReviewsPreview() {
 }
 
 /* ─── 10. FOOD SECTION ───────────────────────────────────── */
+
+const FOOD_ICON_MAP: Record<string, { Icon: LucideIcon; bg: string; color: string; tagBg: string; tagText: string; tagBorder: string }> = {
+  fish:      { Icon: Fish,      bg: 'bg-teal-50',    color: 'text-teal-500',    tagBg: '#f0fdfa', tagText: '#0d9488', tagBorder: '#99f6e4' },
+  disc2:     { Icon: Disc2,     bg: 'bg-orange-50',  color: 'text-orange-500',  tagBg: '#fff7ed', tagText: '#ea580c', tagBorder: '#fed7aa' },
+  utensils:  { Icon: Utensils,  bg: 'bg-orange-50',  color: 'text-orange-500',  tagBg: '#fff7ed', tagText: '#ea580c', tagBorder: '#fed7aa' },
+  sun:       { Icon: Sun,       bg: 'bg-yellow-50',  color: 'text-yellow-500',  tagBg: '#fefce8', tagText: '#a16207', tagBorder: '#fef08a' },
+  heart:     { Icon: Heart,     bg: 'bg-pink-50',    color: 'text-pink-400',    tagBg: '#fdf2f8', tagText: '#db2777', tagBorder: '#fbcfe8' },
+  leaf:      { Icon: Leaf,      bg: 'bg-green-50',   color: 'text-green-600',   tagBg: '#f0fdf4', tagText: '#16a34a', tagBorder: '#bbf7d0' },
+  home:      { Icon: Home,      bg: 'bg-green-50',   color: 'text-green-600',   tagBg: '#f0fdf4', tagText: '#16a34a', tagBorder: '#bbf7d0' },
+  sprout:    { Icon: Sprout,    bg: 'bg-emerald-50', color: 'text-emerald-600', tagBg: '#ecfdf5', tagText: '#059669', tagBorder: '#a7f3d0' },
+  coffee:    { Icon: Coffee,    bg: 'bg-amber-50',   color: 'text-amber-500',   tagBg: '#fffbeb', tagText: '#d97706', tagBorder: '#fde68a' },
+  wheat:     { Icon: Wheat,     bg: 'bg-yellow-50',  color: 'text-yellow-600',  tagBg: '#fefce8', tagText: '#a16207', tagBorder: '#fef08a' },
+  salad:     { Icon: Salad,     bg: 'bg-green-50',   color: 'text-green-600',   tagBg: '#f0fdf4', tagText: '#16a34a', tagBorder: '#bbf7d0' },
+  beef:      { Icon: Beef,      bg: 'bg-red-50',     color: 'text-red-500',     tagBg: '#fef2f2', tagText: '#dc2626', tagBorder: '#fecaca' },
+  drumstick: { Icon: Drumstick, bg: 'bg-amber-50',   color: 'text-amber-600',   tagBg: '#fffbeb', tagText: '#d97706', tagBorder: '#fde68a' },
+  egg:       { Icon: Egg,       bg: 'bg-yellow-50',  color: 'text-yellow-600',  tagBg: '#fefce8', tagText: '#a16207', tagBorder: '#fef08a' },
+  chefhat:   { Icon: ChefHat,   bg: 'bg-green-50',   color: 'text-green-700',   tagBg: '#f0fdf4', tagText: '#15803d', tagBorder: '#bbf7d0' },
+  flame:     { Icon: Flame,     bg: 'bg-orange-50',  color: 'text-orange-600',  tagBg: '#fff7ed', tagText: '#ea580c', tagBorder: '#fed7aa' },
+  apple:     { Icon: Apple,     bg: 'bg-red-50',     color: 'text-red-400',     tagBg: '#fef2f2', tagText: '#f87171', tagBorder: '#fecaca' },
+  soup:      { Icon: Soup,      bg: 'bg-orange-50',  color: 'text-orange-500',  tagBg: '#fff7ed', tagText: '#ea580c', tagBorder: '#fed7aa' },
+  pizza:     { Icon: Pizza,     bg: 'bg-yellow-50',  color: 'text-yellow-600',  tagBg: '#fefce8', tagText: '#a16207', tagBorder: '#fef08a' },
+  sandwich:  { Icon: Sandwich,  bg: 'bg-amber-50',   color: 'text-amber-600',   tagBg: '#fffbeb', tagText: '#d97706', tagBorder: '#fde68a' },
+  carrot:    { Icon: Carrot,    bg: 'bg-orange-50',  color: 'text-orange-500',  tagBg: '#fff7ed', tagText: '#ea580c', tagBorder: '#fed7aa' },
+  cherry:    { Icon: Cherry,    bg: 'bg-pink-50',    color: 'text-pink-500',    tagBg: '#fdf2f8', tagText: '#ec4899', tagBorder: '#fbcfe8' },
+  cookie:    { Icon: Cookie,    bg: 'bg-amber-50',   color: 'text-amber-600',   tagBg: '#fffbeb', tagText: '#d97706', tagBorder: '#fde68a' },
+}
+
+function FoodItemIcon({ value }: { value: string }) {
+  const mapped = FOOD_ICON_MAP[value?.toLowerCase()?.trim() ?? '']
+  if (mapped) {
+    const { Icon, bg, color } = mapped
+    return (
+      <div className={`w-16 h-16 rounded-2xl ${bg} flex items-center justify-center shrink-0`}>
+        <Icon size={28} strokeWidth={1.5} className={color} />
+      </div>
+    )
+  }
+  return (
+    <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center shrink-0">
+      <span className="text-3xl leading-none">{value || '🍽️'}</span>
+    </div>
+  )
+}
+
+function HighlightIcon({ value }: { value: string }) {
+  const mapped = FOOD_ICON_MAP[value?.toLowerCase()?.trim() ?? '']
+  if (mapped) {
+    const { Icon } = mapped
+    return <Icon size={32} strokeWidth={1.5} className="text-green-600" />
+  }
+  return <span className="text-3xl leading-none">{value || '🌿'}</span>
+}
+
+function FoodIconPicker({ blockId, textKey, defaultValue, forHighlight = false }: {
+  blockId: string
+  textKey: string
+  defaultValue: string
+  forHighlight?: boolean
+}) {
+  const { getText, updateText, previewMode } = useBuilder()
+  const [pickerPos, setPickerPos] = useState<{ top: number; left: number } | null>(null)
+  const btnRef = React.useRef<HTMLButtonElement>(null)
+  const value = getText(blockId, textKey, defaultValue).toLowerCase().trim()
+
+  const openPicker = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (pickerPos) { setPickerPos(null); return }
+    const rect = btnRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const pickerW = 224
+    const left = rect.left + pickerW > window.innerWidth ? window.innerWidth - pickerW - 8 : rect.left
+    setPickerPos({ top: rect.top, left })
+  }
+
+  if (previewMode) {
+    return forHighlight ? <HighlightIcon value={value} /> : <FoodItemIcon value={value} />
+  }
+
+  return (
+    <div className="shrink-0">
+      <button
+        ref={btnRef}
+        onClick={openPicker}
+        className="relative group/iconpick block cursor-pointer"
+        title="Click to change icon"
+      >
+        {forHighlight ? <HighlightIcon value={value} /> : <FoodItemIcon value={value} />}
+        <div className="absolute inset-0 rounded-2xl bg-black/0 group-hover/iconpick:bg-black/10 transition-colors pointer-events-none" />
+        <span className="absolute -bottom-1 -right-1 bg-green-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[9px] shadow pointer-events-none">✎</span>
+      </button>
+      {pickerPos && (
+        <>
+          <div className="fixed inset-0 z-[9998]" onClick={() => setPickerPos(null)} />
+          <div
+            className="fixed z-[9999] bg-white rounded-xl shadow-xl border border-stone-200 p-2.5 w-56"
+            style={{ top: pickerPos.top, left: pickerPos.left, transform: 'translateY(-100%) translateY(-8px)' }}
+          >
+            <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 px-0.5 pb-2">Choose Icon</p>
+            <div className="grid grid-cols-6 gap-1 max-h-44 overflow-y-auto pr-0.5">
+              {Object.entries(FOOD_ICON_MAP).map(([key, meta]) => (
+                <button
+                  key={key}
+                  onClick={() => { updateText(blockId, textKey, key); setPickerPos(null) }}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-110 ${meta.bg} ${value === key ? 'ring-2 ring-offset-1 ring-green-500' : ''}`}
+                  title={key}
+                >
+                  <meta.Icon size={16} strokeWidth={1.5} className={meta.color} />
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+const FOOD_HERO_DEFAULT = 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=70'
 const FOOD_IMG_DEFAULTS = [
-  'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=200&q=60',
-  'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=200&q=60',
-  'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=200&q=60',
+  'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=300&q=65',
+  'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=300&q=65',
+  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&q=65',
 ]
 
 const DEFAULT_FOOD_ITEMS = [
-  { name: 'Home-cooked Meals',     desc: 'Fresh vegetables from our garden' },
-  { name: 'Traditional Breakfast', desc: 'Poha, chai, seasonal fruits'       },
+  { name: 'Fresh Seafood',       desc: 'Daily catch cooked in authentic Malvani style.',        emoji: 'fish',  tags: 'Fresh Catch,Seasonal'       },
+  { name: 'Malvani Thali',       desc: 'A wholesome traditional meal with local flavours.',      emoji: 'disc2', tags: 'Authentic,Family Recipes'    },
+  { name: 'Traditional Breakfast', desc: 'Freshly prepared breakfast with seasonal ingredients.', emoji: 'sun',   tags: 'Local,Healthy'               },
+  { name: 'Homemade with Love',  desc: 'Simple, fresh meals made with care and warmth.',         emoji: 'heart', tags: 'Homemade,Made with Love'     },
+]
+
+const DEFAULT_FOOD_HIGHLIGHTS = [
+  { icon: 'leaf',   label: 'Homemade',           sublabel: 'Cooked with love'       },
+  { icon: 'sprout', label: 'Local Ingredients',   sublabel: 'Sourced locally'        },
+  { icon: 'fish',   label: 'Fresh Seafood',        sublabel: 'Daily market catch'     },
+  { icon: 'wheat',  label: 'Vegetarian Options',   sublabel: 'Available on request'  },
 ]
 
 function FoodPreview({ id }: { id: string }) {
@@ -1080,111 +1235,183 @@ function FoodPreview({ id }: { id: string }) {
   const getIds = (): string[] => {
     try { return JSON.parse(getText(id, 'food-meta', '[]')) } catch { return [] }
   }
+  const getHighlightIds = (): string[] => {
+    try { return JSON.parse(getText(id, 'food-highlights-meta', '[]')) } catch { return [] }
+  }
 
-  const saveIds = (next: string[]) => updateText(id, 'food-meta', JSON.stringify(next))
+  const saveIds          = (next: string[]) => updateText(id, 'food-meta',            JSON.stringify(next))
+  const saveHighlightIds = (next: string[]) => updateText(id, 'food-highlights-meta', JSON.stringify(next))
 
   useEffect(() => {
     if (!getText(id, 'food-meta', '')) {
       const ids = DEFAULT_FOOD_ITEMS.map((_, i) => `fd-${Date.now() + i}`)
       saveIds(ids)
       ids.forEach((fid, i) => {
-        updateText(id, `${fid}-name`, DEFAULT_FOOD_ITEMS[i].name)
-        updateText(id, `${fid}-desc`, DEFAULT_FOOD_ITEMS[i].desc)
+        updateText(id, `${fid}-name`,  DEFAULT_FOOD_ITEMS[i].name)
+        updateText(id, `${fid}-desc`,  DEFAULT_FOOD_ITEMS[i].desc)
+        updateText(id, `${fid}-emoji`, DEFAULT_FOOD_ITEMS[i].emoji)
+        updateText(id, `${fid}-tags`,  DEFAULT_FOOD_ITEMS[i].tags)
+      })
+    }
+    if (!getText(id, 'food-highlights-meta', '')) {
+      const hids = DEFAULT_FOOD_HIGHLIGHTS.map((_, i) => `fh-${Date.now() + 100 + i}`)
+      saveHighlightIds(hids)
+      hids.forEach((hid, i) => {
+        updateText(id, `${hid}-icon`,     DEFAULT_FOOD_HIGHLIGHTS[i].icon)
+        updateText(id, `${hid}-label`,    DEFAULT_FOOD_HIGHLIGHTS[i].label)
+        updateText(id, `${hid}-sublabel`, DEFAULT_FOOD_HIGHLIGHTS[i].sublabel)
       })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  const ids = getIds()
+  const ids  = getIds()
+  const hids = getHighlightIds()
 
   const addItem = () => saveIds([...ids, `fd-${Date.now()}`])
 
   const removeItem = (fid: string) => {
     saveIds(ids.filter(i => i !== fid))
     updateImage(id, fid, null)
-    ;['-name', '-desc'].forEach(s => updateText(id, `${fid}${s}`, null))
+    ;['-name', '-desc', '-emoji', '-tags'].forEach(s => updateText(id, `${fid}${s}`, null))
   }
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-5" style={theme}>
-      {/* Section header */}
-      <div className="space-y-1.5">
+    <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden" style={theme}>
+
+      {/* Header */}
+      <div className="p-6 space-y-2">
         <EditableText
           blockId={id} textKey="food-label"
-          defaultValue="Farm to Table"
-          className="text-xs font-semibold uppercase tracking-widest text-brand-600 block"
+          defaultValue="🍴 FOOD & DINING"
+          className="text-xs font-bold uppercase tracking-widest text-green-700 block"
           as="p"
         />
         <EditableText
           blockId={id} textKey="food-title"
-          defaultValue="Authentic Home Cooking"
-          className="text-base font-semibold text-stone-900 block"
+          defaultValue="Home-Cooked Meals"
+          className="text-2xl font-bold text-stone-900 block leading-tight"
           as="h2"
         />
         <EditableText
           blockId={id} textKey="food-desc"
-          defaultValue="Fresh vegetables from our garden, traditional recipes passed through generations."
+          defaultValue="Fresh, home-cooked meals prepared with local ingredients and traditional family recipes."
           multiline
-          className="text-sm text-stone-600 leading-relaxed block"
+          className="text-sm text-stone-500 leading-relaxed block"
           as="p"
         />
       </div>
 
-      {/* Add button */}
-      {!previewMode && (
-        <div className="flex justify-end">
-          <button
-            onClick={addItem}
-            className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-full transition-colors"
-          >
-            <Plus size={12} /> Add Dish
-          </button>
+      {/* Items */}
+      <div className="px-5 pt-3 pb-4">
+        {!previewMode && (
+          <div className="flex justify-end mb-2">
+            <button
+              onClick={addItem}
+              className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-full transition-colors"
+            >
+              <Plus size={12} /> Add Dish
+            </button>
+          </div>
+        )}
+
+        {ids.length === 0 && !previewMode && (
+          <p className="text-xs text-stone-400 text-center py-4 border border-dashed border-stone-200 rounded-xl">
+            No dishes yet — click "+ Add Dish" to start
+          </p>
+        )}
+
+        {ids.map((fid, i) => {
+          const tagsStr  = getText(id, `${fid}-tags`, '')
+          const tags     = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : []
+          const iconKey  = getText(id, `${fid}-emoji`, 'utensils').toLowerCase().trim()
+          const iconMeta = FOOD_ICON_MAP[iconKey]
+          return (
+            <div key={fid} className="relative group/food flex items-center gap-4 p-3 rounded-2xl border border-stone-100 mb-3 last:mb-0">
+              {/* Icon */}
+              <FoodIconPicker blockId={id} textKey={`${fid}-emoji`} defaultValue="utensils" />
+
+              {/* Name / desc / tags */}
+              <div className="flex-1 min-w-0 space-y-1">
+                <EditableText
+                  blockId={id} textKey={`${fid}-name`}
+                  defaultValue="Dish Name"
+                  className="text-base font-bold text-stone-900 block"
+                  as="p"
+                />
+                <EditableText
+                  blockId={id} textKey={`${fid}-desc`}
+                  defaultValue="Short description…"
+                  className="text-sm text-stone-500 block"
+                  as="p"
+                />
+                {previewMode ? (
+                  tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {tags.map(tag => (
+                        <span
+                          key={tag}
+                          className="text-xs px-2 py-0.5 rounded-full font-medium border"
+                          style={iconMeta
+                            ? { backgroundColor: iconMeta.tagBg, color: iconMeta.tagText, borderColor: iconMeta.tagBorder }
+                            : { backgroundColor: '#f0fdf4', color: '#16a34a', borderColor: '#bbf7d0' }}
+                        >{tag}</span>
+                      ))}
+                    </div>
+                  )
+                ) : (
+                  <EditableText
+                    blockId={id} textKey={`${fid}-tags`}
+                    defaultValue="Fresh Catch, Seasonal"
+                    className="text-xs text-stone-400 italic block"
+                    as="p"
+                  />
+                )}
+              </div>
+
+              {/* Photo */}
+              <div className="w-36 h-28 rounded-2xl overflow-hidden shrink-0 relative">
+                <EditableImage
+                  blockId={id} imageKey={fid}
+                  defaultUrl={FOOD_IMG_DEFAULTS[i % FOOD_IMG_DEFAULTS.length]}
+                  wrapperClassName="absolute inset-0"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {!previewMode && (
+                <button
+                  onClick={e => { e.stopPropagation(); removeItem(fid) }}
+                  className="absolute top-2 right-2 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/food:opacity-100 transition-opacity text-[10px] z-10"
+                >×</button>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Highlights strip */}
+      {hids.length > 0 && (
+        <div className="border-t border-stone-100 bg-stone-50 grid grid-cols-4 divide-x divide-stone-100">
+          {hids.map(hid => (
+            <div key={hid} className="flex flex-col items-center gap-0.5 py-4 px-2 text-center">
+              <FoodIconPicker blockId={id} textKey={`${hid}-icon`} defaultValue="leaf" forHighlight />
+              <EditableText
+                blockId={id} textKey={`${hid}-label`}
+                defaultValue="Label"
+                className="text-sm font-bold text-green-700 block mt-1"
+                as="p"
+              />
+              <EditableText
+                blockId={id} textKey={`${hid}-sublabel`}
+                defaultValue="Sublabel"
+                className="text-xs text-stone-400 block"
+                as="p"
+              />
+            </div>
+          ))}
         </div>
       )}
-
-      {ids.length === 0 && !previewMode && (
-        <p className="text-xs text-stone-400 text-center py-4 border border-dashed border-stone-200 rounded-xl">
-          No dishes yet — click "+ Add Dish" to start
-        </p>
-      )}
-
-      {/* Food items */}
-      <div className="space-y-3">
-        {ids.map((fid, i) => (
-          <div key={fid} className="relative group/food border border-stone-100 rounded-xl overflow-hidden flex">
-            <div className="w-24 h-20 shrink-0 relative">
-              <EditableImage
-                blockId={id} imageKey={fid}
-                defaultUrl={FOOD_IMG_DEFAULTS[i % FOOD_IMG_DEFAULTS.length]}
-                wrapperClassName="absolute inset-0"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-1 py-2.5 px-3 space-y-1 min-w-0">
-              <EditableText
-                blockId={id} textKey={`${fid}-name`}
-                defaultValue="Dish Name"
-                className="text-sm font-semibold text-stone-900 w-full"
-                as="p"
-              />
-              <EditableText
-                blockId={id} textKey={`${fid}-desc`}
-                defaultValue="Short description…"
-                className="text-xs text-stone-500 w-full"
-                as="p"
-              />
-            </div>
-            {!previewMode && (
-              <button
-                onClick={e => { e.stopPropagation(); removeItem(fid) }}
-                className="absolute top-1.5 right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/food:opacity-100 transition-opacity text-[10px] z-10"
-              >
-                ×
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
     </div>
   )
 }

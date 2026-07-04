@@ -95,20 +95,38 @@ export function toContentData(block: CanvasBlock): Record<string, unknown> {
         price:     txt[`${rid}-price`]  ?? '',
         details:   txt[`${rid}-details`] ?? '',
       }))
-      return { title: txt['rooms-title'] ?? '', rooms }
+      return {
+        label:       txt['rooms-label']       ?? '',
+        title:       txt['rooms-title']       ?? '',
+        description: txt['rooms-desc']        ?? '',
+        count_stat:  txt['rooms-count-stat']  ?? '',
+        guests_stat: txt['rooms-guests-stat'] ?? '',
+        rooms,
+      }
     }
     case 'food': {
       let ids: string[] = []
       try { ids = JSON.parse(txt['food-meta'] ?? '[]') } catch {}
+      let highlightIds: string[] = []
+      try { highlightIds = JSON.parse(txt['food-highlights-meta'] ?? '[]') } catch {}
       return {
-        label:       txt['food-label'] ?? '',
-        title:       txt['food-title'] ?? '',
-        description: txt['food-desc']  ?? '',
+        label:          txt['food-label'] ?? '',
+        title:          txt['food-title'] ?? '',
+        description:    txt['food-desc']  ?? '',
+        hero_image_url: img['food-hero']  ?? null,
         items: ids.map(fid => ({
           id:        fid,
-          image_url: img[fid]             ?? null,
-          name:      txt[`${fid}-name`]   ?? '',
-          desc:      txt[`${fid}-desc`]   ?? '',
+          image_url: img[fid]                  ?? null,
+          name:      txt[`${fid}-name`]        ?? '',
+          desc:      txt[`${fid}-desc`]        ?? '',
+          emoji:     txt[`${fid}-emoji`]       ?? '',
+          tags:      (txt[`${fid}-tags`] ?? '').split(',').map((t: string) => t.trim()).filter(Boolean),
+        })),
+        highlights: highlightIds.map(hid => ({
+          id:       hid,
+          icon:     txt[`${hid}-icon`]     ?? '🌿',
+          label:    txt[`${hid}-label`]    ?? '',
+          sublabel: txt[`${hid}-sublabel`] ?? '',
         })),
       }
     }

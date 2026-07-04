@@ -1,53 +1,94 @@
 import Image from 'next/image'
+import { BedDouble, Users } from 'lucide-react'
 import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 
 interface Room {
-  id: string
+  id:        string
   image_url: string | null
-  name: string
-  guests: string
-  price: string
-  details: string
+  name:      string
+  guests:    string
+  price?:    string
+  details?:  string
 }
 
 interface Props {
-  data: { title?: string; rooms?: Room[] }
+  data: {
+    label?:       string
+    title?:       string
+    description?: string
+    count_stat?:  string
+    guests_stat?: string
+    rooms?:       Room[]
+  }
 }
 
 export default function RoomsBlock({ data }: Props) {
   const rooms = data.rooms ?? []
-
   if (rooms.length === 0) return null
 
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-5">
-      <h2 className="text-base font-semibold text-stone-900">{data.title || 'Rooms & Accommodation'}</h2>
+
+      {/* Header */}
       <div className="space-y-3">
-        {rooms.map((room) => (
-          <div
-            key={room.id}
-            className="flex gap-4 border border-stone-100 rounded-xl overflow-hidden"
-          >
+        {data.label && (
+          <p className="text-xs font-bold uppercase tracking-widest text-green-700">{data.label}</p>
+        )}
+        <div>
+          <h2 className="text-2xl font-bold text-stone-900 leading-tight">
+            {data.title || 'Comfortable Rooms, Peaceful Stay'}
+          </h2>
+          <div className="w-8 h-0.5 bg-green-600 mt-2 rounded-full" />
+        </div>
+        {data.description && (
+          <p className="text-sm text-stone-500 leading-relaxed">{data.description}</p>
+        )}
+
+        {/* Stat pills */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-full px-3 py-1.5">
+            <BedDouble size={13} className="text-green-700 shrink-0" />
+            <span className="text-xs font-semibold text-stone-700">
+              {data.count_stat || `${rooms.length} Room${rooms.length !== 1 ? 's' : ''}`}
+            </span>
+          </div>
+          {data.guests_stat && (
+            <div className="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-full px-3 py-1.5">
+              <Users size={13} className="text-green-700 shrink-0" />
+              <span className="text-xs font-semibold text-stone-700">{data.guests_stat}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 3-column card grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {rooms.map(room => (
+          <div key={room.id} className="rounded-xl border border-stone-200 overflow-hidden bg-white">
             {room.image_url && (
-              <div className="relative w-28 h-24 shrink-0">
+              <div className="relative aspect-[4/3] w-full">
                 <Image
-                  src={supabaseImgUrl(room.image_url, { width: 300, quality: 70 })}
+                  src={supabaseImgUrl(room.image_url, { width: 400, quality: 75 })}
                   alt={room.name || 'Room'}
                   fill
                   className="object-cover"
-                  sizes="112px"
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
                 />
               </div>
             )}
-            <div className="flex-1 py-3 pr-4 space-y-1 min-w-0">
-              {room.name    && <p className="text-sm font-semibold text-stone-900">{room.name}</p>}
-              {room.guests  && <p className="text-xs text-stone-500">{room.guests}</p>}
-              {room.price   && <p className="text-sm font-bold text-brand-600">{room.price}</p>}
-              {room.details && <p className="text-xs text-stone-400">{room.details}</p>}
+            <div className="p-4 space-y-1.5">
+              {room.name && <p className="text-base font-bold text-stone-900">{room.name}</p>}
+              {room.guests && (
+                <div className="flex items-center gap-1.5">
+                  <Users size={12} className="text-stone-400 shrink-0" />
+                  <span className="text-sm text-stone-500">{room.guests}</span>
+                </div>
+              )}
             </div>
           </div>
         ))}
       </div>
+
     </div>
   )
 }

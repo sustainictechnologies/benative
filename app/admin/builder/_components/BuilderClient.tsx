@@ -184,22 +184,38 @@ export default function BuilderClient() {
               if (d.nearest_town) texts['map-nearest-town'] = d.nearest_town
               break
             case 'food': {
-              if (d.label)       texts['food-label'] = d.label
-              if (d.title)       texts['food-title'] = d.title
-              if (d.description) texts['food-desc']  = d.description
-              const foodItems = (d.items ?? []) as Array<{ id?: string; image_url?: string; name?: string; desc?: string }>
+              if (d.label)          texts['food-label'] = d.label
+              if (d.title)          texts['food-title'] = d.title
+              if (d.description)    texts['food-desc']  = d.description
+              if (d.hero_image_url) images['food-hero'] = d.hero_image_url
+              const foodItems = (d.items ?? []) as Array<{ id?: string; image_url?: string; name?: string; desc?: string; emoji?: string; tags?: string[] }>
               const foodIds = foodItems.map((item, i) => item.id ?? `fd-${i}`)
-              texts['food-meta'] = JSON.stringify(foodIds)
+              if (foodIds.length) texts['food-meta'] = JSON.stringify(foodIds)
               foodItems.forEach((item, i) => {
                 const fid = foodIds[i]
-                if (item.image_url) images[fid]            = item.image_url
-                if (item.name)      texts[`${fid}-name`]   = item.name
-                if (item.desc)      texts[`${fid}-desc`]   = item.desc
+                if (item.image_url)    images[fid]           = item.image_url
+                if (item.name)         texts[`${fid}-name`]  = item.name
+                if (item.desc)         texts[`${fid}-desc`]  = item.desc
+                if (item.emoji)        texts[`${fid}-emoji`] = item.emoji
+                if (item.tags?.length) texts[`${fid}-tags`]  = item.tags.join(', ')
+              })
+              const highlights = (d.highlights ?? []) as Array<{ id?: string; icon?: string; label?: string; sublabel?: string }>
+              const hids = highlights.map((h, i) => h.id ?? `fh-${i}`)
+              if (hids.length) texts['food-highlights-meta'] = JSON.stringify(hids)
+              highlights.forEach((h, i) => {
+                const hid = hids[i]
+                if (h.icon)     texts[`${hid}-icon`]     = h.icon
+                if (h.label)    texts[`${hid}-label`]    = h.label
+                if (h.sublabel) texts[`${hid}-sublabel`] = h.sublabel
               })
               break
             }
             case 'rooms': {
-              if (d.title) texts['rooms-title'] = d.title
+              if (d.label)       texts['rooms-label']       = d.label
+              if (d.title)       texts['rooms-title']       = d.title
+              if (d.description) texts['rooms-desc']        = d.description
+              if (d.count_stat)  texts['rooms-count-stat']  = d.count_stat
+              if (d.guests_stat) texts['rooms-guests-stat'] = d.guests_stat
               const rooms = (d.rooms ?? []) as Array<{ id?: string; image_url?: string; name?: string; guests?: string; price?: string; details?: string }>
               const ids = rooms.map((r, i) => r.id ?? `rm-${i}`)
               texts['rooms-meta'] = JSON.stringify(ids)

@@ -3,10 +3,27 @@ export interface HeroBlockData {
   tagline?: string
 }
 
+export interface FoodHighlight {
+  id:       string
+  icon:     string
+  label:    string
+  sublabel: string
+}
+
+export interface FoodItemData {
+  id:        string
+  image_url: string | null
+  name:      string
+  desc:      string
+  emoji?:    string
+  tags?:     string[]
+}
+
 export interface HostStoryBlockData {
   host_image_url: string
   story_title: string
   story_text: string
+  sub_texts?: { id: string; content: string }[]
 }
 
 export interface BirdingLogBlockData {
