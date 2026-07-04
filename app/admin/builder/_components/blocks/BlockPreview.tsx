@@ -1243,6 +1243,11 @@ function FoodPreview({ id }: { id: string }) {
   const saveHighlightIds = (next: string[]) => updateText(id, 'food-highlights-meta', JSON.stringify(next))
 
   useEffect(() => {
+    // Initialize header defaults once (for both new and existing blocks that never saved these)
+    if (!getText(id, 'food-label', '')) updateText(id, 'food-label', '🍴 FOOD & DINING')
+    if (!getText(id, 'food-title', '')) updateText(id, 'food-title', 'Home-Cooked Meals')
+    if (!getText(id, 'food-desc',  '')) updateText(id, 'food-desc',  'Fresh, home-cooked meals prepared with local ingredients and traditional family recipes.')
+
     if (!getText(id, 'food-meta', '')) {
       const ids = DEFAULT_FOOD_ITEMS.map((_, i) => `fd-${Date.now() + i}`)
       saveIds(ids)
