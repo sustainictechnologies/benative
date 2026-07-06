@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { CanvasBlock } from '@/app/admin/builder/_components/BuilderTypes'
 import { serializeBlock } from '@/lib/blockSerializer'
 
@@ -15,7 +15,7 @@ export async function savePreview(
   slug?:    string | null,
   pageMeta?: PreviewMeta,
 ): Promise<{ token: string } | { error: string }> {
-  const supabase  = createClient()
+  const supabase  = createAdminClient()
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 
   const blocksData = blocks.map(block => ({
