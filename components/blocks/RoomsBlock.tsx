@@ -1,6 +1,4 @@
-import Image from 'next/image'
-import { BedDouble, Users } from 'lucide-react'
-import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
+import { BedDouble } from 'lucide-react'
 
 interface Room {
   id:        string
@@ -58,7 +56,6 @@ export default function RoomsBlock({ data }: Props) {
           </div>
           {data.guests_stat && (
             <div className="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-full px-3 py-1.5">
-              <Users size={13} className="text-green-700 shrink-0" />
               <span className="text-xs font-semibold text-stone-700">{data.guests_stat}</span>
             </div>
           )}
@@ -68,26 +65,15 @@ export default function RoomsBlock({ data }: Props) {
       {/* 3-column card grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {rooms.map(room => (
-          <div key={room.id} className="rounded-xl border border-stone-200 overflow-hidden bg-white">
-            {room.image_url && (
-              <div className="relative aspect-[16/9] sm:aspect-[4/3] w-full">
-                <Image
-                  src={supabaseImgUrl(room.image_url, { width: 400, quality: 75 })}
-                  alt={room.name || 'Room'}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-                />
+          <div key={room.id} className="rounded-xl border border-stone-200 bg-white p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-stone-50 flex items-center justify-center shrink-0">
+                <BedDouble size={18} className="text-green-700" />
               </div>
-            )}
-            <div className="p-4 space-y-1.5">
-              {room.name && <p className="text-base font-bold text-stone-900">{room.name}</p>}
-              {room.guests && (
-                <div className="flex items-center gap-1.5">
-                  <Users size={12} className="text-stone-400 shrink-0" />
-                  <span className="text-sm text-stone-500">{room.guests}</span>
-                </div>
-              )}
+              <div className="flex-1 min-w-0">
+                {room.name && <p className="text-sm font-bold text-stone-900">{room.name}</p>}
+                {room.guests && <p className="text-xs text-stone-500 mt-0.5">{room.guests}</p>}
+              </div>
             </div>
           </div>
         ))}

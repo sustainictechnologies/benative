@@ -11,12 +11,8 @@ export interface FoodHighlight {
 }
 
 export interface FoodItemData {
-  id:        string
-  image_url: string | null
-  name:      string
-  desc:      string
-  emoji?:    string
-  tags?:     string[]
+  id:   string
+  name: string
 }
 
 export interface HostStoryBlockData {

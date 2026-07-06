@@ -122,6 +122,8 @@ function SubTexts({ block }: { block: HomestayBlock }) {
 }
 
 export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Props) {
+  if ((block.content_data as any)?.hidden === true) return null
+
   const bgColor = ((block.content_data as any)?.styles?.['_bg-color'] as string | undefined) || undefined
   const bgStyle = bgColor ? { backgroundColor: bgColor } : undefined
 

@@ -184,23 +184,16 @@ export default function BuilderClient() {
               if (d.nearest_town) texts['map-nearest-town'] = d.nearest_town
               break
             case 'food': {
-              if (d.label)          texts['food-label'] = d.label
-              if (d.title)          texts['food-title'] = d.title
-              if (d.description)    texts['food-desc']  = d.description
-              if (d.hero_image_url) images['food-hero'] = d.hero_image_url
-              const foodItems = (d.items ?? []) as Array<{ id?: string; image_url?: string; name?: string; desc?: string; emoji?: string; tags?: string[]; cx?: string; cy?: string; cz?: string }>
+              if (d.label)         texts['food-label']        = d.label
+              if (d.title)         texts['food-title']        = d.title
+              if (d.description)   texts['food-desc']         = d.description
+              if (d.dishes_label)  texts['food-dishes-label'] = d.dishes_label
+              const foodItems = (d.items ?? []) as Array<{ id?: string; name?: string }>
               const foodIds = foodItems.map((item, i) => item.id ?? `fd-${i}`)
               if (foodIds.length) texts['food-meta'] = JSON.stringify(foodIds)
               foodItems.forEach((item, i) => {
                 const fid = foodIds[i]
-                if (item.image_url)    images[fid]           = item.image_url
-                if (item.name)         texts[`${fid}-name`]  = item.name
-                if (item.desc)         texts[`${fid}-desc`]  = item.desc
-                if (item.emoji)        texts[`${fid}-emoji`] = item.emoji
-                if (item.tags?.length) texts[`${fid}-tags`]  = item.tags.join(', ')
-                if (item.cx)           texts[`${fid}-cx`]    = item.cx
-                if (item.cy)           texts[`${fid}-cy`]    = item.cy
-                if (item.cz)           texts[`${fid}-cz`]    = item.cz
+                if (item.name) texts[`${fid}-name`] = item.name
               })
               const highlights = (d.highlights ?? []) as Array<{ id?: string; icon?: string; label?: string; sublabel?: string }>
               const hids = highlights.map((h, i) => h.id ?? `fh-${i}`)
@@ -260,9 +253,10 @@ export default function BuilderClient() {
           }
 
           return {
-            id:    `loaded-${type}-${i}`,
+            id:     `loaded-${type}-${i}`,
             type,
-            props: { ...DEFAULT_PROPS, images, texts },
+            props:  { ...DEFAULT_PROPS, images, texts },
+            hidden: d.hidden === true,
           }
         })
 
@@ -382,6 +376,10 @@ export default function BuilderClient() {
       next.splice(idx + 1, 0, clone)
       return next
     })
+  }, [])
+
+  const toggleHiddenBlock = useCallback((id: string) => {
+    setBlocks(prev => prev.map(b => b.id === id ? { ...b, hidden: !b.hidden } : b))
   }, [])
 
   /* ── Image operations (via context) ──────────────────── */
@@ -612,6 +610,7 @@ export default function BuilderClient() {
               onMoveUp={id => moveBlock(id, 'up')}
               onMoveDown={id => moveBlock(id, 'down')}
               onDuplicate={duplicateBlock}
+              onToggleHidden={toggleHiddenBlock}
               pageName={pageName}
               onNameChange={setPageName}
               pageHighlights={pageHighlights}

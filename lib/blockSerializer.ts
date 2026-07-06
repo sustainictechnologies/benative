@@ -110,20 +110,13 @@ export function toContentData(block: CanvasBlock): Record<string, unknown> {
       let highlightIds: string[] = []
       try { highlightIds = JSON.parse(txt['food-highlights-meta'] ?? '[]') } catch {}
       return {
-        label:          txt['food-label'] ?? '',
-        title:          txt['food-title'] ?? '',
-        description:    txt['food-desc']  ?? '',
-        hero_image_url: img['food-hero']  ?? null,
+        label:         txt['food-label']         ?? '',
+        title:         txt['food-title']         ?? '',
+        description:   txt['food-desc']          ?? '',
+        dishes_label:  txt['food-dishes-label']  ?? '',
         items: ids.map(fid => ({
-          id:        fid,
-          image_url: img[fid]                  ?? null,
-          name:      txt[`${fid}-name`]        ?? '',
-          desc:      txt[`${fid}-desc`]        ?? '',
-          emoji:     txt[`${fid}-emoji`]       ?? '',
-          tags:      (txt[`${fid}-tags`] ?? '').split(',').map((t: string) => t.trim()).filter(Boolean),
-          cx:        txt[`${fid}-cx`]          ?? '50',
-          cy:        txt[`${fid}-cy`]          ?? '50',
-          cz:        txt[`${fid}-cz`]          ?? '1',
+          id:   fid,
+          name: txt[`${fid}-name`] ?? '',
         })),
         highlights: highlightIds.map(hid => ({
           id:       hid,
@@ -202,6 +195,9 @@ export function serializeBlock(block: CanvasBlock): Record<string, unknown> {
       if (rows.length > 0) (content as any).layout = { rows, cells, images: layoutImages }
     } catch {}
   }
+
+  // Hidden flag
+  if (block.hidden) (content as any).hidden = true
 
   // Sub-texts
   const subTextsRaw = txt['sub-texts']

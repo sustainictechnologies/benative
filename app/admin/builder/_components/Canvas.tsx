@@ -18,6 +18,7 @@ interface Props {
   onMoveUp: (id: string) => void
   onMoveDown: (id: string) => void
   onDuplicate: (id: string) => void
+  onToggleHidden: (id: string) => void
   pageName: string
   onNameChange: (v: string) => void
   pageHighlights: string[]
@@ -84,7 +85,7 @@ function AddTagInput({ onAdd, placeholder }: { onAdd: (v: string) => void; place
 
 export default function Canvas({
   blocks, selectedId, previewMode, viewport,
-  onSelect, onRemove, onMoveUp, onMoveDown, onDuplicate,
+  onSelect, onRemove, onMoveUp, onMoveDown, onDuplicate, onToggleHidden,
   pageName, onNameChange,
   pageHighlights, pageLanguages, onHighlightsChange, onLanguagesChange,
   pageAddress, onAddressChange,
@@ -213,18 +214,22 @@ export default function Canvas({
             >
               <div className="px-4 sm:px-6 pt-1 pb-8 space-y-4">
                 <AnimatePresence>
-                  {blocks.map(block => (
-                    <CanvasBlockItem
-                      key={block.id}
-                      block={block}
-                      selected={!previewMode && block.id === selectedId}
-                      onSelect={() => onSelect(block.id)}
-                      onRemove={() => onRemove(block.id)}
-                      onMoveUp={() => onMoveUp(block.id)}
-                      onMoveDown={() => onMoveDown(block.id)}
-                      onDuplicate={() => onDuplicate(block.id)}
-                    />
-                  ))}
+                  {blocks.map(block => {
+                    if (previewMode && block.hidden) return null
+                    return (
+                      <CanvasBlockItem
+                        key={block.id}
+                        block={block}
+                        selected={!previewMode && block.id === selectedId}
+                        onSelect={() => onSelect(block.id)}
+                        onRemove={() => onRemove(block.id)}
+                        onMoveUp={() => onMoveUp(block.id)}
+                        onMoveDown={() => onMoveDown(block.id)}
+                        onDuplicate={() => onDuplicate(block.id)}
+                        onToggleHidden={() => onToggleHidden(block.id)}
+                      />
+                    )
+                  })}
                 </AnimatePresence>
               </div>
             </SortableContext>

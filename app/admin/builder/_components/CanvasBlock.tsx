@@ -3,7 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { motion, AnimatePresence } from 'framer-motion'
-import { GripVertical, Trash2, ChevronUp, ChevronDown, Copy } from 'lucide-react'
+import { GripVertical, Trash2, ChevronUp, ChevronDown, Copy, Eye, EyeOff } from 'lucide-react'
 import BlockPreview from './blocks/BlockPreview'
 import type { CanvasBlock } from './BuilderTypes'
 import { PALETTE } from './BuilderTypes'
@@ -16,10 +16,11 @@ interface Props {
   onMoveUp?: () => void
   onMoveDown?: () => void
   onDuplicate?: () => void
+  onToggleHidden?: () => void
 }
 
 export default function CanvasBlockItem({
-  block, selected, onSelect, onRemove, onMoveUp, onMoveDown, onDuplicate,
+  block, selected, onSelect, onRemove, onMoveUp, onMoveDown, onDuplicate, onToggleHidden,
 }: Props) {
   const {
     attributes,
@@ -51,7 +52,7 @@ export default function CanvasBlockItem({
         selected
           ? 'ring-2 ring-brand-500 ring-offset-2 rounded-sm'
           : 'hover:ring-1 hover:ring-stone-300 hover:ring-offset-1 rounded-sm'
-      }`}
+      } ${block.hidden ? 'opacity-50' : ''}`}
     >
       {/* Section label */}
       <AnimatePresence>
@@ -111,6 +112,13 @@ export default function CanvasBlockItem({
               className="w-6 h-6 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-500 hover:text-brand-600 hover:border-brand-300 transition-colors shadow-sm"
             >
               <ChevronDown size={11} />
+            </button>
+            <button
+              onClick={onToggleHidden}
+              title={block.hidden ? 'Show section' : 'Hide section'}
+              className="w-6 h-6 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-500 hover:text-brand-600 hover:border-brand-300 transition-colors shadow-sm"
+            >
+              {block.hidden ? <Eye size={11} /> : <EyeOff size={11} />}
             </button>
             <button
               onClick={onRemove}

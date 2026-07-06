@@ -741,29 +741,34 @@ function VideoPreview({ id }: { id: string }) {
   const videoId = ytUrl ? extractYouTubeId(ytUrl) : null
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-stone-200 bg-stone-950" style={theme}>
+    <div className="rounded-2xl border border-stone-200 bg-white p-4" style={theme}>
       {/* Embed or placeholder */}
       {videoId ? (
-        <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-          <iframe
-            className="absolute inset-0 w-full h-full"
-            src={`https://www.youtube.com/embed/${videoId}`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
+        <div className="relative w-full rounded-xl overflow-hidden" style={{ paddingBottom: '56.25%' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+            alt="Video thumbnail"
+            className="absolute inset-0 w-full h-full object-cover"
           />
+          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+            <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-0 h-0 border-t-[8px] border-b-[8px] border-l-[14px] border-transparent border-l-stone-900 ml-1" />
+            </div>
+          </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-1.5 py-8">
-          <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
-            <div className="w-0 h-0 border-t-[7px] border-b-[7px] border-l-[12px] border-transparent border-l-white ml-0.5" />
+        <div className="relative w-full rounded-xl overflow-hidden bg-stone-100 flex flex-col items-center justify-center gap-1.5 py-12">
+          <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center">
+            <div className="w-0 h-0 border-t-[7px] border-b-[7px] border-l-[12px] border-transparent border-l-stone-400 ml-0.5" />
           </div>
-          <p className="text-[11px] text-white/40 font-medium">Paste a YouTube link below</p>
+          <p className="text-[11px] text-stone-400 font-medium">Paste a YouTube link below</p>
         </div>
       )}
 
-      {/* YouTube URL + caption */}
+      {/* YouTube URL input */}
       {!previewMode && (
-        <div className="bg-white border-t border-stone-100 px-4 py-2.5">
+        <div className="mt-3">
           <YoutubeUrlInput blockId={id} />
         </div>
       )}
@@ -1009,32 +1014,24 @@ function RoomsPreview({ id }: { id: string }) {
 
       {/* 3-column card grid */}
       <div className="grid grid-cols-3 gap-3">
-        {ids.map((roomId, i) => (
-          <div key={roomId} className="relative group/room rounded-xl border border-stone-200 overflow-hidden bg-white">
-            {/* Image */}
-            <div className="aspect-[4/3] relative w-full">
-              <EditableImage
-                blockId={id} imageKey={roomId}
-                defaultUrl={ROOM_IMG_DEFAULTS[i % ROOM_IMG_DEFAULTS.length]}
-                wrapperClassName="absolute inset-0"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            {/* Info */}
-            <div className="p-3 space-y-1">
-              <EditableText
-                blockId={id} textKey={`${roomId}-name`}
-                defaultValue="Room Name"
-                className="text-sm font-bold text-stone-900 block"
-                as="p"
-              />
-              <div className="flex items-center gap-1.5">
-                <Users size={11} className="text-stone-400 shrink-0" />
+        {ids.map(roomId => (
+          <div key={roomId} className="relative group/room rounded-xl border border-stone-200 bg-white p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-stone-50 flex items-center justify-center shrink-0">
+                <BedDouble size={18} className="text-green-700" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <EditableText
+                  blockId={id} textKey={`${roomId}-name`}
+                  defaultValue="Room Name"
+                  className="text-sm font-bold text-stone-900 block"
+                  as="p"
+                />
                 <EditableText
                   blockId={id} textKey={`${roomId}-guests`}
                   defaultValue="2 Guests"
-                  className="text-xs text-stone-500"
-                  as="span"
+                  className="text-xs text-stone-500 block mt-0.5"
+                  as="p"
                 />
               </div>
             </div>
@@ -1207,29 +1204,22 @@ function FoodIconPicker({ blockId, textKey, defaultValue, forHighlight = false }
   )
 }
 
-const FOOD_HERO_DEFAULT = 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=70'
-const FOOD_IMG_DEFAULTS = [
-  'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=300&q=65',
-  'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=300&q=65',
-  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&q=65',
-]
-
-const DEFAULT_FOOD_ITEMS = [
-  { name: 'Fresh Seafood',       desc: 'Daily catch cooked in authentic Malvani style.',        emoji: 'fish',  tags: 'Fresh Catch,Seasonal'       },
-  { name: 'Malvani Thali',       desc: 'A wholesome traditional meal with local flavours.',      emoji: 'disc2', tags: 'Authentic,Family Recipes'    },
-  { name: 'Traditional Breakfast', desc: 'Freshly prepared breakfast with seasonal ingredients.', emoji: 'sun',   tags: 'Local,Healthy'               },
-  { name: 'Homemade with Love',  desc: 'Simple, fresh meals made with care and warmth.',         emoji: 'heart', tags: 'Homemade,Made with Love'     },
+const DEFAULT_FOOD_DISHES = [
+  'Malvani Fish Curry', 'Malvani Thali', 'Kombdi Vade',
+  'Prawns Masala', 'Chicken Sukka', 'Vegetable Bhaji',
+  'Sol Kadi', 'Konkani Dal', 'Tandalachi Bhakri',
+  'Sweet Sheera', 'Fresh Seasonal Fruits',
 ]
 
 const DEFAULT_FOOD_HIGHLIGHTS = [
-  { icon: 'leaf',   label: 'Homemade',           sublabel: 'Cooked with love'       },
-  { icon: 'sprout', label: 'Local Ingredients',   sublabel: 'Sourced locally'        },
-  { icon: 'fish',   label: 'Fresh Seafood',        sublabel: 'Daily market catch'     },
-  { icon: 'wheat',  label: 'Vegetarian Options',   sublabel: 'Available on request'  },
+  { icon: 'leaf',   label: 'Homemade',           sublabel: 'Cooked with love'      },
+  { icon: 'sprout', label: 'Local Ingredients',   sublabel: 'Sourced locally'       },
+  { icon: 'fish',   label: 'Fresh Seafood',        sublabel: 'Daily market catch'    },
+  { icon: 'wheat',  label: 'Vegetarian Options',   sublabel: 'Available on request' },
 ]
 
 function FoodPreview({ id }: { id: string }) {
-  const { getText, updateText, updateImage, previewMode } = useBuilder()
+  const { getText, updateText, previewMode } = useBuilder()
   const theme = useBlockTheme(id)
 
   const getIds = (): string[] => {
@@ -1243,20 +1233,15 @@ function FoodPreview({ id }: { id: string }) {
   const saveHighlightIds = (next: string[]) => updateText(id, 'food-highlights-meta', JSON.stringify(next))
 
   useEffect(() => {
-    // Initialize header defaults once (for both new and existing blocks that never saved these)
-    if (!getText(id, 'food-label', '')) updateText(id, 'food-label', '🍴 FOOD & DINING')
-    if (!getText(id, 'food-title', '')) updateText(id, 'food-title', 'Home-Cooked Meals')
-    if (!getText(id, 'food-desc',  '')) updateText(id, 'food-desc',  'Fresh, home-cooked meals prepared with local ingredients and traditional family recipes.')
+    if (!getText(id, 'food-label', ''))         updateText(id, 'food-label',        '🍴 FOOD & DINING')
+    if (!getText(id, 'food-title', ''))         updateText(id, 'food-title',        'Home-Cooked Meals')
+    if (!getText(id, 'food-desc',  ''))         updateText(id, 'food-desc',         'Fresh, home-cooked meals prepared with local ingredients and traditional family recipes.')
+    if (!getText(id, 'food-dishes-label', '')) updateText(id, 'food-dishes-label', 'Popular Dishes')
 
     if (!getText(id, 'food-meta', '')) {
-      const ids = DEFAULT_FOOD_ITEMS.map((_, i) => `fd-${Date.now() + i}`)
+      const ids = DEFAULT_FOOD_DISHES.map((_, i) => `fd-${Date.now() + i}`)
       saveIds(ids)
-      ids.forEach((fid, i) => {
-        updateText(id, `${fid}-name`,  DEFAULT_FOOD_ITEMS[i].name)
-        updateText(id, `${fid}-desc`,  DEFAULT_FOOD_ITEMS[i].desc)
-        updateText(id, `${fid}-emoji`, DEFAULT_FOOD_ITEMS[i].emoji)
-        updateText(id, `${fid}-tags`,  DEFAULT_FOOD_ITEMS[i].tags)
-      })
+      ids.forEach((fid, i) => updateText(id, `${fid}-name`, DEFAULT_FOOD_DISHES[i]))
     }
     if (!getText(id, 'food-highlights-meta', '')) {
       const hids = DEFAULT_FOOD_HIGHLIGHTS.map((_, i) => `fh-${Date.now() + 100 + i}`)
@@ -1273,126 +1258,88 @@ function FoodPreview({ id }: { id: string }) {
   const ids  = getIds()
   const hids = getHighlightIds()
 
-  const addItem = () => saveIds([...ids, `fd-${Date.now()}`])
-
-  const removeItem = (fid: string) => {
+  const addDish    = () => saveIds([...ids, `fd-${Date.now()}`])
+  const removeDish = (fid: string) => {
     saveIds(ids.filter(i => i !== fid))
-    updateImage(id, fid, null)
-    ;['-name', '-desc', '-emoji', '-tags'].forEach(s => updateText(id, `${fid}${s}`, null))
+    updateText(id, `${fid}-name`, null)
   }
 
   return (
     <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden" style={theme}>
 
-      {/* Header */}
-      <div className="p-6 space-y-2">
-        <EditableText
-          blockId={id} textKey="food-label"
-          defaultValue="🍴 FOOD & DINING"
-          className="text-xs font-bold uppercase tracking-widest text-green-700 block"
-          as="p"
-        />
-        <EditableText
-          blockId={id} textKey="food-title"
-          defaultValue="Home-Cooked Meals"
-          className="text-2xl font-bold text-stone-900 block leading-tight"
-          as="h2"
-        />
-        <EditableText
-          blockId={id} textKey="food-desc"
-          defaultValue="Fresh, home-cooked meals prepared with local ingredients and traditional family recipes."
-          multiline
-          className="text-sm text-stone-500 leading-relaxed block whitespace-pre-wrap"
-          as="p"
-        />
-      </div>
-
-      {/* Items */}
-      <div className="px-5 pt-3 pb-4">
-        {!previewMode && (
-          <div className="flex justify-end mb-2">
-            <button
-              onClick={addItem}
-              className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-full transition-colors"
-            >
-              <Plus size={12} /> Add Dish
-            </button>
+      {/* 2-column body */}
+      <div className="flex flex-col sm:flex-row">
+        {/* Left: header info */}
+        <div className="sm:w-2/5 p-6 space-y-3 border-b sm:border-b-0 sm:border-r border-stone-100">
+          <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center">
+            <Utensils size={24} strokeWidth={1.5} className="text-green-600" />
           </div>
-        )}
+          <EditableText
+            blockId={id} textKey="food-label"
+            defaultValue="🍴 FOOD & DINING"
+            className="text-xs font-bold uppercase tracking-widest text-green-700 block"
+            as="p"
+          />
+          <EditableText
+            blockId={id} textKey="food-title"
+            defaultValue="Home-Cooked Meals"
+            className="text-2xl font-bold text-stone-900 block leading-tight"
+            as="h2"
+          />
+          <EditableText
+            blockId={id} textKey="food-desc"
+            defaultValue="Fresh, home-cooked meals prepared with local ingredients and traditional family recipes."
+            multiline
+            className="text-sm text-stone-500 leading-relaxed block whitespace-pre-wrap"
+            as="p"
+          />
+        </div>
 
-        {ids.length === 0 && !previewMode && (
-          <p className="text-xs text-stone-400 text-center py-4 border border-dashed border-stone-200 rounded-xl">
-            No dishes yet — click "+ Add Dish" to start
-          </p>
-        )}
+        {/* Right: dish list */}
+        <div className="sm:w-3/5 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <EditableText
+              blockId={id} textKey="food-dishes-label"
+              defaultValue="Popular Dishes"
+              className="text-base font-bold text-stone-900 block"
+              as="h3"
+            />
+            {!previewMode && (
+              <button
+                onClick={addDish}
+                className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-full transition-colors"
+              >
+                <Plus size={12} /> Add
+              </button>
+            )}
+          </div>
 
-        {ids.map((fid, i) => {
-          const tagsStr  = getText(id, `${fid}-tags`, '')
-          const tags     = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : []
-          const iconKey  = getText(id, `${fid}-emoji`, 'utensils').toLowerCase().trim()
-          const iconMeta = FOOD_ICON_MAP[iconKey]
-          return (
-            <div key={fid} className="relative group/food flex items-center gap-4 p-3 rounded-2xl border border-stone-100 mb-3 last:mb-0">
-              {/* Icon */}
-              <FoodIconPicker blockId={id} textKey={`${fid}-emoji`} defaultValue="utensils" />
+          {ids.length === 0 && !previewMode && (
+            <p className="text-xs text-stone-400 text-center py-4 border border-dashed border-stone-200 rounded-xl">
+              No dishes yet — click "+ Add" to start
+            </p>
+          )}
 
-              {/* Name / desc / tags */}
-              <div className="flex-1 min-w-0 space-y-1">
+          <div className="grid grid-cols-3 gap-x-3 gap-y-1">
+            {ids.map(fid => (
+              <div key={fid} className="relative group/dish flex items-start gap-1.5 py-1">
+                <span className="text-green-600 mt-0.5 shrink-0">•</span>
                 <EditableText
                   blockId={id} textKey={`${fid}-name`}
                   defaultValue="Dish Name"
-                  className="text-base font-bold text-stone-900 block"
+                  className="text-sm text-stone-700 block leading-snug"
                   as="p"
                 />
-                <EditableText
-                  blockId={id} textKey={`${fid}-desc`}
-                  defaultValue="Short description…"
-                  className="text-sm text-stone-500 block"
-                  as="p"
-                />
-                {previewMode ? (
-                  tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                      {tags.map(tag => (
-                        <span
-                          key={tag}
-                          className="text-xs px-2 py-0.5 rounded-full font-medium border"
-                          style={iconMeta
-                            ? { backgroundColor: iconMeta.tagBg, color: iconMeta.tagText, borderColor: iconMeta.tagBorder }
-                            : { backgroundColor: '#f0fdf4', color: '#16a34a', borderColor: '#bbf7d0' }}
-                        >{tag}</span>
-                      ))}
-                    </div>
-                  )
-                ) : (
-                  <EditableText
-                    blockId={id} textKey={`${fid}-tags`}
-                    defaultValue="Fresh Catch, Seasonal"
-                    className="text-xs text-stone-400 italic block"
-                    as="p"
-                  />
+                {!previewMode && (
+                  <button
+                    onClick={e => { e.stopPropagation(); removeDish(fid) }}
+                    className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/dish:opacity-100 transition-opacity text-[9px] z-10"
+                  >×</button>
                 )}
               </div>
-
-              {/* Photo */}
-              <div className="w-36 h-28 rounded-2xl overflow-hidden shrink-0 relative">
-                <EditableImage
-                  blockId={id} imageKey={fid}
-                  defaultUrl={FOOD_IMG_DEFAULTS[i % FOOD_IMG_DEFAULTS.length]}
-                  wrapperClassName="absolute inset-0"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {!previewMode && (
-                <button
-                  onClick={e => { e.stopPropagation(); removeItem(fid) }}
-                  className="absolute top-2 right-2 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/food:opacity-100 transition-opacity text-[10px] z-10"
-                >×</button>
-              )}
-            </div>
-          )
-        })}
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Highlights strip */}

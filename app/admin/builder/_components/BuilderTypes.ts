@@ -31,9 +31,10 @@ export interface BlockProps {
 }
 
 export interface CanvasBlock {
-  id: string
-  type: BlockType
-  props: BlockProps
+  id:      string
+  type:    BlockType
+  props:   BlockProps
+  hidden?: boolean
 }
 
 export const DEFAULT_PROPS: BlockProps = {
