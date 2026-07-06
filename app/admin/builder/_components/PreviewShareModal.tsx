@@ -29,17 +29,22 @@ export default function PreviewShareModal({ open, onClose, blocks, slug, pageNam
 
   const handleGenerate = async () => {
     setLoading(true); setError(null)
-    const result = await savePreview(blocks, slug, {
-      title:     pageName     ?? '',
-      address:   pageAddress  ?? '',
-      languages: pageLanguages ?? [],
-    })
-    if ('error' in result) {
-      setError(result.error)
-    } else {
-      setToken(result.token)
+    try {
+      const result = await savePreview(blocks, slug, {
+        title:     pageName     ?? '',
+        address:   pageAddress  ?? '',
+        languages: pageLanguages ?? [],
+      })
+      if ('error' in result) {
+        setError(result.error)
+      } else {
+        setToken(result.token)
+      }
+    } catch (e) {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleCopy = () => {

@@ -927,7 +927,7 @@ function RoomsPreview({ id }: { id: string }) {
   const saveIds = (next: string[]) => updateText(id, 'rooms-meta', JSON.stringify(next))
 
   useEffect(() => {
-    if (!getText(id, 'rooms-meta', '')) {
+    if (getIds().length === 0) {
       const ids = DEFAULT_ROOMS.map((_, i) => `rm-${Date.now() + i}`)
       saveIds(ids)
       ids.forEach((rid, i) => {

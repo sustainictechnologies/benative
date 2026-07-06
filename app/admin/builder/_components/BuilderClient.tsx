@@ -214,7 +214,7 @@ export default function BuilderClient() {
               if (d.guests_stat) texts['rooms-guests-stat'] = d.guests_stat
               const rooms = (d.rooms ?? []) as Array<{ id?: string; image_url?: string; name?: string; guests?: string; price?: string; details?: string }>
               const ids = rooms.map((r, i) => r.id ?? `rm-${i}`)
-              texts['rooms-meta'] = JSON.stringify(ids)
+              if (ids.length) texts['rooms-meta'] = JSON.stringify(ids)
               rooms.forEach((r, i) => {
                 const rid = ids[i]
                 if (r.image_url) images[rid]               = r.image_url
