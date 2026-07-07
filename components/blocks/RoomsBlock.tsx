@@ -46,19 +46,23 @@ export default function RoomsBlock({ data }: Props) {
         )}
 
         {/* Stat pills */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-full px-3 py-1.5">
-            <BedDouble size={13} className="text-green-700 shrink-0" />
-            <span className="text-xs font-semibold text-stone-700">
-              {data.count_stat || `${rooms.length} Room${rooms.length !== 1 ? 's' : ''}`}
-            </span>
+        {(data.count_stat || rooms.length > 0 || data.guests_stat) && (
+          <div className="flex items-center gap-3 flex-wrap">
+            {(data.count_stat || rooms.length > 0) && (
+              <div className="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-full px-3 py-1.5">
+                <BedDouble size={13} className="text-green-700 shrink-0" />
+                <span className="text-xs font-semibold text-stone-700">
+                  {data.count_stat || `${rooms.length} Room${rooms.length !== 1 ? 's' : ''}`}
+                </span>
+              </div>
+            )}
+            {data.guests_stat && (
+              <div className="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-full px-3 py-1.5">
+                <span className="text-xs font-semibold text-stone-700">{data.guests_stat}</span>
+              </div>
+            )}
           </div>
-          {data.guests_stat && (
-            <div className="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-full px-3 py-1.5">
-              <span className="text-xs font-semibold text-stone-700">{data.guests_stat}</span>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       {/* 3-column card grid */}
