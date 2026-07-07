@@ -25,6 +25,7 @@ interface Homestay {
   cover_image_url:   string | null
   block_count:       number
   category_slugs:    string[]
+  has_draft:         boolean
 }
 
 function timeAgo(dateStr: string): string {
@@ -400,8 +401,13 @@ export default function HomestaysClient({ homestays }: Props) {
                         <ShieldCheck size={9} /> Verified
                       </span>
                     )}
+                    {h.has_draft && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full w-fit">
+                        Draft
+                      </span>
+                    )}
                     <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full w-fit ${
-                      h.has_location ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                      h.has_location ? 'bg-emerald-50 text-emerald-700' : 'bg-stone-100 text-stone-500'
                     }`}>
                       <MapPin size={9} />
                       {h.has_location ? 'On map' : 'No location'}
