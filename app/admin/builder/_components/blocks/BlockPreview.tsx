@@ -1135,9 +1135,9 @@ function HighlightIcon({ value }: { value: string }) {
   const mapped = FOOD_ICON_MAP[value?.toLowerCase()?.trim() ?? '']
   if (mapped) {
     const { Icon } = mapped
-    return <Icon size={32} strokeWidth={1.5} className="text-green-600" />
+    return <Icon strokeWidth={1.5} className="text-green-600 w-5 h-5 sm:w-8 sm:h-8" />
   }
-  return <span className="text-3xl leading-none">{value || '🌿'}</span>
+  return <span className="text-xl sm:text-3xl leading-none">{value || '🌿'}</span>
 }
 
 function FoodIconPicker({ blockId, textKey, defaultValue, forHighlight = false }: {
@@ -1212,10 +1212,10 @@ const DEFAULT_FOOD_DISHES = [
 ]
 
 const DEFAULT_FOOD_HIGHLIGHTS = [
-  { icon: 'leaf',   label: 'Homemade',           sublabel: 'Cooked with love'      },
-  { icon: 'sprout', label: 'Local Ingredients',   sublabel: 'Sourced locally'       },
-  { icon: 'fish',   label: 'Fresh Seafood',        sublabel: 'Daily market catch'    },
-  { icon: 'wheat',  label: 'Vegetarian Options',   sublabel: 'Available on request' },
+  { icon: 'leaf',   label: 'Homemade',    sublabel: 'Cooked with love'      },
+  { icon: 'sprout', label: 'Local',       sublabel: 'Sourced locally'       },
+  { icon: 'fish',   label: 'Seafood',     sublabel: 'Daily market catch'    },
+  { icon: 'wheat',  label: 'Vegetarian',  sublabel: 'On request'  },
 ]
 
 function FoodPreview({ id }: { id: string }) {
@@ -1351,13 +1351,13 @@ function FoodPreview({ id }: { id: string }) {
               <EditableText
                 blockId={id} textKey={`${hid}-label`}
                 defaultValue="Label"
-                className="text-sm font-bold text-green-700 block mt-1"
+                className="text-[10px] sm:text-sm font-bold text-green-700 block mt-1 line-clamp-1 w-full"
                 as="p"
               />
               <EditableText
                 blockId={id} textKey={`${hid}-sublabel`}
                 defaultValue="Sublabel"
-                className="text-xs text-stone-400 block"
+                className="text-[9px] sm:text-xs text-stone-400 block line-clamp-1 w-full"
                 as="p"
               />
             </div>

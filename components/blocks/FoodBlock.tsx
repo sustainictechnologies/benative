@@ -34,8 +34,8 @@ const HIGHLIGHT_ICON_MAP: Record<string, LucideIcon> = {
 
 function HighlightIcon({ value }: { value: string }) {
   const Icon = HIGHLIGHT_ICON_MAP[value?.toLowerCase()?.trim() ?? '']
-  if (Icon) return <Icon size={32} strokeWidth={1.5} className="text-green-600" />
-  return <span className="text-3xl leading-none">{value || '🌿'}</span>
+  if (Icon) return <Icon strokeWidth={1.5} className="text-green-600 w-5 h-5 sm:w-8 sm:h-8" />
+  return <span className="text-xl sm:text-3xl leading-none">{value || '🌿'}</span>
 }
 
 export default function FoodBlock({ data }: Props) {
@@ -89,10 +89,10 @@ export default function FoodBlock({ data }: Props) {
       {highlights.length > 0 && (
         <div className="border-t border-stone-100 bg-stone-50 grid grid-cols-4 divide-x divide-stone-100">
           {highlights.map(h => (
-            <div key={h.id} className="flex flex-col items-center gap-0.5 py-4 px-2 text-center">
+            <div key={h.id} className="flex flex-col items-center gap-0.5 py-3 px-1 sm:py-4 sm:px-2 text-center">
               <HighlightIcon value={h.icon} />
-              <p className="text-sm font-bold text-green-700 mt-1">{h.label}</p>
-              <p className="text-xs text-stone-400">{h.sublabel}</p>
+              <p className="text-[10px] sm:text-sm font-bold text-green-700 mt-1 line-clamp-1 w-full">{h.label}</p>
+              <p className="text-[9px] sm:text-xs text-stone-400 line-clamp-1 w-full">{h.sublabel}</p>
             </div>
           ))}
         </div>
