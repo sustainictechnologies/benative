@@ -91,8 +91,8 @@ export default function FoodBlock({ data }: Props) {
           {highlights.map(h => (
             <div key={h.id} className="flex flex-col items-center gap-0.5 py-3 px-1 sm:py-4 sm:px-2 text-center">
               <HighlightIcon value={h.icon} />
-              <p className="text-[10px] sm:text-sm font-bold text-green-700 mt-1 line-clamp-1 w-full">{h.label}</p>
-              <p className="text-[9px] sm:text-xs text-stone-400 line-clamp-1 w-full">{h.sublabel}</p>
+              <p className="hidden sm:block text-sm font-bold text-green-700 mt-1">{h.label}</p>
+              <p className="hidden sm:block text-xs text-stone-400">{h.sublabel}</p>
             </div>
           ))}
         </div>

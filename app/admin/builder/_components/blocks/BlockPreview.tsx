@@ -1351,13 +1351,13 @@ function FoodPreview({ id }: { id: string }) {
               <EditableText
                 blockId={id} textKey={`${hid}-label`}
                 defaultValue="Label"
-                className="text-[10px] sm:text-sm font-bold text-green-700 block mt-1 line-clamp-1 w-full"
+                className="hidden sm:block text-sm font-bold text-green-700 mt-1"
                 as="p"
               />
               <EditableText
                 blockId={id} textKey={`${hid}-sublabel`}
                 defaultValue="Sublabel"
-                className="text-[9px] sm:text-xs text-stone-400 block line-clamp-1 w-full"
+                className="hidden sm:block text-xs text-stone-400"
                 as="p"
               />
             </div>
