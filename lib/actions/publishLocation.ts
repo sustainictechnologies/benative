@@ -74,5 +74,8 @@ export async function publishHomestay(payload: PublishPayload) {
     if (blockErr) return { success: false as const, error: blockErr.message }
   }
 
+  // Clear draft once published
+  await supabase.from('homestays').update({ draft_data: null }).eq('id', homestayId)
+
   return { success: true as const }
 }

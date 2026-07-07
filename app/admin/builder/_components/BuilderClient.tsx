@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { saveDraft } from '@/lib/actions/saveDraft'
 import {
   DndContext,
   DragEndEvent,
@@ -62,6 +63,7 @@ export default function BuilderClient() {
   const [selectedElement, setSelectedElement]   = useState<SelectedElement | null>(null)
 
   const searchParams  = useSearchParams()
+  const router        = useRouter()
   const editSlug      = searchParams.get('slug')
   const loadedRef     = useRef(false)
 
@@ -93,6 +95,22 @@ export default function BuilderClient() {
       .single()
       .then(({ data: h }) => {
         if (!h) return
+
+        // Prefer draft state over published blocks when a draft exists
+        const dd = h.draft_data as any
+        if (dd?.blocks?.length > 0) {
+          const draftBlocks = dd.blocks as CanvasBlock[]
+          setBlocks(draftBlocks)
+          setPageName(dd.pageName ?? h.title ?? '')
+          setPageHighlights(dd.pageHighlights ?? [])
+          setPageLanguages(dd.pageLanguages ?? h.languages_spoken ?? [])
+          setPageAddress(dd.pageAddress ?? `${h.village_name ?? ''}, ${h.location_district ?? ''}`)
+          historyRef.current      = []
+          lastSnapshotRef.current = draftBlocks
+          skipSnapshotRef.current = true
+          setSelectedId(null)
+          return
+        }
 
         setPageName(h.title ?? '')
         setPageLanguages(h.languages_spoken ?? [])
@@ -271,20 +289,7 @@ export default function BuilderClient() {
       })
   }, [editSlug])
 
-  /* ── Load draft from localStorage on mount ───────────────── */
-  useEffect(() => {
-    if (editSlug) return // skip localStorage when editing existing homestay
-    try {
-      const raw = localStorage.getItem('benative-builder-draft')
-      if (!raw) return
-      const draft = JSON.parse(raw)
-      if (draft.blocks)         setBlocks(draft.blocks)
-      if (draft.pageName)       setPageName(draft.pageName)
-      if (draft.pageHighlights) setPageHighlights(draft.pageHighlights)
-      if (draft.pageLanguages)  setPageLanguages(draft.pageLanguages)
-      if (draft.pageAddress)    setPageAddress(draft.pageAddress)
-    } catch {}
-  }, [])
+
 
   /* ── Debounced snapshot on every blocks change ───────────── */
   useEffect(() => {
@@ -321,12 +326,22 @@ export default function BuilderClient() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  const handleSave = useCallback(() => {
-    try {
-      localStorage.setItem('benative-builder-draft', JSON.stringify({ blocks, pageName, pageHighlights, pageLanguages, pageAddress }))
+  const handleSave = useCallback(async () => {
+    const result = await saveDraft({
+      slug:           editSlug ?? undefined,
+      pageName,
+      pageHighlights,
+      pageLanguages,
+      pageAddress,
+      blocks,
+    })
+    if (result.success) {
       setSavedAt(new Date())
-    } catch {}
-  }, [blocks, pageHighlights, pageLanguages])
+      if (!editSlug && result.slug) {
+        router.replace(`/admin/builder?slug=${result.slug}`, { scroll: false } as any)
+      }
+    }
+  }, [editSlug, pageName, pageHighlights, pageLanguages, pageAddress, blocks, router])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
