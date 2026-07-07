@@ -22,7 +22,6 @@ interface Props {
 
 export default function RoomsBlock({ data }: Props) {
   const rooms = data.rooms ?? []
-  if (rooms.length === 0) return null
 
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-5">
@@ -63,21 +62,23 @@ export default function RoomsBlock({ data }: Props) {
       </div>
 
       {/* 3-column card grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {rooms.map(room => (
-          <div key={room.id} className="rounded-xl border border-stone-200 bg-white p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-stone-50 flex items-center justify-center shrink-0">
-                <BedDouble size={18} className="text-green-700" />
-              </div>
-              <div className="flex-1 min-w-0">
-                {room.name && <p className="text-sm font-bold text-stone-900">{room.name}</p>}
-                {room.guests && <p className="text-xs text-stone-500 mt-0.5">{room.guests}</p>}
+      {rooms.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {rooms.map(room => (
+            <div key={room.id} className="rounded-xl border border-stone-200 bg-white p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-stone-50 flex items-center justify-center shrink-0">
+                  <BedDouble size={18} className="text-green-700" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  {room.name && <p className="text-sm font-bold text-stone-900">{room.name}</p>}
+                  {room.guests && <p className="text-xs text-stone-500 mt-0.5">{room.guests}</p>}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
     </div>
   )
