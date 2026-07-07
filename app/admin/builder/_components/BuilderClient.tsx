@@ -289,7 +289,20 @@ export default function BuilderClient() {
       })
   }, [editSlug])
 
-
+  /* ── Migrate localStorage draft for new homestays (no slug) ── */
+  useEffect(() => {
+    if (editSlug) return
+    try {
+      const raw = localStorage.getItem('benative-builder-draft')
+      if (!raw) return
+      const draft = JSON.parse(raw)
+      if (draft.blocks)         setBlocks(draft.blocks)
+      if (draft.pageName)       setPageName(draft.pageName)
+      if (draft.pageHighlights) setPageHighlights(draft.pageHighlights)
+      if (draft.pageLanguages)  setPageLanguages(draft.pageLanguages)
+      if (draft.pageAddress)    setPageAddress(draft.pageAddress)
+    } catch {}
+  }, [])
 
   /* ── Debounced snapshot on every blocks change ───────────── */
   useEffect(() => {
