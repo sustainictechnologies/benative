@@ -57,7 +57,7 @@ export default function EditableText({
 
   const commit = () => {
     const trimmed = draft.trim()
-    updateText(blockId, textKey, trimmed === defaultValue ? null : trimmed || null)
+    updateText(blockId, textKey, trimmed || null)
     setEditing(false)
   }
 
