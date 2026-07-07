@@ -58,6 +58,8 @@ export async function saveDraft(
       contact_phone:     '',
       village_name:      '',
       location_district: '',
+      latitude:          0,
+      longitude:         0,
       draft_data,
     })
 
