@@ -74,7 +74,7 @@ export default function FoodBlock({ data }: Props) {
           <div className="grid grid-cols-3 gap-x-3 gap-y-1">
             {items.map(item => (
               <div key={item.id} className="flex items-start gap-1.5 py-1">
-                <span className="text-green-600 mt-0.5 shrink-0">•</span>
+                <span className="text-green-600 text-sm leading-snug shrink-0">•</span>
                 <p className="text-sm text-stone-700 leading-snug">{item.name}</p>
               </div>
             ))}

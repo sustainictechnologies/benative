@@ -1320,7 +1320,7 @@ function FoodPreview({ id }: { id: string }) {
           <div className="grid grid-cols-3 gap-x-3 gap-y-1">
             {ids.map(fid => (
               <div key={fid} className="relative group/dish flex items-start gap-1.5 py-1">
-                <span className="text-green-600 mt-0.5 shrink-0">•</span>
+                <span className="text-green-600 text-sm leading-snug shrink-0">•</span>
                 <EditableText
                   blockId={id} textKey={`${fid}-name`}
                   defaultValue="Dish Name"
