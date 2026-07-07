@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Eye, EyeOff, Undo2, Redo2, Smartphone, Monitor, Save, Leaf, Check, Share2 } from 'lucide-react'
+import { Eye, EyeOff, Undo2, Redo2, Smartphone, Monitor, Save, Leaf, Check, Share2, Loader2, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 
 interface Props {
@@ -11,6 +11,8 @@ interface Props {
   onTogglePreview: () => void
   onViewportChange: (v: 'desktop' | 'mobile') => void
   onSave?: () => void
+  saving?: boolean
+  saveError?: string | null
   savedAt?: Date | null
   onPublish?: () => void
   onSharePreview?: () => void
@@ -18,7 +20,7 @@ interface Props {
 
 export default function BuilderTopbar({
   previewMode, viewport, blockCount,
-  onTogglePreview, onViewportChange, onSave, savedAt, onPublish, onSharePreview,
+  onTogglePreview, onViewportChange, onSave, saving, saveError, savedAt, onPublish, onSharePreview,
 }: Props) {
   const [justSaved, setJustSaved] = useState(false)
 
@@ -92,17 +94,25 @@ export default function BuilderTopbar({
         <span className="hidden sm:inline">{previewMode ? 'Edit' : 'Preview'}</span>
       </button>
 
-      {/* Save / Publish */}
+      {/* Save error indicator */}
+      {saveError && (
+        <span className="hidden sm:flex items-center gap-1 text-[10px] text-rose-300 shrink-0">
+          <AlertCircle size={11} /> {saveError}
+        </span>
+      )}
+
+      {/* Save Draft */}
       <button
         onClick={onSave}
-        className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-sm shrink-0 ${
+        disabled={saving}
+        className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-sm shrink-0 disabled:opacity-60 ${
           justSaved
             ? 'bg-emerald-600 text-white'
             : 'bg-brand-600 hover:bg-brand-500 text-white'
         }`}
       >
-        {justSaved ? <Check size={12} /> : <Save size={12} />}
-        <span className="hidden sm:inline">{justSaved ? 'Saved!' : 'Save Draft'}</span>
+        {saving ? <Loader2 size={12} className="animate-spin" /> : justSaved ? <Check size={12} /> : <Save size={12} />}
+        <span className="hidden sm:inline">{saving ? 'Saving…' : justSaved ? 'Saved!' : 'Save Draft'}</span>
       </button>
 
       <button

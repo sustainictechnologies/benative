@@ -58,6 +58,8 @@ export default function BuilderClient() {
   const [pageLanguages, setPageLanguages]   = useState(['Marathi', 'Hindi', 'English'])
   const [pageAddress, setPageAddress]       = useState('Khed, Ratnagiri, Maharashtra')
   const [savedAt, setSavedAt]               = useState<Date | null>(null)
+  const [saving, setSaving]                 = useState(false)
+  const [saveError, setSaveError]           = useState<string | null>(null)
   const [showPublish, setShowPublish]           = useState(false)
   const [showPreviewShare, setShowPreviewShare] = useState(false)
   const [selectedElement, setSelectedElement]   = useState<SelectedElement | null>(null)
@@ -340,19 +342,29 @@ export default function BuilderClient() {
   }, [])
 
   const handleSave = useCallback(async () => {
-    const result = await saveDraft({
-      slug:           editSlug ?? undefined,
-      pageName,
-      pageHighlights,
-      pageLanguages,
-      pageAddress,
-      blocks,
-    })
-    if (result.success) {
-      setSavedAt(new Date())
-      if (!editSlug && result.slug) {
-        router.replace(`/admin/builder?slug=${result.slug}`, { scroll: false } as any)
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const result = await saveDraft({
+        slug:           editSlug ?? undefined,
+        pageName,
+        pageHighlights,
+        pageLanguages,
+        pageAddress,
+        blocks,
+      })
+      if (result.success) {
+        setSavedAt(new Date())
+        if (!editSlug && result.slug) {
+          router.replace(`/admin/builder?slug=${result.slug}`)
+        }
+      } else {
+        setSaveError(result.error ?? 'Save failed')
       }
+    } catch (e: any) {
+      setSaveError(e?.message ?? 'Save failed')
+    } finally {
+      setSaving(false)
     }
   }, [editSlug, pageName, pageHighlights, pageLanguages, pageAddress, blocks, router])
 
@@ -619,6 +631,8 @@ export default function BuilderClient() {
             onTogglePreview={() => { setPreviewMode(v => !v); if (previewMode) setSelectedId(null) }}
             onViewportChange={setViewport}
             onSave={handleSave}
+            saving={saving}
+            saveError={saveError}
             savedAt={savedAt}
             onSharePreview={() => setShowPreviewShare(true)}
             onPublish={() => setShowPublish(true)}
