@@ -55,6 +55,7 @@ export async function saveDraft(
       slug,
       title:             payload.pageName || 'Draft Homestay',
       host_name:         '',
+      contact_phone:     '',
       village_name:      '',
       location_district: '',
       draft_data,
