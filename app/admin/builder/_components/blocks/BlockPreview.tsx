@@ -1271,9 +1271,6 @@ function FoodPreview({ id }: { id: string }) {
       <div className="flex flex-col sm:flex-row">
         {/* Left: header info */}
         <div className="sm:w-2/5 p-6 space-y-3 border-b sm:border-b-0 sm:border-r border-stone-100">
-          <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center">
-            <Utensils size={24} strokeWidth={1.5} className="text-green-600" />
-          </div>
           <EditableText
             blockId={id} textKey="food-label"
             defaultValue="🍴 FOOD & DINING"

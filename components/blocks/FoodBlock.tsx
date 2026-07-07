@@ -1,4 +1,4 @@
-import { Utensils, Fish, Sun, Heart, Leaf, Home, Sprout, Coffee, Wheat, Disc2, Salad, Beef, Drumstick, Egg, ChefHat, Flame, Apple, Soup, Pizza, Sandwich, Carrot, Cherry, Cookie } from 'lucide-react'
+import { Fish, Utensils, Sun, Heart, Leaf, Home, Sprout, Coffee, Wheat, Disc2, Salad, Beef, Drumstick, Egg, ChefHat, Flame, Apple, Soup, Pizza, Sandwich, Carrot, Cherry, Cookie } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 interface FoodHighlight {
@@ -49,9 +49,6 @@ export default function FoodBlock({ data }: Props) {
       <div className="flex flex-col sm:flex-row">
         {/* Left: header info */}
         <div className="sm:w-2/5 p-6 space-y-3 border-b sm:border-b-0 sm:border-r border-stone-100">
-          <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center">
-            <Utensils size={24} strokeWidth={1.5} className="text-green-600" />
-          </div>
           {data.label && (
             <p className="text-xs font-bold uppercase tracking-widest text-green-700">{data.label}</p>
           )}
