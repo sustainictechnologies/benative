@@ -95,6 +95,7 @@ export default async function HomePage() {
       cover_image_url,
       homestay_tags ( tags ( name, slug ) )
     `)
+    .neq('latitude', 0)
     .limit(6)
 
   const homestays = (rawHomestays ?? []).map((h: any) => ({

@@ -47,7 +47,7 @@ export default async function HomestayPage({ params }: Props) {
 
   const homestay = await getHomestay(params.slug)
 
-  if (!homestay) notFound()
+  if (!homestay || homestay.latitude === 0) notFound()
 
   const categories: { id: number; name: string; slug: string }[] = (
     homestay.homestay_tags ?? []

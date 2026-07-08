@@ -123,6 +123,7 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
     supabase
       .from('homestays')
       .select('languages_spoken')
+      .neq('latitude', 0)
       .then(({ data }) => {
         if (data) {
           const langs = Array.from(
