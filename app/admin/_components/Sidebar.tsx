@@ -18,11 +18,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Leaf,
+  FilePen,
 } from 'lucide-react'
 
 const NAV = [
   { label: 'Dashboard',       href: '/admin',                  icon: LayoutDashboard },
   { label: 'Homestays',       href: '/admin/homestays',        icon: Home },
+  { label: 'Drafts',          href: '/admin/drafts',           icon: FilePen },
   { label: 'Hosts',           href: '/admin/hosts',            icon: Users },
   { label: 'Reviews',         href: '/admin/reviews',          icon: Star },
   { label: 'Experiences',     href: '/admin/experiences',      icon: Compass },
