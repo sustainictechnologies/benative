@@ -1,11 +1,13 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { CanvasBlock } from '@/app/admin/builder/_components/BuilderTypes'
 import { serializeBlock } from '@/lib/blockSerializer'
 
 export interface PublishPayload {
   slug:       string
+  draftSlug?: string   // slug of the draft record to clean up (may differ from published slug)
   title:      string
   hostName:   string
   phone:      string
@@ -74,8 +76,12 @@ export async function publishHomestay(payload: PublishPayload) {
     if (blockErr) return { success: false as const, error: blockErr.message }
   }
 
-  // Clear draft once published
-  await supabase.from('homestays').update({ draft_data: null }).eq('id', homestayId)
+  // Clear draft_data on the published record, and delete orphan draft record if slugs differ
+  const admin = createAdminClient()
+  await admin.from('homestays').update({ draft_data: null }).eq('id', homestayId)
+  if (payload.draftSlug && payload.draftSlug !== payload.slug) {
+    await admin.from('homestays').delete().eq('slug', payload.draftSlug)
+  }
 
   return { success: true as const }
 }

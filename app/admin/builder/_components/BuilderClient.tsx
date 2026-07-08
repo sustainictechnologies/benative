@@ -682,6 +682,7 @@ export default function BuilderClient() {
           onClose={() => setShowPublish(false)}
           builderData={{
             title:     pageName,
+            draftSlug: editSlug ?? undefined,
             hostName:  blocks.find(b => b.type === 'contact')?.props.texts?.['contact-host-name'] ?? '',
             phone:     blocks.find(b => b.type === 'contact')?.props.texts?.['contact-phone']    ?? '',
             whatsapp:  blocks.find(b => b.type === 'contact')?.props.texts?.['contact-whatsapp'] ?? '',

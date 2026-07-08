@@ -20,7 +20,8 @@ type Mode   = 'map' | 'gps' | 'coords'
 type Status = 'idle' | 'locating' | 'saving' | 'done' | 'error'
 
 interface BuilderData {
-  title:     string
+  title:      string
+  draftSlug?: string
   hostName:  string
   phone:     string
   whatsapp:  string
@@ -110,6 +111,7 @@ export default function PublishModal({ open, onClose, builderData }: Props) {
 
     const payload: PublishPayload = {
       slug:      slug.trim(),
+      draftSlug: builderData.draftSlug,
       title:     builderData.title,
       hostName:  builderData.hostName,
       phone:     builderData.phone,
