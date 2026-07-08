@@ -5,6 +5,7 @@ import { Plus, X, Check, Upload, Loader2 } from 'lucide-react'
 import { useBuilder } from '../BuilderContext'
 import { ALL_ACTIVITIES } from '@/lib/activities'
 import { createClient } from '@/lib/supabase/client'
+import { createCustomActivity } from '@/lib/actions/customActivities'
 
 export interface ActivityItem {
   id: string
@@ -121,12 +122,14 @@ export default function ActivityLogBlock({ blockId }: Props) {
     if (!newLabel.trim()) return
     setSaving(true); setFormErr('')
     try {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('custom_activities')
-        .insert({ label: newLabel.trim(), description: newDesc.trim() || null, emoji: newEmoji, icon_url: newIconUrl || null })
-        .select().single()
-      if (error) { setFormErr(error.message); return }
+      const result = await createCustomActivity({
+        label:       newLabel.trim(),
+        description: newDesc.trim() || null,
+        emoji:       newEmoji,
+        icon_url:    newIconUrl || null,
+      })
+      if (!result.success) { setFormErr(result.error); return }
+      const data = result.data
       const item: ActivityItem = { id: data.id, label: data.label, emoji: data.emoji ?? '🎯', desc: data.description ?? '', iconUrl: data.icon_url ?? undefined, isCustom: true }
       setCustomList(prev => [item, ...prev])
       updateText(blockId, 'activities', JSON.stringify([...selected, item]))
