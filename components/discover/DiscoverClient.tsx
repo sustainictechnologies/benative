@@ -161,9 +161,8 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
 
       // verifiedOnly + language filters are not RPC params —
       // applied client-side on the small already-bounded result set
-      let results: any[] = (data ?? []).filter(
-        (h) => h.latitude !== 0 || h.longitude !== 0
-      )
+      let results: any[] = data ?? []
+      results = results.filter((h) => h.latitude !== 0 || h.longitude !== 0)
       if (practicalFilters.verifiedOnly) {
         results = results.filter((h) => h.is_verified)
       }
