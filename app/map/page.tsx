@@ -15,6 +15,7 @@ export default async function MapPage() {
       calling_window, languages_spoken, cover_image_url,
       homestay_tags ( tags ( id, name, slug ) )
     `)
+    .neq('latitude', 0)
     .order('created_at', { ascending: false })
 
   const homestays: HomestayWithCategories[] = (rawHomestays ?? []).map((h: any) => ({
