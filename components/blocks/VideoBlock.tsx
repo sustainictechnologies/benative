@@ -49,8 +49,8 @@ export default function VideoBlock({ videoId, caption }: Props) {
       {caption && (
         <p className="text-xs text-stone-400 mt-3 text-center">{caption}</p>
       )}
-      <p className="text-[10px] text-stone-300 mt-2 text-center leading-relaxed">
-        This video is embedded from YouTube for informational purposes only. It is not created, owned, or uploaded by BeNative. All rights belong to the original creator.
+      <p className="text-xs text-stone-900 mt-2 text-left leading-relaxed">
+        <span className="font-semibold">Note:</span> This video is embedded from YouTube for informational purposes only. It is not created, owned, or uploaded by BeNative. All rights belong to the original creator.
       </p>
     </div>
   )
