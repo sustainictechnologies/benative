@@ -80,6 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <ul className="space-y-2 text-sm">
                 <li><Link href="/list-your-stay" className="hover:text-white transition-colors">List Your Stay</Link></li>
                 <li><Link href="/list-your-stay" className="hover:text-white transition-colors">Host Guidelines</Link></li>
+                <li><Link href="/recommend" className="hover:text-white transition-colors inline-flex items-center gap-2">Recommend a Homestay <span className="text-[9px] font-bold bg-brand-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wide">New</span></Link></li>
               </ul>
             </div>
 
