@@ -69,6 +69,8 @@ export interface ContactBlockData {
   facebook_show?: boolean
   youtube?: string
   youtube_show?: boolean
+  maps_link?: string
+  maps_link_show?: boolean
 }
 
 export type HomestayBlock =

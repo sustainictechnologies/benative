@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import PlaceCard from './PlaceCard'
 import type { HomestayWithCategories } from '@/types/blocks.types'
 
-const PAGE_SIZE = 4
+const PAGE_SIZE = 6
 
 interface Props {
   homestays: HomestayWithCategories[]

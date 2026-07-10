@@ -125,7 +125,7 @@ export default function RecommendationsClient({ recommendations }: { recommendat
                       Status <ChevronDown size={12} />
                     </button>
                     {statusOpen === r.id && (
-                      <div className="absolute right-0 top-9 z-20 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden w-36">
+                      <div className="absolute right-0 bottom-full mb-1 z-20 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden w-36">
                         {STATUS_OPTIONS.map((s) => {
                           const c = STATUS_CONFIG[s]
                           return (

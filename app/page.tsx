@@ -95,8 +95,9 @@ export default async function HomePage() {
       cover_image_url,
       homestay_tags ( tags ( name, slug ) )
     `)
+    .eq('show_on_homepage', true)
     .neq('latitude', 0)
-    .limit(6)
+    .limit(12)
 
   const homestays = (rawHomestays ?? []).map((h: any) => ({
     id: h.id,
@@ -259,7 +260,7 @@ export default async function HomePage() {
         <div className="flex items-end justify-between mb-8">
           <div>
             <h2 className="text-3xl font-bold text-stone-900 flex items-center gap-2 mb-1">
-              Liked Homestays
+              Explore Homestays
             </h2>
             <p className="text-stone-500">Where hospitality feels like home</p>
           </div>

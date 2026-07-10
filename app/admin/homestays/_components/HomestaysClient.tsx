@@ -5,10 +5,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Pencil, Trash2, ShieldCheck, MapPin, Search,
-  ExternalLink, Layers, AlertTriangle, X, Check, Tag,
+  ExternalLink, Layers, AlertTriangle, X, Check, Tag, Globe,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { saveCategories } from '../actions'
+import { saveCategories, toggleShowOnHomepage } from '../actions'
 import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 
 interface Homestay {
@@ -26,6 +26,7 @@ interface Homestay {
   block_count:       number
   category_slugs:    string[]
   has_draft:         boolean
+  show_on_homepage:  boolean
 }
 
 function timeAgo(dateStr: string): string {
@@ -275,6 +276,14 @@ export default function HomestaysClient({ homestays }: Props) {
   const [confirmId,  setConfirmId]  = useState<string | null>(null)
   const [deleteErr,  setDeleteErr]  = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+
+  const handleToggleHomepage = async (id: string, current: boolean) => {
+    setTogglingId(id)
+    await toggleShowOnHomepage(id, current)
+    setTogglingId(null)
+    router.refresh()
+  }
 
   const filtered = homestays.filter(h =>
     h.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -439,6 +448,20 @@ export default function HomestaysClient({ homestays }: Props) {
                       </div>
                     ) : (
                       <>
+                        {/* Show on homepage toggle */}
+                        <button
+                          onClick={() => handleToggleHomepage(h.id, h.show_on_homepage)}
+                          disabled={togglingId === h.id}
+                          title={h.show_on_homepage ? 'Remove from homepage' : 'Show on homepage'}
+                          className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors disabled:opacity-50 ${
+                            h.show_on_homepage
+                              ? 'bg-brand-100 text-brand-600 hover:bg-brand-200'
+                              : 'text-stone-400 hover:text-brand-600 hover:bg-brand-50'
+                          }`}
+                        >
+                          <Globe size={14} />
+                        </button>
+
                         {/* Categories */}
                         <button
                           onClick={() => setExpandedId(expandedId === h.id ? null : h.id)}

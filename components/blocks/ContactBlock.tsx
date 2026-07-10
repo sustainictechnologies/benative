@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ShieldCheck, Lock, Phone, Mail, MapPin, Clock, MessageCircle, Globe } from 'lucide-react'
+import { ShieldCheck, Lock, Phone, Mail, MapPin, Clock, MessageCircle, Globe, Navigation } from 'lucide-react'
 import { FaInstagram, FaFacebookF, FaYoutube } from 'react-icons/fa'
 import WhatsAppContactButton from '@/components/WhatsAppContactButton'
 import type { ContactBlockData } from '@/types/blocks.types'
@@ -110,6 +110,17 @@ export default function ContactBlock({ data, hostName, phone, callingWindow, isL
                 </div>
               ))}
             </div>
+          )}
+
+          {shown(data.maps_link, data.maps_link_show) && (
+            <a
+              href={data.maps_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full border border-brand-200 text-brand-700 hover:bg-brand-50 font-semibold text-sm py-2.5 rounded-xl transition-colors"
+            >
+              <Navigation size={15} /> Get Directions
+            </a>
           )}
 
           {socialLinks.length > 0 && (

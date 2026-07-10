@@ -1,7 +1,21 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+
+export async function toggleShowOnHomepage(id: string, current: boolean) {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('homestays')
+    .update({ show_on_homepage: !current })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/homestays')
+  revalidatePath('/')
+  return { success: true }
+}
 
 // All valid taxonomy slugs — tags must already exist in the `tags` table
 // (seeded by supabase/migrate_to_tags.sql)

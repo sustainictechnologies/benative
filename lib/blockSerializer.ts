@@ -157,6 +157,8 @@ export function toContentData(block: CanvasBlock): Record<string, unknown> {
         facebook_show:       txt['contact-facebook-show']         !== 'false',
         youtube:             txt['contact-youtube']               ?? null,
         youtube_show:        txt['contact-youtube-show']          !== 'false',
+        maps_link:           txt['contact-maps-link']             ?? null,
+        maps_link_show:      txt['contact-maps-link-show']        !== 'false',
       }
     default:
       return {}

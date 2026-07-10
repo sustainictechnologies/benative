@@ -124,6 +124,7 @@ function ContactPreview({ id }: { id: string }) {
       getText(id, 'contact-instagram', '') && getText(id, 'contact-instagram-show', 'true') !== 'false' && { label: '📸' },
       getText(id, 'contact-facebook',  '') && getText(id, 'contact-facebook-show',  'true') !== 'false' && { label: '👤' },
       getText(id, 'contact-youtube',   '') && getText(id, 'contact-youtube-show',   'true') !== 'false' && { label: '▶️' },
+      getText(id, 'contact-maps-link', '') && getText(id, 'contact-maps-link-show', 'true') !== 'false' && { label: '🗺️' },
     ].filter(Boolean) as { label: string }[]
 
     return (
@@ -190,6 +191,14 @@ function ContactPreview({ id }: { id: string }) {
         <ContactFieldRow blockId={id} textKey="contact-instagram" showKey="contact-instagram-show" label="Instagram" placeholder="https://instagram.com/..."  emoji="📸" validate={validateUrl} />
         <ContactFieldRow blockId={id} textKey="contact-facebook"  showKey="contact-facebook-show"  label="Facebook"  placeholder="https://facebook.com/..."   emoji="👤" validate={validateUrl} />
         <ContactFieldRow blockId={id} textKey="contact-youtube"   showKey="contact-youtube-show"   label="YouTube"   placeholder="https://youtube.com/..."    emoji="▶️" validate={validateUrl} />
+      </div>
+
+      {/* Google Maps */}
+      <div className="border-t border-stone-200">
+        <div className="bg-stone-50 border-b border-stone-100 px-4 py-1.5">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400">Location (shown after login)</span>
+        </div>
+        <ContactFieldRow blockId={id} textKey="contact-maps-link" showKey="contact-maps-link-show" label="Google Maps Link" placeholder="https://maps.google.com/..." emoji="🗺️" validate={validateUrl} />
       </div>
     </div>
   )
