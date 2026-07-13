@@ -73,6 +73,12 @@ export interface ContactBlockData {
   maps_link_show?: boolean
 }
 
+export interface GoogleRatingBlockData {
+  rating?:       number
+  review_count?: number
+  maps_url?:     string
+}
+
 export type HomestayBlock =
   | { id: string; homestay_id: string; sort_order: number; block_type: 'hero';          content_data: HeroBlockData }
   | { id: string; homestay_id: string; sort_order: number; block_type: 'host-story';    content_data: HostStoryBlockData }
@@ -80,8 +86,9 @@ export type HomestayBlock =
   | { id: string; homestay_id: string; sort_order: number; block_type: 'rules-block';   content_data: RulesBlockData }
   | { id: string; homestay_id: string; sort_order: number; block_type: 'video';         content_data: VideoBlockData }
   | { id: string; homestay_id: string; sort_order: number; block_type: 'agri-calendar'; content_data: AgriCalendarBlockData }
-  | { id: string; homestay_id: string; sort_order: number; block_type: 'contact';       content_data: ContactBlockData }
-  | { id: string; homestay_id: string; sort_order: number; block_type: string;          content_data: Record<string, unknown> }
+  | { id: string; homestay_id: string; sort_order: number; block_type: 'contact';        content_data: ContactBlockData }
+  | { id: string; homestay_id: string; sort_order: number; block_type: 'google-rating'; content_data: GoogleRatingBlockData }
+  | { id: string; homestay_id: string; sort_order: number; block_type: string;           content_data: Record<string, unknown> }
 
 export interface HomestayWithCategories {
   id: string

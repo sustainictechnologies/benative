@@ -6,7 +6,6 @@ import {
   ArrowRight, Phone, Star, Heart, Sprout,
   Home, UtensilsCrossed, Compass,
 } from 'lucide-react'
-
 /* ── Data ─────────────────────────────────────────────────── */
 
 const valueCards = [

@@ -13,6 +13,7 @@ export type BlockType =
   | 'whatsapp'
   | 'map'
   | 'contact'
+  | 'google-rating'
 
 export interface BlockProps {
   bgColor?: string
@@ -62,5 +63,6 @@ export const PALETTE = [
   { type: 'reviews'     as BlockType, label: 'Reviews',          emoji: '⭐', desc: 'Guest testimonials', group: 'Extra' },
   { type: 'food'        as BlockType, label: 'Food Section',     emoji: '🍛', desc: 'Home cooking & meals', group: 'Extra' },
   { type: 'whatsapp'    as BlockType, label: 'WhatsApp CTA',     emoji: '💬', desc: 'Direct message button', group: 'Extra' },
-  { type: 'map'         as BlockType, label: 'Map & Location',   emoji: '📍', desc: 'Interactive location', group: 'Extra' },
+  { type: 'map'           as BlockType, label: 'Map & Location',   emoji: '📍', desc: 'Interactive location',         group: 'Extra' },
+  { type: 'google-rating' as BlockType, label: 'Google Rating',    emoji: '⭐', desc: 'Google rating & review count', group: 'Extra' },
 ]

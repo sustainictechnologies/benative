@@ -11,6 +11,7 @@ import GalleryBlock from './GalleryBlock'
 import MapBlock from './MapBlock'
 import RoomsBlock from './RoomsBlock'
 import FoodBlock from './FoodBlock'
+import GoogleRatingBlock from './GoogleRatingBlock'
 
 interface HomestayMeta {
   host_name: string
@@ -197,6 +198,9 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Pro
       break
     case 'map':
       content = <MapBlock data={block.content_data as any} />
+      break
+    case 'google-rating':
+      content = <GoogleRatingBlock data={block.content_data as any} />
       break
     default:
       return null

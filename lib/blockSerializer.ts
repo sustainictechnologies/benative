@@ -160,6 +160,12 @@ export function toContentData(block: CanvasBlock): Record<string, unknown> {
         maps_link:           txt['contact-maps-link']             ?? null,
         maps_link_show:      txt['contact-maps-link-show']        !== 'false',
       }
+    case 'google-rating':
+      return {
+        rating:       txt['gr-rating']       ? parseFloat(txt['gr-rating']) : null,
+        review_count: txt['gr-review-count'] ? parseInt(txt['gr-review-count']) : null,
+        maps_url:     txt['gr-maps-url']     ?? null,
+      }
     default:
       return {}
   }

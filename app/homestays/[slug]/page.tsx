@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import BlockRenderer from '@/components/blocks/BlockRenderer'
 import ReviewSection from '@/components/reviews/ReviewSection'
 import type { HomestayBlock } from '@/types/blocks.types'
-import { MapPin, Globe2, ShieldCheck } from 'lucide-react'
+import { MapPin, Globe2, ShieldCheck, Clock } from 'lucide-react'
 
 export const revalidate = 60
 
@@ -21,6 +21,7 @@ const getHomestay = cache(async (slug: string) => {
       id, title, slug, village_name, location_district, is_verified,
       host_name, contact_phone, calling_window, languages_spoken,
       address, whatsapp_number, email, youtube_video_id,
+      created_at, updated_at,
       homestay_tags ( tags ( id, name, slug ) ),
       homestay_blocks ( id, block_type, sort_order, content_data )
     `)
@@ -87,6 +88,19 @@ export default async function HomestayPage({ params }: Props) {
             <span className="flex items-center gap-1.5">
               <Globe2 size={14} />
               {(homestay.languages_spoken as string[]).join(', ')}
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4 text-xs text-stone-400 mt-2">
+          <span className="flex items-center gap-1.5">
+            <Clock size={12} />
+            Listed {new Date(homestay.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </span>
+          {homestay.updated_at && homestay.updated_at !== homestay.created_at && (
+            <span className="flex items-center gap-1.5">
+              <Clock size={12} />
+              Updated {new Date(homestay.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
             </span>
           )}
         </div>

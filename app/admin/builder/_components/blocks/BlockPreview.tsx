@@ -1408,6 +1408,97 @@ function WhatsappPreview() {
   )
 }
 
+/* ─── 13. GOOGLE RATING ─────────────────────────────────── */
+function GoogleLabelIcon() {
+  return <span className="text-xs font-bold text-stone-500 tracking-wide">Google</span>
+}
+
+function GoogleRatingPreview({ id }: { id: string }) {
+  const { getText, updateText, previewMode } = useBuilder()
+  const theme = useBlockTheme(id)
+
+  const rating      = getText(id, 'gr-rating', '')
+  const reviewCount = getText(id, 'gr-review-count', '')
+  const mapsUrl     = getText(id, 'gr-maps-url', '')
+
+  const ratingNum = parseFloat(rating) || 0
+
+  const inputCls = "w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-800 placeholder-stone-400 focus:outline-none focus:border-brand-400 bg-stone-50"
+  const labelCls = "block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1"
+
+  if (previewMode) {
+    return (
+      <div className="rounded-2xl border border-stone-200 bg-white p-5 flex items-center gap-4" style={theme}>
+        <div className="w-12 h-10 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center shrink-0"><GoogleLabelIcon /></div>
+        <div>
+          <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-1">Google Reviews</p>
+          <div className="flex items-center gap-1.5">
+            <span className="text-amber-400 text-base">{'★'.repeat(Math.round(ratingNum))}{'☆'.repeat(5 - Math.round(ratingNum))}</span>
+            <span className="font-black text-stone-900">{ratingNum ? ratingNum.toFixed(1) : '–'}</span>
+          </div>
+          {reviewCount && <p className="text-xs text-stone-400 mt-0.5">{reviewCount} reviews</p>}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden" style={theme}>
+      <div className="bg-stone-50 border-b border-stone-200 px-4 py-2.5 flex items-center gap-2">
+        <span className="text-base">⭐</span>
+        <span className="text-[9px] font-bold uppercase tracking-widest text-stone-500">Google Rating Block</span>
+      </div>
+      <div className="p-4 space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>Rating (e.g. 4.8)</label>
+            <input
+              type="number" step="0.1" min="1" max="5"
+              className={inputCls}
+              placeholder="4.8"
+              value={rating}
+              onChange={e => updateText(id, 'gr-rating', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className={labelCls}>Review Count</label>
+            <input
+              type="number" min="0"
+              className={inputCls}
+              placeholder="24"
+              value={reviewCount}
+              onChange={e => updateText(id, 'gr-review-count', e.target.value)}
+            />
+          </div>
+        </div>
+        <div>
+          <label className={labelCls}>Google Maps / Business URL (optional)</label>
+          <input
+            type="url"
+            className={inputCls}
+            placeholder="https://maps.google.com/..."
+            value={mapsUrl}
+            onChange={e => updateText(id, 'gr-maps-url', e.target.value)}
+          />
+          <p className="text-[10px] text-stone-400 mt-1">Clicking the block will open this link for visitors.</p>
+        </div>
+
+        {/* Live preview */}
+        {ratingNum > 0 && (
+          <div className="rounded-xl border border-stone-100 bg-stone-50 p-3 flex items-center gap-3">
+            <div className="w-12 h-9 rounded-lg bg-white border border-stone-200 flex items-center justify-center shrink-0"><GoogleLabelIcon /></div>
+            <div>
+              <span className="text-amber-400 text-sm">{'★'.repeat(Math.round(ratingNum))}{'☆'.repeat(5 - Math.round(ratingNum))}</span>
+              <span className="text-sm font-black text-stone-900 ml-1.5">{ratingNum.toFixed(1)}</span>
+              {reviewCount && <p className="text-[10px] text-stone-400">{reviewCount} reviews</p>}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ─── 12. MAP ────────────────────────────────────────────── */
 function MapPreview({ id }: { id: string }) {
   const { getText, previewMode } = useBuilder()
@@ -1651,8 +1742,9 @@ function BlockContent({ block }: { block: CanvasBlock }) {
     case 'reviews':      return <ReviewsPreview />
     case 'food':         return <FoodPreview id={id} />
     case 'whatsapp':     return <WhatsappPreview />
-    case 'map':          return <MapPreview id={id} />
-    default:             return null
+    case 'map':           return <MapPreview id={id} />
+    case 'google-rating': return <GoogleRatingPreview id={id} />
+    default:              return null
   }
 }
 
