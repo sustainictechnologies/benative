@@ -88,7 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div>
               <h4 className="text-white text-sm font-semibold mb-3">Follow Us</h4>
               <a
-                href="https://www.instagram.com/benative.in?igsh=MWNmODdxZHNleDhqZw=="
+                href="https://www.instagram.com/benative.in?igsh=MThmMWJsZzN2eWkwcw=="
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2.5 text-sm hover:text-white transition-colors group"
