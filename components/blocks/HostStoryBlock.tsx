@@ -47,16 +47,16 @@ export default function HostStoryBlock({ data }: Props) {
   const origin        = ORIGIN_MAP[data.host_photo_position ?? 'center'] ?? '50% 50%'
 
   return (
-    <div className="flex flex-col md:flex-row gap-6">
+    <div className="flex flex-col md:flex-row md:items-center gap-6">
       {data.host_image_url && (
         <div className="shrink-0 flex justify-center md:justify-start">
-          <div className={`relative w-20 h-20 overflow-hidden bg-stone-100 ${shapeClass}`}>
+          <div className={`relative w-28 h-28 overflow-hidden bg-stone-100 ${shapeClass}`}>
             <Image
-              src={supabaseImgUrl(data.host_image_url, { width: 200, quality: 75 })}
+              src={supabaseImgUrl(data.host_image_url, { width: 300, quality: 80 })}
               alt={data.story_title ?? 'Host photo'}
               fill
               className="object-cover"
-              sizes="80px"
+              sizes="112px"
               style={zoom !== 1 ? { transform: `scale(${zoom})`, transformOrigin: origin } : undefined}
             />
           </div>
