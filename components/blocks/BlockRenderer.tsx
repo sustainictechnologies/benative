@@ -147,7 +147,7 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Pro
 
   if (block.block_type === 'host-story') {
     return (
-      <div className="rounded-2xl border border-stone-200 bg-white p-6" style={bgStyle}>
+      <div className="rounded-2xl border border-stone-200 bg-white p-6 overflow-hidden" style={bgStyle}>
         <HostStoryBlock data={block.content_data as any} />
         <LayoutRenderer block={block} />
         <SubTexts block={block} />
