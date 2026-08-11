@@ -358,10 +358,10 @@ export default async function HomePage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Ready to experience Hidden India?</h2>
             <p className="text-white/70 mb-8 max-w-md mx-auto text-lg">Browse verified homestays across mountains, forests, villages, and coastlines. Call the host directly. Pay zero fees.</p>
             <Link
-              href="/map"
+              href="/discover"
               className="inline-flex items-center gap-2 bg-white text-brand-700 font-bold px-8 py-3.5 rounded-full hover:bg-stone-100 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             >
-              <MapPin size={16} /> Browse the Map
+              <MapPin size={16} /> Discover
             </Link>
           </div>
         </div>

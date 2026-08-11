@@ -23,18 +23,6 @@ interface Props {
 type Tab  = 'url' | 'upload'
 type Step = 'pick' | 'crop'
 
-const CROP_SHAPE_OPTIONS = [
-  { value: 'circle'  as const, label: '●', title: 'Circle'  },
-  { value: 'rounded' as const, label: '▢', title: 'Rounded' },
-  { value: 'square'  as const, label: '■', title: 'Square'  },
-]
-
-const SHAPE_CLASS: Record<string, string> = {
-  circle:  'rounded-full',
-  rounded: 'rounded-2xl',
-  square:  'rounded-none',
-}
-
 const POSITION_GRID = [
   ['top-left', 'top',    'top-right'   ],
   ['left',     'center', 'right'       ],
@@ -70,7 +58,7 @@ export default function ImagePickerModal({
   const [fileObj,   setFileObj]   = useState<File | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const [cropShape,    setCropShape]    = useState<CropState['shape']>(cropInitial?.shape    ?? 'circle')
+  const [cropShape]    = useState<CropState['shape']>(cropInitial?.shape ?? 'rounded')
   const [cropZoom,     setCropZoom]     = useState<number>            (cropInitial?.zoom     ?? 1)
   const [cropPosition, setCropPosition] = useState<string>            (cropInitial?.position ?? 'center')
 
@@ -263,7 +251,7 @@ export default function ImagePickerModal({
 
             {/* Live preview */}
             <div className="flex justify-center py-2">
-              <div className={`w-36 h-36 overflow-hidden border-2 border-stone-200 bg-stone-100 ${SHAPE_CLASS[cropShape] ?? 'rounded-full'}`}>
+              <div className="w-36 h-48 overflow-hidden border-2 border-stone-200 bg-stone-100 rounded-xl">
                 {cropPreviewUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -276,25 +264,6 @@ export default function ImagePickerModal({
                     }}
                   />
                 )}
-              </div>
-            </div>
-
-            {/* Shape */}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Shape</p>
-              <div className="flex gap-2">
-                {CROP_SHAPE_OPTIONS.map(s => (
-                  <button
-                    key={s.value} title={s.title} onClick={() => setCropShape(s.value)}
-                    className={`flex-1 py-2.5 text-lg rounded-xl font-bold transition-colors ${
-                      cropShape === s.value
-                        ? 'bg-brand-100 text-brand-700 ring-1 ring-brand-300'
-                        : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
               </div>
             </div>
 

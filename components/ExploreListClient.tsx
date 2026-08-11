@@ -65,12 +65,6 @@ export default function ExploreListClient({ homestays, initialCategory }: Props)
               {filtered.length} {filtered.length === 1 ? 'stay' : 'stays'} across the Konkan coast
             </p>
           </div>
-          <Link
-            href="/map"
-            className="hidden sm:flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-800 border border-brand-200 hover:border-brand-400 bg-white px-4 py-2 rounded-full transition-all"
-          >
-            <MapPin size={14} /> View on Map
-          </Link>
         </div>
       </div>
 

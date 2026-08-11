@@ -53,21 +53,21 @@ export default function HostStoryBlock({ data }: Props) {
   }
 
   return (
-    <div className="flex flex-col md:flex-row gap-6">
-      {/* Left: padded portrait photo */}
-      <div className="relative md:w-[40%] shrink-0 h-64 md:h-auto min-h-[300px] rounded-xl overflow-hidden">
+    <div className="overflow-hidden">
+      {/* Image floated left — text wraps around it */}
+      <div className="relative float-left w-full md:w-48 h-56 mb-4 md:mb-2 md:mr-6 rounded-xl overflow-hidden">
         <Image
-          src={supabaseImgUrl(data.host_image_url, { width: 500, quality: 85 })}
+          src={supabaseImgUrl(data.host_image_url, { width: 400, quality: 85 })}
           alt={data.story_title ?? 'Host photo'}
           fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 40vw"
+          className="object-cover object-top"
+          sizes="(max-width: 768px) 100vw, 192px"
           style={zoom !== 1 ? { transform: `scale(${zoom})`, transformOrigin: origin } : undefined}
         />
       </div>
 
-      {/* Right: text */}
-      <div className="flex-1 min-w-0 flex flex-col justify-center space-y-3">
+      {/* Text wraps around the float */}
+      <div className="space-y-3">
         {data.story_title && (
           <h2 className="text-base font-semibold text-stone-900">{data.story_title}</h2>
         )}

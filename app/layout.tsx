@@ -66,7 +66,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/discover" className="font-semibold text-white hover:text-stone-300 transition-colors">Discover</Link></li>
-                <li><Link href="/map" className="font-semibold text-white hover:text-stone-300 transition-colors">Map</Link></li>
                 <li><Link href="/about" className="font-semibold text-white hover:text-stone-300 transition-colors">About Us</Link></li>
                 <li><Link href="/blog" className="font-semibold text-white hover:text-stone-300 transition-colors">Blog</Link></li>
                 <li><Link href="/faq" className="font-semibold text-white hover:text-stone-300 transition-colors">FAQ</Link></li>

@@ -265,30 +265,28 @@ function HostPhotoEditor({ id }: { id: string }) {
 
   if (previewMode) {
     return (
-      <div className="shrink-0 flex justify-center md:justify-start">
-        <div className={`w-20 h-20 overflow-hidden bg-stone-100 ${SHAPE_CLASS[shape] ?? 'rounded-full'}`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={src} alt="Host"
-            className="w-full h-full object-cover"
-            style={imgStyle}
-          />
-        </div>
+      <div className="w-48 h-56 overflow-hidden rounded-xl bg-stone-100">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src} alt="Host"
+          className="w-full h-full object-cover object-top"
+          style={imgStyle}
+        />
       </div>
     )
   }
 
   return (
     <>
-      <div className="shrink-0 flex flex-col items-center gap-1.5">
+      <div className="flex flex-col items-center gap-1.5">
         <div
-          className={`relative group w-20 h-20 overflow-hidden border-2 border-stone-200 bg-stone-100 cursor-pointer ${SHAPE_CLASS[shape] ?? 'rounded-full'}`}
+          className="relative group w-48 h-56 overflow-hidden rounded-xl border-2 border-stone-200 bg-stone-100 cursor-pointer"
           onClick={() => setShowModal(true)}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={src} alt="Host"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-top"
             style={imgStyle}
           />
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -324,9 +322,11 @@ function HostStoryPreview({ id }: { id: string }) {
   const theme = useBlockTheme(id)
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-6" style={theme}>
-      <div className="flex flex-col md:flex-row gap-6">
-        <HostPhotoEditor id={id} />
-        <div className="flex-1 min-w-0 w-full space-y-2">
+      <div className="flex gap-6">
+        <div className="shrink-0">
+          <HostPhotoEditor id={id} />
+        </div>
+        <div className="flex-1 min-w-0 space-y-2">
           <EditableText
             blockId={id} textKey="story-title"
             defaultValue="Our Story — The Patil Family"
