@@ -217,51 +217,22 @@ const POSITION_GRID = [
   ['bottom-left', 'bottom', 'bottom-right'],
 ]
 
-const SHAPE_CLASS: Record<string, string> = {
-  circle:  'rounded-full',
-  rounded: 'rounded-2xl',
-  square:  'rounded-none',
-}
-
-const POSITION_CLASS: Record<string, string> = {
-  'top-left':    'object-left-top',
-  'top':         'object-top',
-  'top-right':   'object-right-top',
-  'left':        'object-left',
-  'center':      'object-center',
-  'right':       'object-right',
-  'bottom-left': 'object-left-bottom',
-  'bottom':      'object-bottom',
-  'bottom-right':'object-right-bottom',
-}
-
-// Transform origin so zoom expands from the crop point
-const ORIGIN_MAP: Record<string, string> = {
-  'top-left':    '0% 0%',
-  'top':         '50% 0%',
-  'top-right':   '100% 0%',
-  'left':        '0% 50%',
-  'center':      '50% 50%',
-  'right':       '100% 50%',
-  'bottom-left': '0% 100%',
-  'bottom':      '50% 100%',
-  'bottom-right':'100% 100%',
-}
-
 const HOST_PHOTO_DEFAULT = 'https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=120&q=70'
 
 function HostPhotoEditor({ id }: { id: string }) {
   const { getText, updateText, getImage, updateImage, previewMode } = useBuilder()
   const [showModal, setShowModal] = useState(false)
 
-  const shape    = getText(id, 'host-shape',    'circle') as 'circle' | 'rounded' | 'square'
-  const position = getText(id, 'host-position', 'center')
-  const zoom     = parseFloat(getText(id, 'host-zoom', '1'))
-  const src      = getImage(id, 'host-photo', HOST_PHOTO_DEFAULT)
+  const shape = getText(id, 'host-shape', 'rounded') as 'circle' | 'rounded' | 'square'
+  const zoom  = parseFloat(getText(id, 'host-zoom',  '1'))
+  const panX  = parseFloat(getText(id, 'host-pan-x', '50'))
+  const panY  = parseFloat(getText(id, 'host-pan-y', '0'))
+  const src   = getImage(id, 'host-photo', HOST_PHOTO_DEFAULT)
 
-  const imgStyle = zoom !== 1
-    ? { transform: `scale(${zoom})`, transformOrigin: ORIGIN_MAP[position] ?? '50% 50%' }
-    : undefined
+  const imgStyle = {
+    objectPosition: `${panX}% ${panY}%`,
+    ...(zoom !== 1 ? { transform: `scale(${zoom})`, transformOrigin: `${panX}% ${panY}%` } : {}),
+  }
 
   if (previewMode) {
     return (
@@ -269,7 +240,7 @@ function HostPhotoEditor({ id }: { id: string }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src} alt="Host"
-          className="w-full h-full object-cover object-top"
+          className="w-full h-full object-cover"
           style={imgStyle}
         />
       </div>
@@ -286,7 +257,7 @@ function HostPhotoEditor({ id }: { id: string }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={src} alt="Host"
-            className="w-full h-full object-cover object-top"
+            className="w-full h-full object-cover"
             style={imgStyle}
           />
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -303,12 +274,13 @@ function HostPhotoEditor({ id }: { id: string }) {
             onConfirm={() => {}}
             onClose={() => setShowModal(false)}
             withCrop
-            cropInitial={{ shape, zoom, position }}
+            cropInitial={{ shape, zoom, panX, panY }}
             onConfirmWithCrop={(url, crop) => {
               updateImage(id, 'host-photo', url)
-              updateText(id, 'host-shape',    crop.shape)
-              updateText(id, 'host-zoom',     String(crop.zoom))
-              updateText(id, 'host-position', crop.position)
+              updateText(id, 'host-shape', crop.shape)
+              updateText(id, 'host-zoom',  String(crop.zoom))
+              updateText(id, 'host-pan-x', String(crop.panX))
+              updateText(id, 'host-pan-y', String(crop.panY))
               setShowModal(false)
             }}
           />

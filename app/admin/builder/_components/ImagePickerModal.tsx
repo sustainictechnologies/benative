@@ -1,66 +1,73 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { X, Link2, Upload, ImageIcon, CheckCircle2, Loader2, ChevronLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 export interface CropState {
-  shape:    'circle' | 'rounded' | 'square'
-  zoom:     number
-  position: string
+  shape: 'circle' | 'rounded' | 'square'
+  zoom:  number
+  panX:  number   // 0–100
+  panY:  number   // 0–100
 }
 
 interface Props {
   currentUrl: string
   onConfirm:  (url: string) => void
   onClose:    () => void
-  withCrop?:           boolean
-  cropInitial?:        Partial<CropState>
-  onConfirmWithCrop?:  (url: string, crop: CropState) => void
+  withCrop?:          boolean
+  cropInitial?:       Partial<CropState>
+  onConfirmWithCrop?: (url: string, crop: CropState) => void
 }
 
 type Tab  = 'url' | 'upload'
 type Step = 'pick' | 'crop'
 
-const POSITION_GRID = [
-  ['top-left', 'top',    'top-right'   ],
-  ['left',     'center', 'right'       ],
-  ['bottom-left', 'bottom', 'bottom-right'],
-]
-
-const POSITION_ARROW: Record<string, string> = {
-  'top-left': '↖', 'top': '↑', 'top-right': '↗',
-  'left': '←', 'center': '·', 'right': '→',
-  'bottom-left': '↙', 'bottom': '↓', 'bottom-right': '↘',
-}
-
-const ORIGIN_MAP: Record<string, string> = {
-  'top-left': '0% 0%',    'top': '50% 0%',    'top-right': '100% 0%',
-  'left':     '0% 50%',   'center': '50% 50%', 'right':    '100% 50%',
-  'bottom-left': '0% 100%', 'bottom': '50% 100%', 'bottom-right': '100% 100%',
-}
-
 export default function ImagePickerModal({
   currentUrl, onConfirm, onClose,
   withCrop, cropInitial, onConfirmWithCrop,
 }: Props) {
-  const [tab,      setTab]      = useState<Tab>('url')
-  const [step,     setStep]     = useState<Step>(withCrop && currentUrl ? 'crop' : 'pick')
-  const [urlInput, setUrlInput] = useState(currentUrl)
-  const [preview,  setPreview]  = useState(currentUrl)
+  const [tab,       setTab]      = useState<Tab>('url')
+  const [step,      setStep]     = useState<Step>(withCrop && currentUrl ? 'crop' : 'pick')
+  const [urlInput,  setUrlInput] = useState(currentUrl)
+  const [preview,   setPreview]  = useState(currentUrl)
   const [pickedUrl, setPickedUrl] = useState(withCrop && currentUrl ? currentUrl : '')
 
-  const [dragging,  setDragging]  = useState(false)
-  const [fileName,  setFileName]  = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [uploadErr, setUploadErr] = useState('')
-  const [fileObj,   setFileObj]   = useState<File | null>(null)
+  const [fileDragging, setFileDragging] = useState(false)
+  const [fileName,     setFileName]     = useState('')
+  const [uploading,    setUploading]    = useState(false)
+  const [uploadErr,    setUploadErr]    = useState('')
+  const [fileObj,      setFileObj]      = useState<File | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const [cropShape]    = useState<CropState['shape']>(cropInitial?.shape ?? 'rounded')
-  const [cropZoom,     setCropZoom]     = useState<number>            (cropInitial?.zoom     ?? 1)
-  const [cropPosition, setCropPosition] = useState<string>            (cropInitial?.position ?? 'center')
+  // Crop state
+  const [cropShape] = useState<CropState['shape']>(cropInitial?.shape ?? 'rounded')
+  const [cropZoom,  setCropZoom]  = useState<number>(cropInitial?.zoom ?? 1)
+  const [cropPanX,  setCropPanX]  = useState<number>(cropInitial?.panX ?? 50)
+  const [cropPanY,  setCropPanY]  = useState<number>(cropInitial?.panY ?? 0)
+
+  // Drag-to-pan
+  const cropContainerRef = useRef<HTMLDivElement>(null)
+  const dragRef = useRef<{ startX: number; startY: number; startPanX: number; startPanY: number } | null>(null)
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragRef.current = { startX: e.clientX, startY: e.clientY, startPanX: cropPanX, startPanY: cropPanY }
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current || !cropContainerRef.current) return
+    const { width, height } = cropContainerRef.current.getBoundingClientRect()
+    const dx = e.clientX - dragRef.current.startX
+    const dy = e.clientY - dragRef.current.startY
+    // Drag right → image moves right → shows left side → panX decreases
+    setCropPanX(Math.max(0, Math.min(100, dragRef.current.startPanX - (dx / width)  * 150)))
+    setCropPanY(Math.max(0, Math.min(100, dragRef.current.startPanY - (dy / height) * 150)))
+  }
+
+  const handlePointerUp = () => { dragRef.current = null }
 
   /* ── URL: advance to crop or confirm directly ── */
   const handleUrlNext = () => {
@@ -71,20 +78,20 @@ export default function ImagePickerModal({
   }
 
   /* ── File pick ── */
-  const handleFile = useCallback((file: File) => {
+  const handleFile = (file: File) => {
     if (!file.type.startsWith('image/')) return
     setFileObj(file)
     setFileName(file.name)
     setPreview(URL.createObjectURL(file))
     setUploadErr('')
-  }, [])
+  }
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if (f) handleFile(f)
   }
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault(); setDragging(false)
+    e.preventDefault(); setFileDragging(false)
     const f = e.dataTransfer.files?.[0]; if (f) handleFile(f)
   }
 
@@ -109,7 +116,7 @@ export default function ImagePickerModal({
   }
 
   const handleApplyCrop = () => {
-    onConfirmWithCrop?.(pickedUrl, { shape: cropShape, zoom: cropZoom, position: cropPosition })
+    onConfirmWithCrop?.(pickedUrl, { shape: cropShape, zoom: cropZoom, panX: cropPanX, panY: cropPanY })
   }
 
   const cropPreviewUrl = pickedUrl || preview
@@ -132,7 +139,7 @@ export default function ImagePickerModal({
           <div className="flex items-center gap-2">
             <ImageIcon size={16} className="text-brand-600" />
             <h2 className="text-sm font-bold text-stone-900">
-              {step === 'crop' ? 'Crop & Shape Photo' : 'Replace Image'}
+              {step === 'crop' ? 'Crop & Position Photo' : 'Replace Image'}
             </h2>
           </div>
           <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 text-stone-400 transition-colors">
@@ -198,18 +205,18 @@ export default function ImagePickerModal({
               {tab === 'upload' && (
                 <>
                   <div
-                    onDragOver={e => { e.preventDefault(); setDragging(true) }}
-                    onDragLeave={() => setDragging(false)}
+                    onDragOver={e => { e.preventDefault(); setFileDragging(true) }}
+                    onDragLeave={() => setFileDragging(false)}
                     onDrop={handleDrop}
                     onClick={() => fileRef.current?.click()}
                     className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-                      dragging ? 'border-brand-400 bg-brand-50' : 'border-stone-200 hover:border-brand-300 hover:bg-stone-50'
+                      fileDragging ? 'border-brand-400 bg-brand-50' : 'border-stone-200 hover:border-brand-300 hover:bg-stone-50'
                     }`}
                   >
                     <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileInput} />
-                    <Upload size={22} className={`mx-auto mb-2 ${dragging ? 'text-brand-500' : 'text-stone-300'}`} />
+                    <Upload size={22} className={`mx-auto mb-2 ${fileDragging ? 'text-brand-500' : 'text-stone-300'}`} />
                     <p className="text-xs font-semibold text-stone-600">
-                      {dragging ? 'Drop to upload' : 'Click or drag image here'}
+                      {fileDragging ? 'Drop to upload' : 'Click or drag image here'}
                     </p>
                     <p className="text-[10px] text-stone-400 mt-1">JPG, PNG, WEBP — max 10 MB</p>
                   </div>
@@ -245,25 +252,46 @@ export default function ImagePickerModal({
           </>
         )}
 
-        {/* ── STEP 2: CROP ── */}
+        {/* ── STEP 2: CROP & POSITION ── */}
         {step === 'crop' && (
           <div className="p-5 space-y-4">
 
-            {/* Live preview */}
-            <div className="flex justify-center py-2">
-              <div className="w-36 h-48 overflow-hidden border-2 border-stone-200 bg-stone-100 rounded-xl">
+            {/* Drag-to-pan crop preview — same 6:7 ratio as the actual display frame */}
+            <div className="flex flex-col items-center gap-1">
+              <div
+                ref={cropContainerRef}
+                className="relative overflow-hidden rounded-xl border-2 border-stone-200 bg-stone-100 cursor-grab active:cursor-grabbing select-none touch-none"
+                style={{ width: '240px', aspectRatio: '6/7' }}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
+              >
                 {cropPreviewUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={cropPreviewUrl}
                     alt="crop preview"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover pointer-events-none"
                     style={{
-                      transform:       cropZoom !== 1 ? `scale(${cropZoom})` : undefined,
-                      transformOrigin: ORIGIN_MAP[cropPosition] ?? '50% 50%',
+                      objectPosition: `${cropPanX}% ${cropPanY}%`,
+                      transform: cropZoom !== 1 ? `scale(${cropZoom})` : undefined,
+                      transformOrigin: `${cropPanX}% ${cropPanY}%`,
                     }}
+                    draggable={false}
                   />
                 )}
+                {/* Rule-of-thirds grid */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backgroundImage: 'linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px)',
+                    backgroundSize: '33.33% 33.33%',
+                  }}
+                />
+                <p className="absolute bottom-2 left-0 right-0 text-center text-[10px] text-white/80 drop-shadow-sm pointer-events-none">
+                  Drag to reposition
+                </p>
               </div>
             </div>
 
@@ -282,25 +310,6 @@ export default function ImagePickerModal({
               />
               <div className="flex justify-between text-[9px] text-stone-300 mt-0.5">
                 <span>1×</span><span>3×</span>
-              </div>
-            </div>
-
-            {/* Focus point */}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Focus point</p>
-              <div className="grid grid-cols-3 gap-1.5">
-                {POSITION_GRID.flat().map(pos => (
-                  <button
-                    key={pos} title={pos} onClick={() => setCropPosition(pos)}
-                    className={`h-10 rounded-xl text-base transition-colors ${
-                      cropPosition === pos
-                        ? 'bg-brand-500 text-white'
-                        : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
-                    }`}
-                  >
-                    {POSITION_ARROW[pos]}
-                  </button>
-                ))}
               </div>
             </div>
 

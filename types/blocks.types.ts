@@ -20,6 +20,11 @@ export interface HostStoryBlockData {
   story_title: string
   story_text: string
   sub_texts?: { id: string; content: string }[]
+  host_photo_shape?: string
+  host_photo_zoom?: number
+  host_photo_pan_x?: number
+  host_photo_pan_y?: number
+  host_photo_position?: string  // legacy — kept for backward compat when reading old records
 }
 
 export interface BirdingLogBlockData {

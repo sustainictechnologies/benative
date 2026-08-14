@@ -21,12 +21,13 @@ export function toContentData(block: CanvasBlock): Record<string, unknown> {
       }
     case 'host-story':
       return {
-        host_image_url:       img['host-photo']    ?? null,
-        host_photo_shape:     txt['host-shape']    ?? 'circle',
-        host_photo_position:  txt['host-position'] ?? 'center',
-        host_photo_zoom:      parseFloat(txt['host-zoom'] ?? '1'),
-        story_title:          txt['story-title']   ?? null,
-        story_text:           txt['story-body']    ?? null,
+        host_image_url:   img['host-photo']  ?? null,
+        host_photo_shape: txt['host-shape']  ?? 'rounded',
+        host_photo_zoom:  parseFloat(txt['host-zoom']  ?? '1'),
+        host_photo_pan_x: parseFloat(txt['host-pan-x'] ?? '50'),
+        host_photo_pan_y: parseFloat(txt['host-pan-y'] ?? '0'),
+        story_title:      txt['story-title'] ?? null,
+        story_text:       txt['story-body']  ?? null,
       }
     case 'activity-log': {
       let activities: unknown[] = []

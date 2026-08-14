@@ -138,12 +138,25 @@ export default function BuilderClient() {
               if (d.youtube)      { texts['contact-youtube']      = d.youtube;      texts['contact-youtube-show']      = d.youtube_show      === false ? 'false' : 'true' }
               break
             case 'host-story':
-              if (d.host_image_url)    images['host-photo']       = d.host_image_url
-              if (d.story_title)       texts['story-title']       = d.story_title
-              if (d.story_text)        texts['story-body']        = d.story_text
-              if (d.host_photo_shape)  texts['host-shape']        = d.host_photo_shape
-              if (d.host_photo_position) texts['host-position']   = d.host_photo_position
+              if (d.host_image_url)         images['host-photo']  = d.host_image_url
+              if (d.story_title)            texts['story-title']  = d.story_title
+              if (d.story_text)             texts['story-body']   = d.story_text
+              if (d.host_photo_shape)       texts['host-shape']   = d.host_photo_shape
               if (d.host_photo_zoom != null) texts['host-zoom']   = String(d.host_photo_zoom)
+              if (d.host_photo_pan_x != null) {
+                texts['host-pan-x'] = String(d.host_photo_pan_x)
+                texts['host-pan-y'] = String(d.host_photo_pan_y ?? 0)
+              } else if (d.host_photo_position) {
+                // Convert legacy grid position to pan percentages
+                const PAN: Record<string, [number, number]> = {
+                  'top-left': [0,0], 'top': [50,0], 'top-right': [100,0],
+                  'left': [0,50], 'center': [50,50], 'right': [100,50],
+                  'bottom-left': [0,100], 'bottom': [50,100], 'bottom-right': [100,100],
+                }
+                const [px, py] = PAN[d.host_photo_position] ?? [50, 0]
+                texts['host-pan-x'] = String(px)
+                texts['host-pan-y'] = String(py)
+              }
               break
             case 'activity-log':
               texts['activities'] = JSON.stringify(d.highlight_species ?? [])
