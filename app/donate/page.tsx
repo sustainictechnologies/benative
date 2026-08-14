@@ -18,8 +18,8 @@ export default function DonatePage() {
         </p>
         <p className="text-xs text-stone-400 bg-stone-50 rounded-xl px-4 py-3">
           Payment coming soon. Get in touch at{' '}
-          <a href="mailto:sustainic.technologies@gmail.com" className="text-brand-600 underline">
-            sustainic.technologies@gmail.com
+          <a href="mailto:support.benative@gmail.com" className="text-brand-600 underline">
+            support.benative@gmail.com
           </a>
         </p>
         <Link
