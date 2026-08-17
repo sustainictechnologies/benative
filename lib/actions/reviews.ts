@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 export async function submitReview(
@@ -32,5 +33,19 @@ export async function submitReview(
   }
 
   revalidatePath(`/homestays/${slug}`)
+  return { success: true }
+}
+
+export async function deleteReview(
+  reviewId: string,
+  slug: string
+): Promise<{ error?: string; success?: boolean }> {
+  const supabase = createAdminClient()
+
+  const { error } = await supabase.from('reviews').delete().eq('id', reviewId)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/homestays/${slug}`)
+  revalidatePath('/admin/reviews')
   return { success: true }
 }
