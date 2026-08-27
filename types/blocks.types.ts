@@ -116,6 +116,8 @@ export interface ReviewWithProfile {
   rating: number
   comment: string
   created_at: string
+  host_reply: string | null
+  host_reply_at: string | null
   profiles: {
     full_name: string
   } | null

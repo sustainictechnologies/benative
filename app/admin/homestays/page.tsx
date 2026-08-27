@@ -13,7 +13,7 @@ export default async function HomestaysPage() {
       .select(`
         id, title, slug, host_name, village_name, location_district,
         is_verified, latitude, longitude, created_at, updated_at, cover_image_url,
-        draft_data, show_on_homepage,
+        draft_data, show_on_homepage, host_user_id,
         homestay_blocks ( id )
       `)
       .order('created_at', { ascending: false }),
@@ -50,6 +50,7 @@ export default async function HomestaysPage() {
     category_slugs:    assignmentMap[h.id] ?? [],
     has_draft:         h.draft_data != null,
     show_on_homepage:  h.show_on_homepage ?? false,
+    host_user_id:      h.host_user_id ?? null,
   }))
 
   return (

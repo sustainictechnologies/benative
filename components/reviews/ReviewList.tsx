@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react'
+import { Star, Home } from 'lucide-react'
 import type { ReviewWithProfile } from '@/types/blocks.types'
 
 interface Props {
@@ -45,6 +45,20 @@ export default function ReviewList({ reviews }: Props) {
             </div>
           </div>
           <p className="text-sm text-stone-600 leading-relaxed ml-11">{r.comment}</p>
+
+          {r.host_reply && (
+            <div className="ml-11 mt-3 pl-3 border-l-2 border-brand-200 space-y-0.5">
+              <p className="flex items-center gap-1 text-xs font-semibold text-brand-700">
+                <Home size={11} /> Host reply
+              </p>
+              <p className="text-sm text-stone-600 leading-relaxed">{r.host_reply}</p>
+              {r.host_reply_at && (
+                <p className="text-[10px] text-stone-400">
+                  {new Date(r.host_reply_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       ))}
     </div>

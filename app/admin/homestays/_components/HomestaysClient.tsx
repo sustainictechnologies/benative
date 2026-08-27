@@ -5,10 +5,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Pencil, Trash2, ShieldCheck, MapPin, Search,
-  ExternalLink, Layers, AlertTriangle, X, Check, Tag, Globe,
+  ExternalLink, Layers, AlertTriangle, X, Check, Tag, Globe, UserCheck,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { saveCategories, toggleShowOnHomepage } from '../actions'
+import { saveCategories, toggleShowOnHomepage, linkHostAccount, unlinkHostAccount } from '../actions'
 import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 
 interface Homestay {
@@ -27,6 +27,7 @@ interface Homestay {
   category_slugs:    string[]
   has_draft:         boolean
   show_on_homepage:  boolean
+  host_user_id:      string | null
 }
 
 function timeAgo(dateStr: string): string {
@@ -99,6 +100,94 @@ const ALL_SLUG_NAMES = Object.fromEntries([
 
 const slugToName = (slug: string) =>
   ALL_SLUG_NAMES[slug] ?? slug.replace(/-/g, ' ')
+
+/* ── Link-host panel ─────────────────────────────────────────── */
+function LinkHostPanel({
+  homestayId,
+  isLinked,
+  onClose,
+  onSaved,
+}: {
+  homestayId: string
+  isLinked:   boolean
+  onClose:    () => void
+  onSaved:    () => void
+}) {
+  const [email,   setEmail]   = useState('')
+  const [saving,  setSaving]  = useState(false)
+  const [saved,   setSaved]   = useState(false)
+  const [error,   setError]   = useState<string | null>(null)
+
+  async function handleLink() {
+    if (!email.trim()) return
+    setSaving(true); setError(null)
+    const res = await linkHostAccount(homestayId, email.trim())
+    setSaving(false)
+    if (res.error) { setError(res.error); return }
+    setSaved(true)
+    setTimeout(() => onSaved(), 900)
+  }
+
+  async function handleUnlink() {
+    setSaving(true); setError(null)
+    const res = await unlinkHostAccount(homestayId)
+    setSaving(false)
+    if (res.error) { setError(res.error); return }
+    onSaved()
+  }
+
+  return (
+    <div className="col-span-full px-5 py-4 bg-stone-50 border-t border-stone-100">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-bold uppercase tracking-widest text-stone-500">Link Host Account</p>
+        <button onClick={onClose} className="text-stone-400 hover:text-stone-600"><X size={14} /></button>
+      </div>
+
+      {isLinked && (
+        <div className="flex items-center gap-3 mb-3 bg-brand-50 border border-brand-200 rounded-xl px-3 py-2">
+          <UserCheck size={14} className="text-brand-600 shrink-0" />
+          <span className="text-xs text-brand-700 flex-1">A host account is already linked to this homestay.</span>
+          <button
+            onClick={handleUnlink}
+            disabled={saving}
+            className="text-xs text-rose-500 hover:text-rose-700 font-medium disabled:opacity-50"
+          >
+            Unlink
+          </button>
+        </div>
+      )}
+
+      <div className="flex gap-2 items-start">
+        <input
+          type="email"
+          value={email}
+          onChange={e => { setEmail(e.target.value); setSaved(false); setError(null) }}
+          placeholder={isLinked ? 'Enter new host email to re-link…' : 'Enter host email address…'}
+          className="flex-1 text-xs border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:border-brand-400 text-stone-700 placeholder:text-stone-300"
+          onKeyDown={e => e.key === 'Enter' && handleLink()}
+        />
+        <button
+          onClick={handleLink}
+          disabled={saving || !email.trim()}
+          className="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors whitespace-nowrap"
+        >
+          {saving ? (
+            <span className="w-3 h-3 border border-white/40 border-t-white rounded-full animate-spin" />
+          ) : saved ? (
+            <Check size={12} />
+          ) : (
+            <UserCheck size={12} />
+          )}
+          {saved ? 'Linked!' : 'Link Account'}
+        </button>
+      </div>
+      {error && <p className="text-xs text-rose-500 mt-2">{error}</p>}
+      <p className="text-[10px] text-stone-400 mt-2">
+        The host must already have an account on BeNative (created via /login). Enter their registered email address.
+      </p>
+    </div>
+  )
+}
 
 /* ── Taxonomy panel (replaces CategoryPanel) ─────────────────── */
 function TaxonomyPanel({
@@ -271,12 +360,13 @@ function TaxonomyPanel({
 /* ── Main component ──────────────────────────────────────────── */
 export default function HomestaysClient({ homestays }: Props) {
   const router = useRouter()
-  const [search,     setSearch]     = useState('')
-  const [deleting,   setDeleting]   = useState<string | null>(null)
-  const [confirmId,  setConfirmId]  = useState<string | null>(null)
-  const [deleteErr,  setDeleteErr]  = useState('')
-  const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [search,       setSearch]       = useState('')
+  const [deleting,     setDeleting]     = useState<string | null>(null)
+  const [confirmId,    setConfirmId]    = useState<string | null>(null)
+  const [deleteErr,    setDeleteErr]    = useState('')
+  const [expandedId,   setExpandedId]   = useState<string | null>(null)
+  const [linkHostId,   setLinkHostId]   = useState<string | null>(null)
+  const [togglingId,   setTogglingId]   = useState<string | null>(null)
 
   const handleToggleHomepage = async (id: string, current: boolean) => {
     setTogglingId(id)
@@ -464,7 +554,7 @@ export default function HomestaysClient({ homestays }: Props) {
 
                         {/* Categories */}
                         <button
-                          onClick={() => setExpandedId(expandedId === h.id ? null : h.id)}
+                          onClick={() => { setExpandedId(expandedId === h.id ? null : h.id); setLinkHostId(null) }}
                           title={h.category_slugs.length > 0 ? `Edit ${h.category_slugs.length} tags` : 'Assign Taxonomy'}
                           className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
                             expandedId === h.id
@@ -475,6 +565,21 @@ export default function HomestaysClient({ homestays }: Props) {
                           }`}
                         >
                           <Tag size={14} />
+                        </button>
+
+                        {/* Link host */}
+                        <button
+                          onClick={() => { setLinkHostId(linkHostId === h.id ? null : h.id); setExpandedId(null) }}
+                          title={h.host_user_id ? 'Host account linked — click to manage' : 'Link host account'}
+                          className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
+                            linkHostId === h.id
+                              ? 'bg-brand-100 text-brand-600'
+                              : h.host_user_id
+                              ? 'bg-brand-50 text-brand-500 hover:bg-brand-100'
+                              : 'text-stone-400 hover:text-brand-600 hover:bg-brand-50'
+                          }`}
+                        >
+                          <UserCheck size={14} />
                         </button>
 
                         {/* View */}
@@ -516,6 +621,16 @@ export default function HomestaysClient({ homestays }: Props) {
                     initialSlugs={h.category_slugs}
                     onClose={() => setExpandedId(null)}
                     onSaved={() => { setExpandedId(null); router.refresh() }}
+                  />
+                )}
+
+                {/* Link host panel */}
+                {linkHostId === h.id && (
+                  <LinkHostPanel
+                    homestayId={h.id}
+                    isLinked={!!h.host_user_id}
+                    onClose={() => setLinkHostId(null)}
+                    onSaved={() => { setLinkHostId(null); router.refresh() }}
                   />
                 )}
               </div>

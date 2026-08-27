@@ -4,6 +4,45 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
+export async function linkHostAccount(
+  homestayId: string,
+  email: string,
+): Promise<{ error?: string; success?: boolean; email?: string }> {
+  const supabase = createAdminClient()
+
+  const { data: { users }, error } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+  if (error) return { error: error.message }
+
+  const match = users.find((u: any) => u.email?.toLowerCase() === email.toLowerCase().trim())
+  if (!match) return { error: `No account found with email: ${email}` }
+
+  const { error: updateErr } = await supabase
+    .from('homestays')
+    .update({ host_user_id: match.id })
+    .eq('id', homestayId)
+
+  if (updateErr) return { error: updateErr.message }
+
+  revalidatePath('/admin/homestays')
+  return { success: true, email: match.email }
+}
+
+export async function unlinkHostAccount(
+  homestayId: string,
+): Promise<{ error?: string; success?: boolean }> {
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('homestays')
+    .update({ host_user_id: null })
+    .eq('id', homestayId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/homestays')
+  return { success: true }
+}
+
 export async function toggleShowOnHomepage(id: string, current: boolean) {
   const supabase = createAdminClient()
   const { error } = await supabase

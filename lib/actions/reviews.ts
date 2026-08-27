@@ -49,3 +49,77 @@ export async function deleteReview(
   revalidatePath('/admin/reviews')
   return { success: true }
 }
+
+export async function submitHostReply(
+  reviewId: string,
+  reply: string,
+  homestaySlug: string,
+): Promise<{ error?: string; success?: boolean }> {
+  const supabase = createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  const sanitized = reply.trim().slice(0, 2000)
+  if (!sanitized) return { error: 'Reply cannot be empty.' }
+
+  const { data: review } = await supabase
+    .from('reviews')
+    .select('homestay_id')
+    .eq('id', reviewId)
+    .single()
+  if (!review) return { error: 'Review not found.' }
+
+  const { data: homestay } = await supabase
+    .from('homestays')
+    .select('host_user_id')
+    .eq('id', review.homestay_id)
+    .single()
+  if (!homestay || homestay.host_user_id !== user.id) return { error: 'You are not the host of this homestay.' }
+
+  const { error } = await supabase
+    .from('reviews')
+    .update({ host_reply: sanitized, host_reply_at: new Date().toISOString() })
+    .eq('id', reviewId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/homestays/${homestaySlug}`)
+  revalidatePath('/host/dashboard')
+  return { success: true }
+}
+
+export async function deleteHostReply(
+  reviewId: string,
+  homestaySlug: string,
+): Promise<{ error?: string; success?: boolean }> {
+  const supabase = createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  const { data: review } = await supabase
+    .from('reviews')
+    .select('homestay_id')
+    .eq('id', reviewId)
+    .single()
+  if (!review) return { error: 'Review not found.' }
+
+  const { data: homestay } = await supabase
+    .from('homestays')
+    .select('host_user_id')
+    .eq('id', review.homestay_id)
+    .single()
+  if (!homestay || homestay.host_user_id !== user.id) return { error: 'You are not the host.' }
+
+  const { error } = await supabase
+    .from('reviews')
+    .update({ host_reply: null, host_reply_at: null })
+    .eq('id', reviewId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/homestays/${homestaySlug}`)
+  revalidatePath('/host/dashboard')
+  return { success: true }
+}
