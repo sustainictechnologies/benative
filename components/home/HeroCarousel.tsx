@@ -20,7 +20,7 @@ export default function HeroCarousel() {
   }, [])
 
   return (
-    <section className="relative h-[calc(100vh-64px)] min-h-[520px] overflow-hidden">
+    <section className="relative h-[55vh] min-h-[380px] overflow-hidden">
       {SLIDES.map((slide, i) => (
         <div
           key={slide.src}
