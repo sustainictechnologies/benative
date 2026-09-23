@@ -3,8 +3,8 @@ import { ArrowRight } from 'lucide-react'
 
 export default function IntroductionSection() {
   return (
-    <section className="bg-white px-6 py-24 sm:py-32">
-      <div className="max-w-2xl mx-auto">
+    <section className="bg-white px-6 py-10 sm:py-14">
+      <div className="max-w-2xl">
 
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 leading-snug mb-10">
           Travel a little closer to the place.
