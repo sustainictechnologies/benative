@@ -37,9 +37,12 @@ export default function HowItWorks() {
 
         {/* Header */}
         <div className="mb-16">
-          <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mb-2">
-            Find. Know. Talk. Go.
+          <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mb-3">
+            How it Works
           </h2>
+          <p className="text-lg sm:text-xl font-semibold text-stone-700 mb-1">
+            Find. Know. Talk. Go.
+          </p>
           <p className="text-stone-500 text-base sm:text-lg">
             Finding a place to stay can be simple.
           </p>
