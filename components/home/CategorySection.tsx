@@ -41,55 +41,6 @@ const MAIN_CATEGORIES = [
   },
 ]
 
-const SUB_CATEGORIES = [
-  {
-    group: 'By Place',
-    items: [
-      'By the Sea',
-      'Beside the Water',
-      'In the Hills',
-      'Among the Green',
-      'In the Countryside',
-      'Away from It All',
-    ],
-  },
-  {
-    group: 'By Type of Home',
-    items: [
-      'Family Homes',
-      'Farm Stays',
-      'Heritage Homes',
-      'Village Homes',
-      'Eco & Nature Homes',
-      'Homesteads',
-    ],
-  },
-  {
-    group: 'By Kind of Trip',
-    items: [
-      'Slow Escapes',
-      'Weekend Getaways',
-      'Long Stays',
-      'Family Time',
-      'For Two',
-      'Solo Stays',
-      'Work From Somewhere Else',
-    ],
-  },
-  {
-    group: 'By What You Want to Experience',
-    items: [
-      'Eat Like a Local',
-      'Wake Up in Nature',
-      'Live Like a Local',
-      'Learn Something New',
-      'Go Offline',
-      'Meet the People',
-      'Do Absolutely Nothing',
-    ],
-  },
-]
-
 /* ── Category card ───────────────────────────────────────────── */
 
 function CategoryCard({
@@ -147,42 +98,6 @@ export default function CategorySection() {
               wide={i === 4}
             />
           ))}
-        </div>
-
-        {/* Sub-category lists */}
-        <div className="divide-y divide-stone-200">
-          {SUB_CATEGORIES.map(({ group, items }) => (
-            <div
-              key={group}
-              className="py-5 flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-10"
-            >
-              <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 sm:w-56 shrink-0 mt-0.5">
-                {group}
-              </p>
-              <div className="flex flex-wrap gap-x-5 gap-y-2">
-                {items.map(item => (
-                  <Link
-                    key={item}
-                    href="/discover"
-                    className="text-sm text-stone-600 hover:text-brand-700 transition-colors"
-                  >
-                    {item}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Newly Added */}
-        <div className="mt-8 pt-5 border-t border-stone-200 flex items-center gap-3">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400">Newly Added</p>
-          <Link
-            href="/discover"
-            className="text-sm text-brand-700 hover:text-brand-800 font-medium transition-colors"
-          >
-            See recently listed homestays →
-          </Link>
         </div>
 
       </div>
