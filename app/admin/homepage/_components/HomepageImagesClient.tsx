@@ -15,6 +15,7 @@ interface CropState {
   slot: string
   imgW: number
   imgH: number
+  minZoom: number
   x: number
   y: number
   zoom: number
@@ -82,12 +83,17 @@ export default function HomepageImagesClient({ slots }: Props) {
     reader.onload = e => {
       const src = e.target!.result as string
       const img = new Image()
-      img.onload = () => setCrop({
-        src, file, slot,
-        imgW: img.naturalWidth,
-        imgH: img.naturalHeight,
-        x: 50, y: 50, zoom: 1, dragging: false,
-      })
+      img.onload = () => {
+        const { w, h } = slotMeta(slot)
+        const minZoom = Math.max(w / img.naturalWidth, h / img.naturalHeight)
+        setCrop({
+          src, file, slot,
+          imgW: img.naturalWidth,
+          imgH: img.naturalHeight,
+          minZoom,
+          x: 50, y: 50, zoom: minZoom, dragging: false,
+        })
+      }
       img.src = src
     }
     reader.readAsDataURL(file)
@@ -195,7 +201,7 @@ export default function HomepageImagesClient({ slots }: Props) {
                   onMouseDown={onMouseDown}
                   onWheel={e => {
                     e.preventDefault()
-                    setCrop(p => p ? { ...p, zoom: Math.min(3, Math.max(1, p.zoom + (e.deltaY < 0 ? 0.1 : -0.1))) } : p)
+                    setCrop(p => p ? { ...p, zoom: Math.min(p.minZoom * 3, Math.max(p.minZoom, p.zoom + (e.deltaY < 0 ? 0.1 : -0.1))) } : p)
                   }}
                 >
                   {/* Preview mirrors canvas math exactly:
@@ -226,12 +232,12 @@ export default function HomepageImagesClient({ slots }: Props) {
                     </span>
                   </div>
                   <input
-                    type="range" min="1" max="3" step="0.05" value={crop.zoom}
+                    type="range" min={crop.minZoom} max={crop.minZoom * 3} step="0.05" value={crop.zoom}
                     onChange={e => setCrop(p => p ? { ...p, zoom: parseFloat(e.target.value) } : p)}
                     className="w-full h-1.5 rounded-full accent-brand-700 cursor-pointer"
                   />
                   <div className="flex justify-between text-[9px] text-stone-300 mt-1">
-                    <span>1×</span><span>3×</span>
+                    <span>{crop.minZoom.toFixed(1)}×</span><span>{(crop.minZoom * 3).toFixed(1)}×</span>
                   </div>
                 </div>
 
