@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 
-const SLIDES = [
+const FALLBACK_SLIDES = [
   { src: '/hero.jpg',              alt: 'BeNative — Real homes across India' },
   { src: '/bird_waching.jpg',      alt: 'Nature stays' },
   { src: '/Rider_Friendly.jpeg',   alt: 'Travel stays' },
@@ -11,7 +11,12 @@ const SLIDES = [
   { src: '/Agri_Immersion.jpeg',   alt: 'Rural immersion' },
 ]
 
-export default function HeroCarousel() {
+export default function HeroCarousel({ imageMap = {} }: { imageMap?: Record<string, string> }) {
+  const SLIDES = FALLBACK_SLIDES.map((s, i) => ({
+    src: imageMap[`carousel_${i + 1}`] ?? s.src,
+    alt: s.alt,
+    external: !!(imageMap[`carousel_${i + 1}`]),
+  }))
   const [current, setCurrent] = useState(0)
 
   useEffect(() => {
@@ -33,6 +38,7 @@ export default function HeroCarousel() {
             className="object-cover"
             priority={i === 0}
             sizes="100vw"
+            unoptimized={slide.external}
           />
         </div>
       ))}

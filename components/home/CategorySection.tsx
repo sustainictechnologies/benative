@@ -109,7 +109,7 @@ function toCard(h: Record<string, unknown>): HomestayWithCategories {
   }
 }
 
-export default function CategorySection() {
+export default function CategorySection({ imageMap = {} }: { imageMap?: Record<string, string> }) {
   const supabase = useMemo(() => createClient(), [])
 
   const [selectedCatKey, setSelectedCatKey] = useState<string | null>(null)
@@ -205,7 +205,7 @@ export default function CategorySection() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={cat.img}
+                src={imageMap[`cat_${cat.key}`] ?? cat.img}
                 alt={cat.alt}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
               />
@@ -244,7 +244,7 @@ export default function CategorySection() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={sub.img}
+                    src={imageMap[`sub_${sub.label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/_+$/, '')}`] ?? sub.img}
                     alt={sub.alt}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   />
