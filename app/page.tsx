@@ -13,11 +13,11 @@ export default function HomePage() {
       {/* 01 — Full-screen carousel */}
       <HeroCarousel />
 
-      {/* 02 — Introduction / BeNative proposition */}
-      <IntroductionSection />
-
-      {/* 03 — Explore by Categories */}
+      {/* 02 — Explore by Categories */}
       <CategorySection />
+
+      {/* 03 — Introduction / BeNative proposition */}
+      <IntroductionSection />
 
       {/* 04 — Why BeNative? */}
       <WhyBeNative />

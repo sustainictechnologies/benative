@@ -41,11 +41,11 @@ export default function HeroCarousel() {
       <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/15 to-black/55" />
 
       {/* Headline */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-        <p className="text-white/70 text-[11px] sm:text-xs uppercase tracking-[0.3em] mb-5 font-medium">
+      <div className="absolute inset-0 flex flex-col items-start justify-end text-left px-8 sm:px-12 pb-14 sm:pb-16">
+        <p className="text-white/60 text-[10px] sm:text-[11px] uppercase tracking-[0.3em] mb-3 font-medium">
           BeNative
         </p>
-        <h1 className="text-3xl sm:text-5xl md:text-[3.75rem] font-bold text-white leading-tight max-w-2xl">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-snug max-w-xs sm:max-w-sm lg:max-w-md">
           Find places that still belong to themselves.
         </h1>
       </div>

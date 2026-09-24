@@ -1,20 +1,86 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import type L from 'leaflet'
-import { SlidersHorizontal, ChevronDown, ChevronUp, Check } from 'lucide-react'
-
-interface MapBounds { south: number; north: number; west: number; east: number }
-import TravelIntentFilter from './TravelIntentFilter'
-import LandscapeFilterRail from './LandscapeFilterRail'
+import { SlidersHorizontal, ChevronDown, ChevronUp, MapPin, Home, Compass, Sparkles, Star, X, Waves, Mountain, TreePine, Sun, Wind, Droplets, Bird, Clock, Car, Anchor, Leaf } from 'lucide-react'
 import PracticalFiltersDrawer from './PracticalFiltersDrawer'
 import PlaceGrid from './PlaceGrid'
-import { SketchIcon } from './icons'
-import { TRAVEL_INTENTS, LANDSCAPES } from './mockData'
-import { EMPTY_PRACTICAL_FILTERS, type TravelIntent, type Landscape, type PracticalFilters } from './types'
+import { EMPTY_PRACTICAL_FILTERS, type PracticalFilters } from './types'
 import type { HomestayWithCategories } from '@/types/blocks.types'
 import { createClient } from '@/lib/supabase/client'
+
+interface MapBounds { south: number; north: number; west: number; east: number }
+
+const INDIA = { south: 8.0, north: 37.5, west: 68.0, east: 97.5 }
+
+type SubCat = { label: string; img: string; alt: string; icon: React.ElementType; intentSlug?: string; landscapeSlugs?: string[] }
+type MainCat = { key: string; label: string; icon: React.ElementType; img: string; alt: string; subCats: SubCat[] }
+
+const CATEGORIES: MainCat[] = [
+  {
+    key: 'place',
+    label: 'By the Place',
+    icon: MapPin,
+    img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=70',
+    alt: 'Coastal place',
+    subCats: [
+      { label: 'By the Sea',       icon: Waves,    img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=70', alt: 'Sea',    landscapeSlugs: ['env_coastal'] },
+      { label: 'Beside the Water', icon: Droplets, img: 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=400&q=70', alt: 'River',  landscapeSlugs: ['env_riverside'] },
+      { label: 'In the Hills',     icon: Mountain, img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=70', alt: 'Hills',  landscapeSlugs: ['env_mountain_valley'] },
+      { label: 'In the Forest',    icon: TreePine, img: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=70', alt: 'Forest', landscapeSlugs: ['env_forest_border'] },
+      { label: 'On the Farm',      icon: Sun,      img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&q=70', alt: 'Farm',   landscapeSlugs: ['env_agricultural'] },
+      { label: 'Away from It All', icon: Wind,     img: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=400&q=70', alt: 'Wild',   landscapeSlugs: ['env_rocky_plateau', 'env_sacred_grove', 'env_wetland'] },
+    ],
+  },
+  {
+    key: 'home',
+    label: 'By the Home',
+    icon: Home,
+    img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=70',
+    alt: 'Family home',
+    subCats: [
+      { label: 'Nature & Wildlife', icon: Bird,    img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=70', alt: 'Nature', intentSlug: 'nature_habitat' },
+      { label: 'Rural Immersion',   icon: Home,    img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&q=70', alt: 'Rural',  intentSlug: 'rural_immersion' },
+      { label: 'Long Stays',        icon: Clock,   img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&q=70', alt: 'Long',   intentSlug: 'long_stay_retreat' },
+      { label: 'Road Stops',        icon: Car,     img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&q=70', alt: 'Road',   intentSlug: 'transit_pitstop' },
+    ],
+  },
+  {
+    key: 'trip',
+    label: 'By the Trip',
+    icon: Compass,
+    img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=70',
+    alt: 'Travel and trip',
+    subCats: [
+      { label: 'Nature & Wildlife', icon: Bird,    img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=70', alt: 'Nature', intentSlug: 'nature_habitat' },
+      { label: 'Rural Immersion',   icon: Home,    img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&q=70', alt: 'Rural',  intentSlug: 'rural_immersion' },
+      { label: 'Long Stays',        icon: Clock,   img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&q=70', alt: 'Long',   intentSlug: 'long_stay_retreat' },
+      { label: 'Road Stops',        icon: Car,     img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&q=70', alt: 'Road',   intentSlug: 'transit_pitstop' },
+    ],
+  },
+  {
+    key: 'experience',
+    label: 'By the Experience',
+    icon: Sparkles,
+    img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=70',
+    alt: 'Local experience',
+    subCats: [
+      { label: 'Forest Stays',     icon: TreePine, img: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=70', alt: 'Forest',  landscapeSlugs: ['env_forest_border'] },
+      { label: 'Riverside',        icon: Waves,    img: 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=400&q=70', alt: 'River',   landscapeSlugs: ['env_riverside'] },
+      { label: 'Coastal Villages', icon: Anchor,   img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=70', alt: 'Coast',   landscapeSlugs: ['env_coastal'] },
+      { label: 'Sacred Groves',    icon: Leaf,     img: 'https://images.unsplash.com/photo-1425913397330-cf8af2ff40a1?w=400&q=70', alt: 'Sacred',  landscapeSlugs: ['env_sacred_grove'] },
+    ],
+  },
+  {
+    key: 'new',
+    label: 'Recently Added',
+    icon: Star,
+    img: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=600&q=70',
+    alt: 'Newly added homestays',
+    subCats: [],
+  },
+]
 
 const PRACTICAL_ITEMS = [
   { slug: 'spec_stable_network',       name: 'Stable Network'        },
@@ -34,9 +100,6 @@ const PRACTICAL_ITEMS = [
   { slug: 'spec_solo_female_friendly', name: 'Solo-Female Friendly'  },
 ]
 
-// India's full bounding box — used before the map reports its actual bounds
-const INDIA_BOUNDS = { south: 8.0, north: 37.5, west: 68.0, east: 97.5 }
-
 const DiscoverMap = dynamic(() => import('./DiscoverMap'), {
   ssr: false,
   loading: () => (
@@ -50,32 +113,34 @@ interface Props {
   initialIntentSlug?: string
 }
 
-export default function DiscoverClient({ initialIntentSlug }: Props) {
+export default function DiscoverClient({ initialIntentSlug: _ }: Props) {
   const supabase = useMemo(() => createClient(), [])
 
-  // ── Filter state ────────────────────────────────────────────────
-  const [selectedIntent, setSelectedIntent]       = useState<TravelIntent | null>(
-    () => TRAVEL_INTENTS.find((i) => i.slug === initialIntentSlug) ?? null
-  )
-  const [selectedLandscapes, setSelectedLandscapes] = useState<Landscape[]>([])
-  const [practicalFilters, setPracticalFilters]     = useState<PracticalFilters>(EMPTY_PRACTICAL_FILTERS)
-  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
+  // ── Category drill-down state ────────────────────────────────────
+  const [selectedCatKey, setSelectedCatKey] = useState<string | null>(null)
+  const [selectedSubCat, setSelectedSubCat] = useState<SubCat | null>(null)
 
-  // ── UI state ────────────────────────────────────────────────────
-  const [highlightedId, setHighlightedId]     = useState<string | null>(null)
+  // ── Practical filters ────────────────────────────────────────────
+  const [practicalFilters, setPracticalFilters] = useState<PracticalFilters>(EMPTY_PRACTICAL_FILTERS)
+  const [mapBounds, setMapBounds]               = useState<MapBounds | null>(null)
+
+  // ── UI state ─────────────────────────────────────────────────────
+  const [highlightedId,    setHighlightedId]    = useState<string | null>(null)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
-  // ── Data state ──────────────────────────────────────────────────
-  const [homestays, setHomestays]               = useState<HomestayWithCategories[]>([])
+  // ── Data state ───────────────────────────────────────────────────
+  const [homestays,          setHomestays]          = useState<HomestayWithCategories[]>([])
   const [availableLanguages, setAvailableLanguages] = useState<string[]>([])
-  const [isLoading, setIsLoading]               = useState(true)
+  const [isLoading,          setIsLoading]          = useState(true)
 
+  const splitRef    = useRef<HTMLDivElement>(null)
+  const selectedCat = CATEGORIES.find(c => c.key === selectedCatKey) ?? null
+
+  // ── Handlers ─────────────────────────────────────────────────────
   const handleBoundsChange = useCallback((bounds: L.LatLngBounds) => {
     const next: MapBounds = {
-      south: bounds.getSouth(),
-      north: bounds.getNorth(),
-      west:  bounds.getWest(),
-      east:  bounds.getEast(),
+      south: bounds.getSouth(), north: bounds.getNorth(),
+      west:  bounds.getWest(),  east:  bounds.getEast(),
     }
     setMapBounds((prev) => {
       if (
@@ -84,41 +149,51 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
         Math.abs(prev.north - next.north) < 0.0001 &&
         Math.abs(prev.west  - next.west)  < 0.0001 &&
         Math.abs(prev.east  - next.east)  < 0.0001
-      ) {
-        return prev
-      }
+      ) return prev
       return next
     })
   }, [])
 
-  function toggleLandscape(landscape: Landscape) {
-    setSelectedLandscapes((prev) =>
-      prev.some((l) => l.id === landscape.id)
-        ? prev.filter((l) => l.id !== landscape.id)
-        : [...prev, landscape]
-    )
-  }
-
   function togglePractical(slug: string) {
-    setPracticalFilters((prev) => ({
+    setPracticalFilters(prev => ({
       ...prev,
       practicalSlugs: prev.practicalSlugs.includes(slug)
-        ? prev.practicalSlugs.filter((s) => s !== slug)
+        ? prev.practicalSlugs.filter(s => s !== slug)
         : [...prev.practicalSlugs, slug],
     }))
   }
 
   function toggleLanguage(lang: string) {
-    setPracticalFilters((prev) => ({
+    setPracticalFilters(prev => ({
       ...prev,
       languages: prev.languages.includes(lang)
-        ? prev.languages.filter((l) => l !== lang)
+        ? prev.languages.filter(l => l !== lang)
         : [...prev.languages, lang],
     }))
   }
 
-  // ── Effect 1: fetch available languages once on mount ───────────
-  // Runs independently of filters — gives the language pill options
+  function handleCatClick(cat: MainCat) {
+    if (selectedCatKey === cat.key) {
+      setSelectedCatKey(null)
+      setSelectedSubCat(null)
+      return
+    }
+    setSelectedCatKey(cat.key)
+    setSelectedSubCat(null)
+  }
+
+  function handleSubCatClick(sub: SubCat) {
+    setSelectedSubCat(sub)
+    setTimeout(() => splitRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
+  }
+
+  function resetAll() {
+    setSelectedCatKey(null)
+    setSelectedSubCat(null)
+    setPracticalFilters(EMPTY_PRACTICAL_FILTERS)
+  }
+
+  // ── Effect: fetch available languages ────────────────────────────
   useEffect(() => {
     supabase
       .from('homestays')
@@ -134,77 +209,65 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
       })
   }, [])
 
-  // ── Effect 2: call RPC whenever filters or map bounds change ─────
-  // 300ms debounce prevents spamming DB while user drags map or
-  // rapidly toggles filters on a slow mobile connection
+  // ── Effect: fetch homestays whenever filters / bounds change ─────
   useEffect(() => {
     let cancelled = false
     setIsLoading(true)
 
     const timer = setTimeout(async () => {
-      const south = mapBounds?.south ?? INDIA_BOUNDS.south
-      const north = mapBounds?.north ?? INDIA_BOUNDS.north
-      const west  = mapBounds?.west  ?? INDIA_BOUNDS.west
-      const east  = mapBounds?.east  ?? INDIA_BOUNDS.east
+      const south = mapBounds?.south ?? INDIA.south
+      const north = mapBounds?.north ?? INDIA.north
+      const west  = mapBounds?.west  ?? INDIA.west
+      const east  = mapBounds?.east  ?? INDIA.east
 
       const { data, error } = await supabase.rpc('filter_homestays_spatial', {
         min_lat:         south,
         max_lat:         north,
         min_lng:         west,
         max_lng:         east,
-        intent_slug:     selectedIntent?.slug ?? null,
-        landscape_slugs: selectedLandscapes.map((l) => l.slug),
+        intent_slug:     selectedSubCat?.intentSlug     ?? null,
+        landscape_slugs: selectedSubCat?.landscapeSlugs ?? [],
         practical_slugs: practicalFilters.practicalSlugs,
       })
 
       if (cancelled) return
       if (error) { setIsLoading(false); return }
 
-      // verifiedOnly + language filters are not RPC params —
-      // applied client-side on the small already-bounded result set
       let results: any[] = data ?? []
-      results = results.filter((h) => h.latitude !== 0 || h.longitude !== 0)
-      if (practicalFilters.verifiedOnly) {
-        results = results.filter((h) => h.is_verified)
-      }
+      results = results.filter(h => h.latitude !== 0 || h.longitude !== 0)
+      if (practicalFilters.verifiedOnly) results = results.filter(h => h.is_verified)
       if (practicalFilters.languages.length > 0) {
-        results = results.filter((h) =>
-          practicalFilters.languages.some((l) => (h.languages_spoken ?? []).includes(l))
+        results = results.filter(h =>
+          practicalFilters.languages.some(l => (h.languages_spoken ?? []).includes(l))
         )
       }
 
-      setHomestays(
-        results.map((h) => ({
-          id:                h.id,
-          title:             h.title,
-          slug:              h.slug,
-          location_district: h.location_district,
-          village_name:      h.village_name,
-          host_name:         h.host_name,
-          is_verified:       h.is_verified,
-          latitude:          h.latitude,
-          longitude:         h.longitude,
-          calling_window:    h.calling_window,
-          languages_spoken:  h.languages_spoken ?? [],
-          categories:        [],   // filtering is now server-side; not needed in client
-          cover_image_url:   h.cover_image_url ?? null,
-        }))
-      )
+      setHomestays(results.map(h => ({
+        id:                h.id,
+        title:             h.title,
+        slug:              h.slug,
+        location_district: h.location_district,
+        village_name:      h.village_name,
+        host_name:         h.host_name,
+        is_verified:       h.is_verified,
+        latitude:          h.latitude,
+        longitude:         h.longitude,
+        calling_window:    h.calling_window,
+        languages_spoken:  h.languages_spoken ?? [],
+        categories:        [],
+        cover_image_url:   h.cover_image_url ?? null,
+      })))
       setIsLoading(false)
     }, 300)
 
-    // Cleanup: cancel in-flight logic if filters change before timer fires
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
-  }, [selectedIntent, selectedLandscapes, practicalFilters, mapBounds])
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [selectedSubCat, practicalFilters, mapBounds])
 
-  // ── Derived values ──────────────────────────────────────────────
+  // ── Derived values ───────────────────────────────────────────────
   const locationLabel = useMemo(() => {
     if (homestays.length === 0) return undefined
     const counts: Record<string, number> = {}
-    homestays.forEach((h) => {
+    homestays.forEach(h => {
       if (h.location_district) counts[h.location_district] = (counts[h.location_district] ?? 0) + 1
     })
     const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
@@ -212,8 +275,7 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
   }, [homestays])
 
   const totalActiveFilters =
-    (selectedIntent ? 1 : 0) +
-    selectedLandscapes.length +
+    (selectedSubCat ? 1 : 0) +
     (practicalFilters.verifiedOnly ? 1 : 0) +
     practicalFilters.languages.length +
     practicalFilters.practicalSlugs.length
@@ -221,23 +283,86 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
   return (
     <div className="flex flex-col bg-white">
 
-      {/* ── Desktop filter bars (Layer 1 + 2) ── */}
-      <div className="hidden md:block shrink-0 bg-white relative z-[500]">
-        <TravelIntentFilter
-          intents={TRAVEL_INTENTS}
-          selected={selectedIntent}
-          onSelect={setSelectedIntent}
-        />
-        <LandscapeFilterRail
-          landscapes={LANDSCAPES}
-          selected={selectedLandscapes}
-          onToggle={toggleLandscape}
-        />
+      {/* ── Category drill-down ── */}
+      <div className="bg-[#f8f7f2] px-4 sm:px-6 py-6 border-b border-stone-200">
+        <div className="max-w-7xl mx-auto">
+
+          {/* Main category cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {CATEGORIES.map((cat, i) => (
+              <button
+                key={cat.key}
+                type="button"
+                onClick={() => handleCatClick(cat)}
+                className={`group relative rounded-xl overflow-hidden aspect-[3/2] text-left transition-all duration-200 ${
+                  i === 4 ? 'col-span-2 sm:col-span-1' : ''
+                } ${selectedCatKey === cat.key ? 'ring-2 ring-brand-600 ring-offset-2' : ''}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={cat.img}
+                  alt={cat.alt}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/65" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5">
+                  <cat.icon size={30} className="text-white/90 drop-shadow-md" />
+                  <span className="text-white font-semibold text-sm leading-tight text-center px-2">{cat.label}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Sub-category expansion */}
+          {selectedCat && selectedCat.subCats.length > 0 && (
+            <div className="mt-5 pt-5 border-t border-stone-200">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-stone-400">
+                  {selectedCat.label}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setSelectedCatKey(null); setSelectedSubCat(null) }}
+                  className="text-stone-400 hover:text-stone-600 transition-colors"
+                  aria-label="Close"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {selectedCat.subCats.map((sub) => (
+                  <button
+                    key={sub.label}
+                    type="button"
+                    onClick={() => handleSubCatClick(sub)}
+                    className={`group relative rounded-xl overflow-hidden aspect-[3/2] text-left transition-all duration-200 ${
+                      selectedSubCat?.label === sub.label ? 'ring-2 ring-brand-600 ring-offset-1' : ''
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={sub.img}
+                      alt={sub.alt}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/25 to-black/70" />
+                    <div className="absolute inset-0 flex items-center justify-center pb-5">
+                      <sub.icon size={28} className="text-white/90 drop-shadow-md" />
+                    </div>
+                    <span className="absolute bottom-0 left-0 right-0 p-2.5 text-white font-semibold text-xs leading-tight text-center">
+                      {sub.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
 
-      {/* ── Mobile single filter bar ── */}
+      {/* ── Mobile filter bar ── */}
       <div className="md:hidden shrink-0 bg-white relative z-[500]">
-        {/* Bar */}
         <div className="flex items-center gap-4 px-4 py-2.5 border-b border-stone-100">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-stone-900 leading-none">
@@ -251,7 +376,7 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
           </div>
           <button
             type="button"
-            onClick={() => setMobileFiltersOpen((o) => !o)}
+            onClick={() => setMobileFiltersOpen(o => !o)}
             className={`inline-flex items-center gap-1.5 text-sm font-medium border rounded-full px-3.5 py-1.5 transition-colors shrink-0 ${
               totalActiveFilters > 0 || mobileFiltersOpen
                 ? 'bg-brand-700 border-brand-700 text-white'
@@ -269,62 +394,12 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
           </button>
         </div>
 
-        {/* Expanded mobile filter panel */}
         {mobileFiltersOpen && (
           <div className="px-4 py-3 border-b border-stone-100 space-y-4 bg-white">
-
-            {/* Layer 1: Intent */}
-            <div>
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">Why are you travelling?</p>
-              <div className="flex flex-wrap gap-2">
-                {TRAVEL_INTENTS.map((intent) => {
-                  const isSelected = selectedIntent?.id === intent.id
-                  return (
-                    <button
-                      key={intent.id}
-                      type="button"
-                      onClick={() => setSelectedIntent(isSelected ? null : intent)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-all ${
-                        isSelected ? 'bg-brand-700 border-brand-700 text-white' : 'bg-white border-stone-300 text-stone-700'
-                      }`}
-                    >
-                      <SketchIcon slug={intent.slug} className={`w-[18px] h-[18px] shrink-0 ${isSelected ? 'text-white' : 'text-brand-700'}`} />
-                      {intent.name}
-                      {isSelected && <Check size={13} strokeWidth={2.5} />}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Layer 2: Landscape */}
-            <div>
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">Landscape</p>
-              <div className="flex flex-wrap gap-2">
-                {LANDSCAPES.map((landscape) => {
-                  const isSelected = selectedLandscapes.some((l) => l.id === landscape.id)
-                  return (
-                    <button
-                      key={landscape.id}
-                      type="button"
-                      onClick={() => toggleLandscape(landscape)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium shrink-0 whitespace-nowrap transition-all ${
-                        isSelected ? 'bg-brand-700 border-brand-700 text-white' : 'bg-white border-stone-200 text-stone-600'
-                      }`}
-                    >
-                      <SketchIcon slug={landscape.slug} className={`w-[18px] h-[18px] shrink-0 ${isSelected ? 'text-white' : 'text-brand-800'}`} />
-                      {landscape.name}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Layer 3: Requirements */}
             <div>
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">Requirements</p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                {PRACTICAL_ITEMS.map((item) => (
+                {PRACTICAL_ITEMS.map(item => (
                   <label key={item.slug} className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -340,31 +415,16 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
                 <input
                   type="checkbox"
                   checked={practicalFilters.verifiedOnly}
-                  onChange={(e) => setPracticalFilters((p) => ({ ...p, verifiedOnly: e.target.checked }))}
+                  onChange={e => setPracticalFilters(p => ({ ...p, verifiedOnly: e.target.checked }))}
                   className="w-3.5 h-3.5 accent-brand-700"
                 />
                 <span className="text-xs text-stone-600">Verified hosts only</span>
               </label>
               {availableLanguages.length > 0 && (
                 <div className="mt-2">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-xs text-stone-400">Languages spoken</p>
-                    {totalActiveFilters > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedIntent(null)
-                          setSelectedLandscapes([])
-                          setPracticalFilters(EMPTY_PRACTICAL_FILTERS)
-                        }}
-                        className="text-xs text-brand-600 font-medium hover:text-brand-800 transition-colors"
-                      >
-                        Reset filters
-                      </button>
-                    )}
-                  </div>
+                  <p className="text-xs text-stone-400 mb-1.5">Languages spoken</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {availableLanguages.map((lang) => (
+                    {availableLanguages.map(lang => (
                       <button
                         key={lang}
                         type="button"
@@ -381,31 +441,33 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
                   </div>
                 </div>
               )}
+              {totalActiveFilters > 0 && (
+                <button type="button" onClick={resetAll} className="mt-3 text-xs text-brand-600 font-medium">
+                  Reset all filters
+                </button>
+              )}
             </div>
           </div>
         )}
       </div>
 
-      {/* ── Split: mobile=column (cards then map), desktop=row (60/40) ── */}
-      <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row">
+      {/* ── Desktop: practical filters drawer ── */}
+      <div className="hidden md:block shrink-0 bg-white relative z-[500]">
+        <PracticalFiltersDrawer
+          filters={practicalFilters}
+          availableLanguages={availableLanguages}
+          onChange={setPracticalFilters}
+          filteredCount={homestays.length}
+          locationLabel={locationLabel}
+          totalActiveFilters={totalActiveFilters}
+          onReset={resetAll}
+        />
+      </div>
 
-        {/* List panel — below map on mobile, left on desktop */}
+      {/* ── Split view: cards left, map right ── */}
+      <div ref={splitRef} className="max-w-7xl mx-auto w-full flex flex-col md:flex-row">
+
         <div className="w-full md:w-3/5 flex flex-col md:border-r border-stone-100 order-2 md:order-1">
-          <div className="hidden md:block shrink-0 relative z-[500]">
-            <PracticalFiltersDrawer
-              filters={practicalFilters}
-              availableLanguages={availableLanguages}
-              onChange={setPracticalFilters}
-              filteredCount={homestays.length}
-              locationLabel={locationLabel}
-              totalActiveFilters={totalActiveFilters}
-              onReset={() => {
-                setSelectedIntent(null)
-                setSelectedLandscapes([])
-                setPracticalFilters(EMPTY_PRACTICAL_FILTERS)
-              }}
-            />
-          </div>
           <PlaceGrid
             homestays={homestays}
             highlightedId={highlightedId}
@@ -414,7 +476,6 @@ export default function DiscoverClient({ initialIntentSlug }: Props) {
           />
         </div>
 
-        {/* Map panel — top on mobile, right on desktop */}
         <div className="w-full h-[300px] p-3 md:w-2/5 md:h-[520px] md:shrink-0 order-1 md:order-2">
           <div className="h-full rounded-xl overflow-hidden">
             <DiscoverMap

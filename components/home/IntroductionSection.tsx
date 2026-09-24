@@ -3,15 +3,13 @@ import { ArrowRight } from 'lucide-react'
 
 export default function IntroductionSection() {
   return (
-    <section className="bg-white px-6 py-10 sm:py-14">
-      <div className="max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
+    <section className="bg-white px-6 py-6 sm:py-8">
+      <div className="max-w-7xl space-y-4">
 
-        {/* Left — heading */}
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 leading-snug">
           Travel a little closer to the place.
         </h2>
 
-        {/* Right — body + CTA */}
         <div className="space-y-4 text-stone-600 text-base sm:text-lg leading-relaxed">
           <p>Some of the best stays aren't the ones you find everywhere.</p>
           <p>
