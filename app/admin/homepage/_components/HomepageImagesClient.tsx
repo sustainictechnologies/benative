@@ -13,6 +13,8 @@ interface CropState {
   src: string
   file: File
   slot: string
+  imgW: number
+  imgH: number
   x: number
   y: number
   zoom: number
@@ -72,14 +74,20 @@ export default function HomepageImagesClient({ slots }: Props) {
 
   function setStatus(slot: string, s: Status) { setStatuses(p => ({ ...p, [slot]: s })) }
 
-  // ── File selected → load preview + open crop modal ──────────────
+  // ── File selected → get natural dims → open crop modal ─────────
   function onFileChange(slot: string, file: File) {
     const reader = new FileReader()
-    reader.onload = e => setCrop({
-      src: e.target!.result as string,
-      file, slot,
-      x: 50, y: 50, zoom: 1, dragging: false,
-    })
+    reader.onload = e => {
+      const src = e.target!.result as string
+      const img = new Image()
+      img.onload = () => setCrop({
+        src, file, slot,
+        imgW: img.naturalWidth,
+        imgH: img.naturalHeight,
+        x: 50, y: 50, zoom: 1, dragging: false,
+      })
+      img.src = src
+    }
     reader.readAsDataURL(file)
   }
 
@@ -188,18 +196,21 @@ export default function HomepageImagesClient({ slots }: Props) {
                     setCrop(p => p ? { ...p, zoom: Math.min(3, Math.max(1, p.zoom + (e.deltaY < 0 ? 0.1 : -0.1))) } : p)
                   }}
                 >
+                  {/* Preview mirrors canvas math exactly:
+                      image drawn at (imgW*zoom × imgH*zoom) offset so
+                      (x%,y%) of scaled image lands at center of frame */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={crop.src}
                     alt="crop preview"
                     draggable={false}
-                    className="absolute inset-0 w-full h-full pointer-events-none"
+                    className="absolute pointer-events-none"
                     style={{
-                      objectFit:      'cover',
-                      objectPosition: `${crop.x}% ${crop.y}%`,
-                      transform:       crop.zoom !== 1 ? `scale(${crop.zoom})` : undefined,
-                      transformOrigin: `${crop.x}% ${crop.y}%`,
-                      transition:      crop.dragging ? 'none' : 'transform 0.15s ease',
+                      width:  `${crop.imgW * crop.zoom / meta.w * 100}%`,
+                      height: `${crop.imgH * crop.zoom / meta.h * 100}%`,
+                      left:   `${(0.5 - (crop.x / 100) * crop.imgW * crop.zoom / meta.w) * 100}%`,
+                      top:    `${(0.5 - (crop.y / 100) * crop.imgH * crop.zoom / meta.h) * 100}%`,
+                      transition: crop.dragging ? 'none' : 'left 0.05s, top 0.05s',
                     }}
                   />
                 </div>
