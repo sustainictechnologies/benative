@@ -21,14 +21,20 @@ export async function uploadHomepageImage(
   if (uploadError) return { error: uploadError.message }
 
   const { data: { publicUrl } } = supabase.storage.from('homepage').getPublicUrl(path)
-  const url = `${publicUrl}?v=${Date.now()}`
+  // strip any existing ?v= before adding fresh one
+  const baseUrl = publicUrl.split('?')[0]
+  const url = `${baseUrl}?v=${Date.now()}`
 
-  const { error: dbError } = await supabase
+  const { error: dbError, data: upserted } = await supabase
     .from('homepage_images')
-    .update({ image_url: url, updated_at: new Date().toISOString() })
-    .eq('slot', slot)
+    .upsert(
+      { slot, image_url: url, updated_at: new Date().toISOString() },
+      { onConflict: 'slot', ignoreDuplicates: false }
+    )
+    .select('slot')
 
   if (dbError) return { error: dbError.message }
+  if (!upserted || upserted.length === 0) return { error: `Slot "${slot}" not found in homepage_images table` }
 
   revalidatePath('/')
   revalidatePath('/discover')
@@ -42,8 +48,10 @@ export async function clearHomepageImage(
 
   const { error } = await supabase
     .from('homepage_images')
-    .update({ image_url: null, updated_at: new Date().toISOString() })
-    .eq('slot', slot)
+    .upsert(
+      { slot, image_url: null, updated_at: new Date().toISOString() },
+      { onConflict: 'slot', ignoreDuplicates: false }
+    )
 
   if (error) return { error: error.message }
 
