@@ -1,7 +1,6 @@
 import HeroCarousel        from '@/components/home/HeroCarousel'
 import IntroductionSection from '@/components/home/IntroductionSection'
 import CategorySection     from '@/components/home/CategorySection'
-import WhyBeNative         from '@/components/home/WhyBeNative'
 import HowItWorks          from '@/components/home/HowItWorks'
 import FinalCTA            from '@/components/home/FinalCTA'
 import { createClient }    from '@/lib/supabase/server'
@@ -33,14 +32,11 @@ export default async function HomePage() {
       {/* 03 — Introduction / BeNative proposition */}
       <IntroductionSection />
 
-      {/* 04 — Why BeNative? */}
-      <WhyBeNative />
-
-      {/* 05 — How it Works */}
+      {/* 04 — How it Works */}
       <HowItWorks />
 
       {/* 06 — Final full-screen image */}
-      <FinalCTA />
+      <FinalCTA imageMap={imageMap} />
     </div>
   )
 }

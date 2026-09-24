@@ -2,12 +2,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
 
-export default function FinalCTA() {
+export default function FinalCTA({ imageMap = {} }: { imageMap?: Record<string, string> }) {
   return (
     <section className="relative h-[75vh] min-h-[480px] overflow-hidden">
       <div className="absolute inset-0">
         <Image
-          src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1600&q=75"
+          src={imageMap['cta_background'] ?? 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1600&q=75'}
           alt="Hidden India"
           fill
           className="object-cover"

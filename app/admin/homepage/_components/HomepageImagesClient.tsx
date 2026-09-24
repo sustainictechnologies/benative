@@ -22,9 +22,9 @@ interface CropState {
 }
 
 function slotMeta(slot: string) {
-  if (slot.startsWith('carousel_')) return { w: 1600, h: 580 }
-  if (slot.startsWith('cat_'))      return { w: 600,  h: 800 }
-  return                                   { w: 600,  h: 400 }
+  if (slot.startsWith('carousel_') || slot.startsWith('cta_')) return { w: 1600, h: 580 }
+  if (slot.startsWith('cat_'))                                  return { w: 600,  h: 800 }
+  return                                                               { w: 600,  h: 400 }
 }
 
 async function cropToBlob(
@@ -76,6 +76,7 @@ const SECTIONS = [
   { key: 'carousel',      title: 'Hero Carousel',   hint: '1600 × 580 px — landscape' },
   { key: 'categories',    title: 'Main Categories', hint: '600 × 800 px — portrait'   },
   { key: 'subcategories', title: 'Sub-Categories',  hint: '600 × 400 px — landscape'  },
+  { key: 'cta',           title: 'Final CTA',       hint: '1600 × 580 px — landscape' },
 ]
 
 export default function HomepageImagesClient({ slots }: Props) {
@@ -187,7 +188,7 @@ export default function HomepageImagesClient({ slots }: Props) {
   }, [crop?.dragging, crop?.zoom, crop?.slot, crop?.img])
 
   return (
-    <>
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* ── Crop modal ── */}
       {crop && (() => {
         const meta = slotMeta(crop.slot)
@@ -363,6 +364,6 @@ export default function HomepageImagesClient({ slots }: Props) {
           )
         })}
       </div>
-    </>
+    </div>
   )
 }
