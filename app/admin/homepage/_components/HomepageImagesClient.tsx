@@ -11,10 +11,9 @@ type Status = 'idle' | 'uploading' | 'success' | 'error'
 
 interface CropState {
   src: string
+  img: HTMLImageElement
   file: File
   slot: string
-  imgW: number
-  imgH: number
   minZoom: number
   x: number
   y: number
@@ -23,9 +22,9 @@ interface CropState {
 }
 
 function slotMeta(slot: string) {
-  if (slot.startsWith('carousel_')) return { w: 1600, h: 580, aspect: '1600 / 580' }
-  if (slot.startsWith('cat_'))      return { w: 600,  h: 800, aspect: '3 / 4' }
-  return                                   { w: 600,  h: 400, aspect: '3 / 2' }
+  if (slot.startsWith('carousel_')) return { w: 1600, h: 580 }
+  if (slot.startsWith('cat_'))      return { w: 600,  h: 800 }
+  return                                   { w: 600,  h: 400 }
 }
 
 async function cropToBlob(
@@ -54,10 +53,29 @@ async function cropToBlob(
   })
 }
 
+function drawPreview(canvas: HTMLCanvasElement, img: HTMLImageElement, crop: CropState) {
+  const { w: tw, h: th } = slotMeta(crop.slot)
+  // Preview at half resolution for performance
+  const pw = Math.min(tw, 800)
+  const ph = Math.round(pw * th / tw)
+  if (canvas.width !== pw)  canvas.width  = pw
+  if (canvas.height !== ph) canvas.height = ph
+  const ctx = canvas.getContext('2d')!
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  const scale = pw / tw
+  const sw = img.naturalWidth  * crop.zoom * scale
+  const sh = img.naturalHeight * crop.zoom * scale
+  const ox = (crop.x / 100) * sw - pw / 2
+  const oy = (crop.y / 100) * sh - ph / 2
+  ctx.clearRect(0, 0, pw, ph)
+  ctx.drawImage(img, -ox, -oy, sw, sh)
+}
+
 const SECTIONS = [
-  { key: 'carousel',     title: 'Hero Carousel',   hint: '1600 × 580 px — landscape' },
-  { key: 'categories',   title: 'Main Categories', hint: '600 × 800 px — portrait'   },
-  { key: 'subcategories',title: 'Sub-Categories',  hint: '600 × 400 px — landscape'  },
+  { key: 'carousel',      title: 'Hero Carousel',   hint: '1600 × 580 px — landscape' },
+  { key: 'categories',    title: 'Main Categories', hint: '600 × 800 px — portrait'   },
+  { key: 'subcategories', title: 'Sub-Categories',  hint: '600 × 400 px — landscape'  },
 ]
 
 export default function HomepageImagesClient({ slots }: Props) {
@@ -72,12 +90,19 @@ export default function HomepageImagesClient({ slots }: Props) {
   const [errors,   setErrors]   = useState<Record<string, string>>({})
   const [crop,     setCrop]     = useState<CropState | null>(null)
 
-  const fileRefs = useRef<Record<string, HTMLInputElement | null>>({})
-  const dragRef  = useRef({ startMX: 0, startMY: 0, startX: 0, startY: 0 })
+  const fileRefs    = useRef<Record<string, HTMLInputElement | null>>({})
+  const dragRef     = useRef({ startMX: 0, startMY: 0, startX: 0, startY: 0 })
+  const canvasRef   = useRef<HTMLCanvasElement>(null)
 
   function setStatus(slot: string, s: Status) { setStatuses(p => ({ ...p, [slot]: s })) }
 
-  // ── File selected → get natural dims → open crop modal ─────────
+  // ── Redraw preview canvas whenever crop state changes ───────────
+  useEffect(() => {
+    if (!crop || !canvasRef.current) return
+    drawPreview(canvasRef.current, crop.img, crop)
+  }, [crop])
+
+  // ── File selected → load image → open crop modal ────────────────
   function onFileChange(slot: string, file: File) {
     const reader = new FileReader()
     reader.onload = e => {
@@ -86,20 +111,14 @@ export default function HomepageImagesClient({ slots }: Props) {
       img.onload = () => {
         const { w, h } = slotMeta(slot)
         const minZoom = Math.max(w / img.naturalWidth, h / img.naturalHeight)
-        setCrop({
-          src, file, slot,
-          imgW: img.naturalWidth,
-          imgH: img.naturalHeight,
-          minZoom,
-          x: 50, y: 50, zoom: minZoom, dragging: false,
-        })
+        setCrop({ src, img, file, slot, minZoom, x: 50, y: 50, zoom: minZoom, dragging: false })
       }
       img.src = src
     }
     reader.readAsDataURL(file)
   }
 
-  // ── Crop modal: apply → canvas crop → upload ────────────────────
+  // ── Apply: canvas crop → upload ─────────────────────────────────
   async function handleApply() {
     if (!crop) return
     const { w, h } = slotMeta(crop.slot)
@@ -140,7 +159,7 @@ export default function HomepageImagesClient({ slots }: Props) {
     }
   }
 
-  // ── Crop modal drag ─────────────────────────────────────────────
+  // ── Drag to reposition ──────────────────────────────────────────
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     if (!crop) return
     e.preventDefault()
@@ -150,17 +169,22 @@ export default function HomepageImagesClient({ slots }: Props) {
 
   useEffect(() => {
     if (!crop?.dragging) return
-    const sensitivity = 2.5 * (crop.zoom ?? 1)
+    // sensitivity: how many screen pixels = 1% focal-point shift
+    const { w: tw, h: th } = slotMeta(crop.slot)
+    const cw = canvasRef.current?.clientWidth  ?? 400
+    const ch = canvasRef.current?.clientHeight ?? Math.round(400 * th / tw)
+    const sensX = (crop.img.naturalWidth  * crop.zoom / tw  * cw)  / 100
+    const sensY = (crop.img.naturalHeight * crop.zoom / th * ch) / 100
     const onMove = (e: MouseEvent) => {
-      const nx = Math.min(100, Math.max(0, dragRef.current.startX - (e.clientX - dragRef.current.startMX) / sensitivity))
-      const ny = Math.min(100, Math.max(0, dragRef.current.startY - (e.clientY - dragRef.current.startMY) / sensitivity))
+      const nx = Math.min(100, Math.max(0, dragRef.current.startX - (e.clientX - dragRef.current.startMX) / sensX))
+      const ny = Math.min(100, Math.max(0, dragRef.current.startY - (e.clientY - dragRef.current.startMY) / sensY))
       setCrop(p => p ? { ...p, x: nx, y: ny } : p)
     }
     const onUp = () => setCrop(p => p ? { ...p, dragging: false } : p)
     window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
+    window.addEventListener('mouseup',  onUp)
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-  }, [crop?.dragging, crop?.zoom])
+  }, [crop?.dragging, crop?.zoom, crop?.slot, crop?.img])
 
   return (
     <>
@@ -177,53 +201,30 @@ export default function HomepageImagesClient({ slots }: Props) {
               style={{ maxHeight: 'calc(100vh - 48px)' }}
               onClick={e => e.stopPropagation()}
             >
-              {/* Header — fixed */}
+              {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 shrink-0">
                 <div>
                   <h2 className="text-sm font-bold text-stone-900">Crop & Position</h2>
                   <p className="text-[11px] text-stone-400 mt-0.5">Drag to reposition · Scroll to zoom</p>
                 </div>
-                <button
-                  onClick={() => setCrop(null)}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 text-stone-400 transition-colors"
-                >
+                <button onClick={() => setCrop(null)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 text-stone-400 transition-colors">
                   <X size={15} />
                 </button>
               </div>
 
-              {/* Scrollable body */}
+              {/* Body */}
               <div className="p-5 space-y-4 overflow-y-auto flex-1">
-                {/* Preview frame — correct aspect ratio for this slot */}
-                <div
-                  className="relative w-full overflow-hidden rounded-xl bg-stone-100 ring-2 ring-stone-200 select-none"
-                  style={{
-                    aspectRatio: meta.aspect,
-                    cursor: crop.dragging ? 'grabbing' : 'grab',
-                  }}
+                {/* Canvas preview — same math as cropToBlob, guaranteed to match */}
+                <canvas
+                  ref={canvasRef}
+                  className="w-full rounded-xl ring-2 ring-stone-200 block select-none"
+                  style={{ cursor: crop.dragging ? 'grabbing' : 'grab', aspectRatio: `${meta.w} / ${meta.h}` }}
                   onMouseDown={onMouseDown}
                   onWheel={e => {
                     e.preventDefault()
                     setCrop(p => p ? { ...p, zoom: Math.min(p.minZoom * 3, Math.max(p.minZoom, p.zoom + (e.deltaY < 0 ? 0.1 : -0.1))) } : p)
                   }}
-                >
-                  {/* Preview mirrors canvas math exactly:
-                      image drawn at (imgW*zoom × imgH*zoom) offset so
-                      (x%,y%) of scaled image lands at center of frame */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={crop.src}
-                    alt="crop preview"
-                    draggable={false}
-                    className="absolute pointer-events-none"
-                    style={{
-                      width:  `${crop.imgW * crop.zoom / meta.w * 100}%`,
-                      height: 'auto',
-                      left:   `${(0.5 - (crop.x / 100) * crop.imgW * crop.zoom / meta.w) * 100}%`,
-                      top:    `${(0.5 - (crop.y / 100) * crop.imgH * crop.zoom / meta.h) * 100}%`,
-                      transition: crop.dragging ? 'none' : 'left 0.05s, top 0.05s',
-                    }}
-                  />
-                </div>
+                />
 
                 {/* Zoom */}
                 <div>
@@ -239,18 +240,17 @@ export default function HomepageImagesClient({ slots }: Props) {
                     className="w-full h-1.5 rounded-full accent-brand-700 cursor-pointer"
                   />
                   <div className="flex justify-between text-[9px] text-stone-300 mt-1">
-                    <span>{crop.minZoom.toFixed(1)}×</span><span>{(crop.minZoom * 3).toFixed(1)}×</span>
+                    <span>{crop.minZoom.toFixed(1)}×</span>
+                    <span>{(crop.minZoom * 3).toFixed(1)}×</span>
                   </div>
                 </div>
 
-                {/* Target size hint */}
                 <p className="text-[10px] text-stone-400 text-center">
                   Saves as {meta.w} × {meta.h} px
                 </p>
-
               </div>
 
-              {/* Actions — always visible at bottom */}
+              {/* Buttons — always visible */}
               <div className="flex gap-2 px-5 py-4 border-t border-stone-100 shrink-0">
                 <button
                   onClick={() => setCrop(null)}
@@ -296,42 +296,31 @@ export default function HomepageImagesClient({ slots }: Props) {
 
                   return (
                     <div key={slot.slot} className="space-y-2">
-                      {/* Image card */}
                       <div
                         className={`relative overflow-hidden rounded-xl bg-stone-100 border-2 ${
                           img ? 'border-transparent' : 'border-dashed border-stone-200'
                         }`}
-                        style={{ aspectRatio: meta.aspect }}
+                        style={{ aspectRatio: `${meta.w} / ${meta.h}` }}
                       >
                         {img ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={img}
-                            alt={slot.label}
-                            className="absolute inset-0 w-full h-full object-cover"
-                          />
+                          <img src={img} alt={slot.label} className="absolute inset-0 w-full h-full object-cover" />
                         ) : (
                           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-stone-300">
                             <Upload size={20} />
                             <span className="text-[10px]">No image</span>
                           </div>
                         )}
-
-                        {/* Uploading overlay */}
                         {status === 'uploading' && (
                           <div className="absolute inset-0 bg-white/75 flex items-center justify-center">
                             <Loader2 size={22} className="animate-spin text-brand-600" />
                           </div>
                         )}
-
-                        {/* Success flash */}
                         {status === 'success' && (
                           <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
                             <CheckCircle size={22} className="text-green-600" />
                           </div>
                         )}
-
-                        {/* Clear button */}
                         {img && status === 'idle' && (
                           <button
                             onClick={() => handleClear(slot.slot)}
@@ -343,7 +332,6 @@ export default function HomepageImagesClient({ slots }: Props) {
                         )}
                       </div>
 
-                      {/* Label + actions */}
                       <div className="space-y-1">
                         <p className="text-[11px] font-semibold text-stone-700 truncate">{slot.label}</p>
                         {status === 'error' && (
@@ -359,9 +347,7 @@ export default function HomepageImagesClient({ slots }: Props) {
                         </button>
                         <input
                           ref={el => { fileRefs.current[slot.slot] = el }}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
+                          type="file" accept="image/*" className="hidden"
                           onChange={e => {
                             const file = e.target.files?.[0]
                             if (file) onFileChange(slot.slot, file)
