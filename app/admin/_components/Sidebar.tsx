@@ -20,6 +20,7 @@ import {
   Leaf,
   FilePen,
   Inbox,
+  LayoutTemplate,
 } from 'lucide-react'
 
 const NAV = [
@@ -27,14 +28,15 @@ const NAV = [
   { label: 'Homestays',       href: '/admin/homestays',            icon: Home },
   { label: 'Drafts',          href: '/admin/drafts',               icon: FilePen },
   { label: 'Recommendations', href: '/admin/recommendations',      icon: Inbox },
-  { label: 'Hosts',           href: '/admin/hosts',            icon: Users },
-  { label: 'Reviews',         href: '/admin/reviews',          icon: Star },
-  { label: 'Experiences',     href: '/admin/experiences',      icon: Compass },
-  { label: 'Regions',         href: '/admin/regions',          icon: MapPin },
-  { label: 'Analytics',       href: '/admin/analytics',        icon: BarChart2 },
-  { label: 'Media Library',   href: '/admin/media',            icon: ImageIcon },
-  { label: 'Website Builder', href: '/admin/builder',          icon: Wrench },
-  { label: 'Settings',        href: '/admin/settings',         icon: Settings },
+  { label: 'Hosts',           href: '/admin/hosts',                icon: Users },
+  { label: 'Reviews',         href: '/admin/reviews',              icon: Star },
+  { label: 'Experiences',     href: '/admin/experiences',          icon: Compass },
+  { label: 'Regions',         href: '/admin/regions',              icon: MapPin },
+  { label: 'Analytics',       href: '/admin/analytics',            icon: BarChart2 },
+  { label: 'Homepage',        href: '/admin/homepage',             icon: LayoutTemplate },
+  { label: 'Media Library',   href: '/admin/media',                icon: ImageIcon },
+  { label: 'Website Builder', href: '/admin/builder',              icon: Wrench },
+  { label: 'Settings',        href: '/admin/settings',             icon: Settings },
 ]
 
 export default function Sidebar() {
