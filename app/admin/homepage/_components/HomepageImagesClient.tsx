@@ -39,12 +39,14 @@ async function cropToBlob(
       const canvas = document.createElement('canvas')
       canvas.width = tw; canvas.height = th
       const ctx = canvas.getContext('2d')!
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
       const sw = img.naturalWidth  * crop.zoom
       const sh = img.naturalHeight * crop.zoom
       const ox = (crop.x / 100) * sw - tw / 2
       const oy = (crop.y / 100) * sh - th / 2
       ctx.drawImage(img, -ox, -oy, sw, sh)
-      canvas.toBlob(b => b ? resolve(b) : reject(new Error('canvas toBlob failed')), 'image/jpeg', 0.92)
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('canvas toBlob failed')), 'image/jpeg', 0.95)
     }
     img.onerror = reject
     img.src = src
