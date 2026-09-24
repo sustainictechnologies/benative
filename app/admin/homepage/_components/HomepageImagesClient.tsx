@@ -217,7 +217,7 @@ export default function HomepageImagesClient({ slots }: Props) {
                     className="absolute pointer-events-none"
                     style={{
                       width:  `${crop.imgW * crop.zoom / meta.w * 100}%`,
-                      height: `${crop.imgH * crop.zoom / meta.h * 100}%`,
+                      height: 'auto',
                       left:   `${(0.5 - (crop.x / 100) * crop.imgW * crop.zoom / meta.w) * 100}%`,
                       top:    `${(0.5 - (crop.y / 100) * crop.imgH * crop.zoom / meta.h) * 100}%`,
                       transition: crop.dragging ? 'none' : 'left 0.05s, top 0.05s',
