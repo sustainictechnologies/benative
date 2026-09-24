@@ -173,11 +173,12 @@ export default function HomepageImagesClient({ slots }: Props) {
             onClick={() => setCrop(null)}
           >
             <div
-              className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-md"
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col"
+              style={{ maxHeight: 'calc(100vh - 48px)' }}
               onClick={e => e.stopPropagation()}
             >
-              {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
+              {/* Header — fixed */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 shrink-0">
                 <div>
                   <h2 className="text-sm font-bold text-stone-900">Crop & Position</h2>
                   <p className="text-[11px] text-stone-400 mt-0.5">Drag to reposition · Scroll to zoom</p>
@@ -190,7 +191,8 @@ export default function HomepageImagesClient({ slots }: Props) {
                 </button>
               </div>
 
-              <div className="p-5 space-y-4">
+              {/* Scrollable body */}
+              <div className="p-5 space-y-4 overflow-y-auto flex-1">
                 {/* Preview frame — correct aspect ratio for this slot */}
                 <div
                   className="relative w-full overflow-hidden rounded-xl bg-stone-100 ring-2 ring-stone-200 select-none"
@@ -246,21 +248,22 @@ export default function HomepageImagesClient({ slots }: Props) {
                   Saves as {meta.w} × {meta.h} px
                 </p>
 
-                {/* Actions */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCrop(null)}
-                    className="flex-1 py-2.5 rounded-xl border border-stone-200 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleApply}
-                    className="flex-[2] py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition-colors"
-                  >
-                    <CheckCircle size={13} /> Apply & Upload
-                  </button>
-                </div>
+              </div>
+
+              {/* Actions — always visible at bottom */}
+              <div className="flex gap-2 px-5 py-4 border-t border-stone-100 shrink-0">
+                <button
+                  onClick={() => setCrop(null)}
+                  className="flex-1 py-2.5 rounded-xl border border-stone-200 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleApply}
+                  className="flex-[2] py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition-colors"
+                >
+                  <CheckCircle size={13} /> Apply & Upload
+                </button>
               </div>
             </div>
           </div>
