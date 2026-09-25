@@ -111,13 +111,14 @@ const DiscoverMap = dynamic(() => import('./DiscoverMap'), {
 
 interface Props {
   initialIntentSlug?: string
+  initialCatKey?: string
 }
 
-export default function DiscoverClient({ initialIntentSlug: _ }: Props) {
+export default function DiscoverClient({ initialIntentSlug: _, initialCatKey }: Props) {
   const supabase = useMemo(() => createClient(), [])
 
   // ── Category drill-down state ────────────────────────────────────
-  const [selectedCatKey, setSelectedCatKey] = useState<string | null>(null)
+  const [selectedCatKey, setSelectedCatKey] = useState<string | null>(initialCatKey ?? null)
   const [selectedSubCat, setSelectedSubCat] = useState<SubCat | null>(null)
 
   // ── Practical filters ────────────────────────────────────────────
