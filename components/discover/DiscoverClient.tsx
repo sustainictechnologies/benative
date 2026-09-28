@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import type L from 'leaflet'
-import { SlidersHorizontal, ChevronDown, ChevronUp, MapPin, Home, Compass, Sparkles, Star, X, Waves, Mountain, TreePine, Sun, Wind, Droplets, Bird, Clock, Car, Anchor, Leaf } from 'lucide-react'
+import { SlidersHorizontal, ChevronDown, ChevronUp, MapPin, Home, Compass, Sparkles, X, Waves, Mountain, TreePine, Sun, Wind, Droplets, Bird, Clock, Car, Anchor, Leaf } from 'lucide-react'
 import PracticalFiltersDrawer from './PracticalFiltersDrawer'
 import PlaceGrid from './PlaceGrid'
 import { EMPTY_PRACTICAL_FILTERS, type PracticalFilters } from './types'
@@ -15,12 +15,13 @@ interface MapBounds { south: number; north: number; west: number; east: number }
 const INDIA = { south: 8.0, north: 37.5, west: 68.0, east: 97.5 }
 
 type SubCat = { label: string; img: string; alt: string; icon: React.ElementType; intentSlug?: string; landscapeSlugs?: string[] }
-type MainCat = { key: string; label: string; icon: React.ElementType; img: string; alt: string; subCats: SubCat[] }
+type MainCat = { key: string; label: string; subtitle: string; icon: React.ElementType; img: string; alt: string; subCats: SubCat[] }
 
 const CATEGORIES: MainCat[] = [
   {
     key: 'place',
     label: 'By the Place',
+    subtitle: 'Find homestays in the setting that feels right for you.',
     icon: MapPin,
     img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=70',
     alt: 'Coastal place',
@@ -36,6 +37,7 @@ const CATEGORIES: MainCat[] = [
   {
     key: 'home',
     label: 'By the Home',
+    subtitle: 'Choose a home that matches the way you like to stay.',
     icon: Home,
     img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=70',
     alt: 'Family home',
@@ -49,6 +51,7 @@ const CATEGORIES: MainCat[] = [
   {
     key: 'trip',
     label: 'By the Trip',
+    subtitle: 'Find the right stay for the kind of trip you\'re on.',
     icon: Compass,
     img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=70',
     alt: 'Travel and trip',
@@ -62,6 +65,7 @@ const CATEGORIES: MainCat[] = [
   {
     key: 'experience',
     label: 'By the Experience',
+    subtitle: 'Stay somewhere that gives you a story to tell.',
     icon: Sparkles,
     img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=70',
     alt: 'Local experience',
@@ -71,14 +75,6 @@ const CATEGORIES: MainCat[] = [
       { label: 'Coastal Villages', icon: Anchor,   img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=70', alt: 'Coast',   landscapeSlugs: ['env_coastal'] },
       { label: 'Sacred Groves',    icon: Leaf,     img: 'https://images.unsplash.com/photo-1425913397330-cf8af2ff40a1?w=400&q=70', alt: 'Sacred',  landscapeSlugs: ['env_sacred_grove'] },
     ],
-  },
-  {
-    key: 'new',
-    label: 'Recently Added',
-    icon: Star,
-    img: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=600&q=70',
-    alt: 'Newly added homestays',
-    subCats: [],
   },
 ]
 
@@ -285,82 +281,105 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey }: 
     <div className="flex flex-col bg-white">
 
       {/* ── Category drill-down ── */}
-      <div className="bg-[#f8f7f2] px-4 sm:px-6 py-6 border-b border-stone-200">
-        <div className="max-w-7xl mx-auto">
-
-          {/* Main category cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {CATEGORIES.map((cat, i) => (
-              <button
-                key={cat.key}
-                type="button"
-                onClick={() => handleCatClick(cat)}
-                className={`group relative rounded-xl overflow-hidden aspect-[3/2] text-left transition-all duration-200 ${
-                  i === 4 ? 'col-span-2 sm:col-span-1' : ''
-                } ${selectedCatKey === cat.key ? 'ring-2 ring-brand-600 ring-offset-2' : ''}`}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cat.img}
-                  alt={cat.alt}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/65" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5">
-                  <cat.icon size={30} className="text-white/90 drop-shadow-md" />
-                  <span className="text-white font-semibold text-sm leading-tight text-center px-2">{cat.label}</span>
-                </div>
-              </button>
-            ))}
+      {!selectedCat ? (
+        /* No category selected — show cards grid */
+        <div className="bg-[#f8f7f2] px-4 sm:px-6 py-6 border-b border-stone-200">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.key}
+                  type="button"
+                  onClick={() => handleCatClick(cat)}
+                  className="group relative rounded-xl overflow-hidden aspect-[3/2] text-left transition-all duration-200"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={cat.img}
+                    alt={cat.alt}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/65" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5">
+                    <cat.icon size={30} className="text-white/90 drop-shadow-md" />
+                    <span className="text-white font-semibold text-sm leading-tight text-center px-2">{cat.label}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Category selected — hero banner + sub-categories */
+        <div className="border-b border-stone-200">
+          {/* Hero banner */}
+          <div className="relative h-48 sm:h-64 overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={selectedCat.img}
+              alt={selectedCat.alt}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/60" />
+            <div className="absolute inset-0 flex flex-col justify-end px-6 sm:px-10 pb-8">
+              <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-2">
+                Explore by Category
+              </p>
+              <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight mb-1">
+                {selectedCat.label}
+              </h2>
+              <p className="text-white/80 text-sm sm:text-base">
+                {selectedCat.subtitle}
+              </p>
+            </div>
           </div>
 
-          {/* Sub-category expansion */}
-          {selectedCat && selectedCat.subCats.length > 0 && (
-            <div className="mt-5 pt-5 border-t border-stone-200">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-stone-400">
-                  {selectedCat.label}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => { setSelectedCatKey(null); setSelectedSubCat(null) }}
-                  className="text-stone-400 hover:text-stone-600 transition-colors"
-                  aria-label="Close"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                {selectedCat.subCats.map((sub) => (
-                  <button
-                    key={sub.label}
-                    type="button"
-                    onClick={() => handleSubCatClick(sub)}
-                    className={`group relative rounded-xl overflow-hidden aspect-[3/2] text-left transition-all duration-200 ${
-                      selectedSubCat?.label === sub.label ? 'ring-2 ring-brand-600 ring-offset-1' : ''
-                    }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={sub.img}
-                      alt={sub.alt}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/25 to-black/70" />
-                    <div className="absolute inset-0 flex items-center justify-center pb-5">
-                      <sub.icon size={28} className="text-white/90 drop-shadow-md" />
-                    </div>
-                    <span className="absolute bottom-0 left-0 right-0 p-2.5 text-white font-semibold text-xs leading-tight text-center">
-                      {sub.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Back + sub-categories */}
+          <div className="bg-[#f8f7f2] px-4 sm:px-6 py-6">
+            <div className="max-w-7xl mx-auto">
+              <button
+                type="button"
+                onClick={() => { setSelectedCatKey(null); setSelectedSubCat(null) }}
+                className="flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-700 transition-colors mb-6"
+              >
+                ← Back to Categories
+              </button>
 
+              {selectedCat.subCats.length > 0 && (
+                <>
+                  <p className="text-sm font-bold text-stone-700 mb-4">Sub-categories</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    {selectedCat.subCats.map((sub) => (
+                      <button
+                        key={sub.label}
+                        type="button"
+                        onClick={() => handleSubCatClick(sub)}
+                        className={`group relative rounded-xl overflow-hidden aspect-[3/2] text-left transition-all duration-200 ${
+                          selectedSubCat?.label === sub.label ? 'ring-2 ring-brand-600 ring-offset-1' : ''
+                        }`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={sub.img}
+                          alt={sub.alt}
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/25 to-black/70" />
+                        <div className="absolute inset-0 flex items-center justify-center pb-5">
+                          <sub.icon size={28} className="text-white/90 drop-shadow-md" />
+                        </div>
+                        <span className="absolute bottom-0 left-0 right-0 p-2.5 text-white font-semibold text-xs leading-tight text-center">
+                          {sub.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Mobile filter bar ── */}
       <div className="md:hidden shrink-0 bg-white relative z-[500]">

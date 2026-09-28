@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { MapPin, Home, Compass, Sparkles, Star } from 'lucide-react'
+import { MapPin, Home, Compass, Sparkles } from 'lucide-react'
 
 type MainCat = {
   key: string
@@ -14,7 +14,6 @@ const CATEGORIES: MainCat[] = [
   { key: 'home',       label: 'By the Home',        icon: Home,      img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=70', alt: 'Family home'           },
   { key: 'trip',       label: 'By the Trip',        icon: Compass,   img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=70', alt: 'Travel and trip'       },
   { key: 'experience', label: 'By the Experience',  icon: Sparkles,  img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=70', alt: 'Local experience'      },
-  { key: 'new',        label: 'Recently Added',     icon: Star,      img: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=600&q=70', alt: 'Newly added homestays' },
 ]
 
 export default function CategorySection({ imageMap = {} }: { imageMap?: Record<string, string> }) {
@@ -31,9 +30,7 @@ export default function CategorySection({ imageMap = {} }: { imageMap?: Record<s
             <Link
               key={cat.key}
               href={`/discover?cat=${cat.key}`}
-              className={`group relative rounded-xl overflow-hidden aspect-[3/4] transition-all duration-200 ${
-                i === 4 ? 'col-span-2 sm:col-span-1' : ''
-              }`}
+              className="group relative rounded-xl overflow-hidden aspect-[3/4] transition-all duration-200"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

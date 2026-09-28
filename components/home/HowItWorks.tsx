@@ -1,26 +1,29 @@
-import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { MapPin, Home, MessageCircle, Navigation } from 'lucide-react'
 
 const STEPS = [
   {
+    icon: MapPin,
     word: 'Find',
     body: [
       'Look around. Browse homes by where they are, what they\'re like, the kind of trip you\'re planning or simply the feeling you\'re looking for.',
     ],
   },
   {
+    icon: Home,
     word: 'Know',
     body: [
       'Take a little time to get to know the place. See the home, meet the hosts, discover the food and find out what\'s around.',
     ],
   },
   {
+    icon: MessageCircle,
     word: 'Talk',
     body: [
       'Then talk to the person who knows it best. Ask about the rooms, the food, the journey, the weather, whatever you\'re curious about.',
     ],
   },
   {
+    icon: Navigation,
     word: 'Go',
     body: [
       'Make your plans, pack your bags and go.',
@@ -37,7 +40,7 @@ export default function HowItWorks() {
 
         {/* Header */}
         <div className="mb-16">
-          <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mb-3">
+          <h2 className="text-2xl sm:text-3xl font-bold text-brand-800 mb-3">
             How it Works
           </h2>
           <p className="text-lg sm:text-xl font-semibold text-stone-700 mb-1">
@@ -48,25 +51,34 @@ export default function HowItWorks() {
           </p>
         </div>
 
-        {/* Steps — horizontal on desktop, vertical on mobile */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
-          {STEPS.map(({ word, body }, i) => (
-            <div
-              key={word}
-              className={`flex flex-col gap-3 py-8 sm:py-0 sm:px-8 ${
-                i < STEPS.length - 1
-                  ? 'border-b sm:border-b-0 sm:border-r border-stone-200'
-                  : ''
-              } ${i === 0 ? 'sm:pl-0' : ''} ${i === STEPS.length - 1 ? 'sm:pr-0' : ''}`}
-            >
-              <p className="text-xs font-bold uppercase tracking-widest text-stone-400">
-                — {word}
+        {/* Steps */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-12 lg:gap-y-0">
+          {STEPS.map(({ icon: Icon, word, body }, i) => (
+            <div key={word} className="flex flex-col pr-8 last:pr-0">
+              {/* Icon + connector line */}
+              <div className="flex items-center mb-6">
+                <Icon size={28} className="text-brand-800 shrink-0" strokeWidth={1.5} />
+                {i < STEPS.length - 1 && (
+                  <div className="flex-1 h-px bg-stone-300 ml-4 hidden lg:block" />
+                )}
+              </div>
+
+              {/* Step number */}
+              <p className="text-4xl font-bold text-brand-800 mb-1 leading-none">
+                0{i + 1}
               </p>
-              <div className="space-y-3">
+
+              {/* Step label */}
+              <p className="text-xs font-bold uppercase tracking-widest text-stone-600 mb-4">
+                {word}
+              </p>
+
+              {/* Body */}
+              <div className="space-y-2">
                 {body.map((line, j) => (
                   <p
                     key={j}
-                    className={`text-sm sm:text-base leading-relaxed ${
+                    className={`text-sm leading-relaxed ${
                       j === 0 ? 'text-stone-700' : 'text-stone-500 italic'
                     }`}
                   >
@@ -76,17 +88,6 @@ export default function HowItWorks() {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* CTA */}
-        <div className="mt-14 pt-10 border-t border-stone-200">
-          <Link
-            href="/discover"
-            className="inline-flex items-center gap-2 text-brand-700 font-semibold text-base hover:gap-3 transition-all duration-200 group"
-          >
-            Explore Homestays
-            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-          </Link>
         </div>
 
       </div>
