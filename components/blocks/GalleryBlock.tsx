@@ -21,12 +21,15 @@ const RATIO_CLASS: Record<string, string> = {
   portrait:  'aspect-[3/4]',
 }
 
+const VISIBLE_LIMIT = 6
+
 export default function GalleryBlock({ data }: Props) {
   const photos: GalleryItem[] = data.items
     ? data.items.filter(i => i?.url)
     : (data.images ?? []).filter(Boolean).map(url => ({ url: url as string, ratio: 'square' as Ratio }))
 
   const [selected, setSelected] = useState<number | null>(null)
+  const [expanded, setExpanded] = useState(false)
 
   const close = () => setSelected(null)
   const prev  = useCallback(() => setSelected(i => i !== null ? (i - 1 + photos.length) % photos.length : null), [photos.length])
@@ -46,25 +49,51 @@ export default function GalleryBlock({ data }: Props) {
 
   if (photos.length === 0) return null
 
+  // Count by grid cells (landscape = 3 cols, others = 1) so cut is always at exactly 2 rows
+  let cellCount = 0
+  let visibleCount = photos.length
+  if (!expanded) {
+    for (let i = 0; i < photos.length; i++) {
+      const cells = (photos[i].ratio ?? 'square') === 'landscape' ? 3 : 1
+      if (cellCount + cells > VISIBLE_LIMIT) { visibleCount = i; break }
+      cellCount += cells
+    }
+  }
+
+  const visiblePhotos   = expanded ? photos : photos.slice(0, visibleCount)
+  const hiddenCount     = photos.length - visibleCount
+  const showPlusOverlay = !expanded && hiddenCount > 0
+
   return (
     <>
       <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-4">
-        <h2 className="font-semibold text-stone-900">Photo Gallery</h2>
 
         <div className="grid grid-cols-3 gap-1.5 items-start grid-flow-row-dense">
-          {photos.map((photo, i) => {
+          {visiblePhotos.map((photo, i) => {
             const ratio = photo.ratio ?? 'square'
+            const isLastVisible = i === visiblePhotos.length - 1 && showPlusOverlay
             return (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <div
                 key={i}
-                src={supabaseImgUrl(photo.url, { width: 800, quality: 75 })}
-                alt={`Gallery photo ${i + 1}`}
-                onClick={() => setSelected(i)}
-                className={`w-full object-cover rounded-xl cursor-pointer hover:opacity-90 transition-opacity ${RATIO_CLASS[ratio]} ${
-                  ratio === 'landscape' ? 'col-span-3' : 'col-span-1'
-                }`}
-              />
+                className={`relative ${ratio === 'landscape' ? 'col-span-3' : 'col-span-1'}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={supabaseImgUrl(photo.url, { width: 800, quality: 75 })}
+                  alt={`Gallery photo ${i + 1}`}
+                  onClick={() => isLastVisible ? setExpanded(true) : setSelected(i)}
+                  className={`w-full object-cover rounded-xl cursor-pointer hover:opacity-90 transition-opacity ${RATIO_CLASS[ratio]}`}
+                />
+                {isLastVisible && (
+                  <div
+                    onClick={() => setExpanded(true)}
+                    className="absolute inset-0 bg-black/55 rounded-xl flex flex-col items-center justify-center cursor-pointer gap-1"
+                  >
+                    <span className="text-white text-2xl font-bold">+{hiddenCount}</span>
+                    <span className="text-white/80 text-xs font-medium">more photos</span>
+                  </div>
+                )}
+              </div>
             )
           })}
         </div>

@@ -58,7 +58,7 @@ export default async function HomestayPage({ params }: Props) {
     .sort((a: any, b: any) => a.sort_order - b.sort_order)
 
   return (
-    <article className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-2">
+    <article className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-2">
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-wrap items-center gap-2 mb-3">
