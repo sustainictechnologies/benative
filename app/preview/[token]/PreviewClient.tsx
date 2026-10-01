@@ -47,7 +47,7 @@ export default function PreviewClient({ blocksData, pageMeta }: Props) {
 
       {/* Homestay meta header */}
       {pageMeta?.title && (
-        <div className="bg-white border-b border-stone-100 px-4 py-4 max-w-2xl mx-auto">
+        <div className="bg-white border-b border-stone-100 px-4 sm:px-6 py-4 max-w-7xl mx-auto">
           <h1 className="text-lg font-bold text-stone-900">{pageMeta.title}</h1>
           <div className="flex flex-wrap items-center gap-3 mt-1.5">
             {pageMeta.address && (
@@ -65,7 +65,7 @@ export default function PreviewClient({ blocksData, pageMeta }: Props) {
       )}
 
       {/* Page content */}
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-4">
         {blocks.map(block => (
           <BlockRenderer
             key={block.id}

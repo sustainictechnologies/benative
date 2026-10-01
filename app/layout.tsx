@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.variable} ${inter.className} bg-white text-stone-900 antialiased flex flex-col min-h-screen`}>
 
         <header className="sticky top-0 z-[1000] bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-end pb-2 gap-5">
+          <div className="px-4 sm:px-6 h-16 flex items-end pb-2 gap-5">
 
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -48,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PageViewTracker />
         <main className="flex-1">{children}</main>
 
-        <footer className="bg-stone-900 text-stone-400">
+        <footer className="bg-stone-900 text-stone-400 mx-4 sm:mx-6">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-6 grid grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Logo — full width on mobile */}
             <div className="col-span-2 lg:col-span-1">

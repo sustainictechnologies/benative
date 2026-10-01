@@ -35,8 +35,8 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section className="bg-[#f8f7f2] px-6 py-20 sm:py-28">
-      <div className="max-w-6xl mx-auto">
+    <section className="bg-[#f8f7f2] px-4 sm:px-6 py-20 sm:py-28">
+      <div className="max-w-7xl mx-auto">
 
         {/* Header */}
         <div className="mb-16">

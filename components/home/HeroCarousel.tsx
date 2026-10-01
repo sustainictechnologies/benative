@@ -25,49 +25,48 @@ export default function HeroCarousel({ imageMap = {} }: { imageMap?: Record<stri
   }, [])
 
   return (
-    <section className="relative h-[55vh] min-h-[380px] overflow-hidden">
-      {SLIDES.map((slide, i) => (
-        <div
-          key={slide.src}
-          className={`absolute inset-0 transition-opacity duration-1000 ${i === current ? 'opacity-100' : 'opacity-0'}`}
-        >
-          <Image
-            src={slide.src}
-            alt={slide.alt}
-            fill
-            className="object-cover"
-            priority={i === 0}
-            sizes="100vw"
-            unoptimized={slide.external}
-          />
-        </div>
-      ))}
-
-      {/* Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/15 to-black/55" />
-
-      {/* Headline */}
-      <div className="absolute inset-0 flex flex-col items-start justify-end text-left px-8 sm:px-12 pb-14 sm:pb-16">
-        <p className="text-white/60 text-[10px] sm:text-[11px] uppercase tracking-[0.3em] mb-3 font-medium">
-          BeNative
-        </p>
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-snug max-w-xs sm:max-w-sm lg:max-w-md">
-          Find places that still belong to themselves.
-        </h1>
-      </div>
-
-      {/* Dot nav */}
-      <div className="absolute bottom-7 left-0 right-0 flex justify-center gap-2">
-        {SLIDES.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            aria-label={`Slide ${i + 1}`}
-            className={`h-1 rounded-full transition-all duration-300 ${
-              i === current ? 'w-8 bg-white' : 'w-2 bg-white/35'
-            }`}
-          />
+    <section className="px-4 sm:px-6">
+      <div className="relative h-[55vh] min-h-[380px] overflow-hidden">
+        {SLIDES.map((slide, i) => (
+          <div
+            key={slide.src}
+            className={`absolute inset-0 transition-opacity duration-1000 ${i === current ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <Image
+              src={slide.src}
+              alt={slide.alt}
+              fill
+              className="object-cover"
+              priority={i === 0}
+              sizes="100vw"
+              unoptimized={slide.external}
+            />
+          </div>
         ))}
+
+        {/* Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/15 to-black/55" />
+
+        {/* Headline */}
+        <div className="absolute inset-0 flex flex-col items-start justify-end text-left px-8 sm:px-12 pb-14 sm:pb-16">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-snug max-w-xs sm:max-w-sm lg:max-w-md">
+            Find places that still belong to themselves.
+          </h1>
+        </div>
+
+        {/* Dot nav */}
+        <div className="absolute bottom-7 left-0 right-0 flex justify-center gap-2">
+          {SLIDES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              aria-label={`Slide ${i + 1}`}
+              className={`h-1 rounded-full transition-all duration-300 ${
+                i === current ? 'w-8 bg-white' : 'w-2 bg-white/35'
+              }`}
+            />
+          ))}
+        </div>
       </div>
     </section>
   )

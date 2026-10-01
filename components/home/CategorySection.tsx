@@ -25,7 +25,7 @@ export default function CategorySection({ imageMap = {} }: { imageMap?: Record<s
           <h2 className="text-2xl sm:text-3xl font-bold text-stone-900">Explore by Categories</h2>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {CATEGORIES.map((cat, i) => (
             <Link
               key={cat.key}

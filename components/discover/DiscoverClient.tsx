@@ -108,9 +108,10 @@ const DiscoverMap = dynamic(() => import('./DiscoverMap'), {
 interface Props {
   initialIntentSlug?: string
   initialCatKey?: string
+  imageMap?: Record<string, string>
 }
 
-export default function DiscoverClient({ initialIntentSlug: _, initialCatKey }: Props) {
+export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, imageMap = {} }: Props) {
   const supabase = useMemo(() => createClient(), [])
 
   // ── Category drill-down state ────────────────────────────────────
@@ -295,7 +296,7 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey }: 
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={cat.img}
+                    src={imageMap[`cat_${cat.key}`] ?? cat.img}
                     alt={cat.alt}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   />
@@ -313,10 +314,11 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey }: 
         /* Category selected — hero banner + sub-categories */
         <div className="border-b border-stone-200">
           {/* Hero banner */}
+          <div className="px-4 sm:px-6">
           <div className="relative h-48 sm:h-64 overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={selectedCat.img}
+              src={imageMap[`cat_${selectedCat.key}`] ?? selectedCat.img}
               alt={selectedCat.alt}
               className="absolute inset-0 w-full h-full object-cover"
             />
@@ -332,6 +334,7 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey }: 
                 {selectedCat.subtitle}
               </p>
             </div>
+          </div>
           </div>
 
           {/* Back + sub-categories */}

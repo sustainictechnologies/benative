@@ -10,7 +10,7 @@ const WHY_ITEMS = [
 
 export default function IntroductionSection() {
   return (
-    <section className="bg-cream-200 px-6 py-20 sm:py-24">
+    <section className="bg-cream-200 px-4 sm:px-6 py-20 sm:py-24">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-16 lg:gap-24 items-start">
 
         {/* Left — Introduction */}
