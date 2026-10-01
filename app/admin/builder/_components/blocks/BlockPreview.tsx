@@ -842,9 +842,9 @@ function GalleryPreview({ id }: { id: string }) {
   const showPlusOverlay = previewMode && !expanded && hiddenCount > 0
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-4" style={theme}>
+    <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden" style={theme}>
       {!previewMode && (
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end px-4 py-2 border-b border-stone-100">
           <button
             onClick={addSlot}
             className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-full transition-colors"
@@ -854,13 +854,13 @@ function GalleryPreview({ id }: { id: string }) {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-1.5 items-start grid-flow-row-dense">
+      <div className="grid grid-cols-3 gap-px items-start grid-flow-row-dense">
         {visibleMeta.map((item, i) => {
           const isLastVisible = showPlusOverlay && i === visibleMeta.length - 1
           return (
             <div
               key={item.key}
-              className={`relative group/slot overflow-hidden rounded-lg ${RATIO_CLASS[item.ratio]} ${
+              className={`relative group/slot overflow-hidden ${RATIO_CLASS[item.ratio]} ${
                 item.ratio === 'landscape' ? 'col-span-3' : 'col-span-1'
               }`}
             >

@@ -29,7 +29,6 @@ export default function GalleryBlock({ data }: Props) {
     : (data.images ?? []).filter(Boolean).map(url => ({ url: url as string, ratio: 'square' as Ratio }))
 
   const [selected, setSelected] = useState<number | null>(null)
-  const [expanded, setExpanded] = useState(false)
 
   const close = () => setSelected(null)
   const prev  = useCallback(() => setSelected(i => i !== null ? (i - 1 + photos.length) % photos.length : null), [photos.length])
@@ -52,23 +51,20 @@ export default function GalleryBlock({ data }: Props) {
   // Count by grid cells (landscape = 3 cols, others = 1) so cut is always at exactly 2 rows
   let cellCount = 0
   let visibleCount = photos.length
-  if (!expanded) {
-    for (let i = 0; i < photos.length; i++) {
-      const cells = (photos[i].ratio ?? 'square') === 'landscape' ? 3 : 1
-      if (cellCount + cells > VISIBLE_LIMIT) { visibleCount = i; break }
-      cellCount += cells
-    }
+  for (let i = 0; i < photos.length; i++) {
+    const cells = (photos[i].ratio ?? 'square') === 'landscape' ? 3 : 1
+    if (cellCount + cells > VISIBLE_LIMIT) { visibleCount = i; break }
+    cellCount += cells
   }
 
-  const visiblePhotos   = expanded ? photos : photos.slice(0, visibleCount)
+  const visiblePhotos   = photos.slice(0, visibleCount)
   const hiddenCount     = photos.length - visibleCount
-  const showPlusOverlay = !expanded && hiddenCount > 0
+  const showPlusOverlay = hiddenCount > 0
 
   return (
     <>
-      <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-4">
-
-        <div className="grid grid-cols-3 gap-1.5 items-start grid-flow-row-dense">
+      <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden">
+        <div className="grid grid-cols-3 gap-px items-start grid-flow-row-dense">
           {visiblePhotos.map((photo, i) => {
             const ratio = photo.ratio ?? 'square'
             const isLastVisible = i === visiblePhotos.length - 1 && showPlusOverlay
@@ -81,13 +77,13 @@ export default function GalleryBlock({ data }: Props) {
                 <img
                   src={supabaseImgUrl(photo.url, { width: 800, quality: 75 })}
                   alt={`Gallery photo ${i + 1}`}
-                  onClick={() => isLastVisible ? setExpanded(true) : setSelected(i)}
-                  className={`w-full object-cover rounded-xl cursor-pointer hover:opacity-90 transition-opacity ${RATIO_CLASS[ratio]}`}
+                  onClick={() => setSelected(i)}
+                  className={`w-full object-cover cursor-pointer hover:opacity-90 transition-opacity ${RATIO_CLASS[ratio]}`}
                 />
                 {isLastVisible && (
                   <div
-                    onClick={() => setExpanded(true)}
-                    className="absolute inset-0 bg-black/55 rounded-xl flex flex-col items-center justify-center cursor-pointer gap-1"
+                    onClick={() => setSelected(visibleCount)}
+                    className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center cursor-pointer gap-1"
                   >
                     <span className="text-white text-2xl font-bold">+{hiddenCount}</span>
                     <span className="text-white/80 text-xs font-medium">more photos</span>
