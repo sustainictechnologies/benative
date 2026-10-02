@@ -21,11 +21,21 @@ export default function HeroBlock({ data, hostName }: Props) {
           />
         </div>
       )}
-      {data.tagline && (
-        <div className="px-6 pt-4">
-          <p className="text-base text-stone-600 italic">"{data.tagline}"</p>
-        </div>
-      )}
+      {data.tagline && (() => {
+        const styles = (data as any).styles ?? {}
+        const inlineStyle: React.CSSProperties = {
+          ...(styles['tagline-font']             ? { fontFamily: styles['tagline-font'] }      : {}),
+          ...(styles['tagline-size']             ? { fontSize: `${styles['tagline-size']}px` } : {}),
+          ...(styles['tagline-color']            ? { color: styles['tagline-color'] }           : {}),
+          ...(styles['tagline-bold']   === 'true' ? { fontWeight: 'bold' }                     : {}),
+          ...(styles['tagline-italic'] === 'true' ? { fontStyle: 'italic' }                    : {}),
+        }
+        return (
+          <div className="px-6 pt-4">
+            <p className="text-base text-stone-600 italic" style={inlineStyle}>"{data.tagline}"</p>
+          </div>
+        )
+      })()}
     </>
   )
 }
