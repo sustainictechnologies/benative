@@ -30,6 +30,7 @@ export default function HeroBlock({ data, hostName }: Props) {
           ...(styles['tagline-bold']   === 'true' ? { fontWeight: 'bold' }                     : {}),
           ...(styles['tagline-italic'] === 'true' ? { fontStyle: 'italic' }                    : {}),
           ...(styles['tagline-align']            ? { textAlign: styles['tagline-align'] as React.CSSProperties['textAlign'] } : {}),
+          ...(styles['tagline-size']             ? { lineHeight: '1.4' }                       : {}),
         }
         return (
           <div className="px-6 pt-4">
