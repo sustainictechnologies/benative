@@ -29,10 +29,12 @@ export default function HeroBlock({ data, hostName }: Props) {
           ...(styles['tagline-color']            ? { color: styles['tagline-color'] }           : {}),
           ...(styles['tagline-bold']   === 'true' ? { fontWeight: 'bold' }                     : {}),
           ...(styles['tagline-italic'] === 'true' ? { fontStyle: 'italic' }                    : {}),
+          ...(styles['tagline-align']            ? { textAlign: styles['tagline-align'] as React.CSSProperties['textAlign'] } : {}),
+          ...(styles['tagline-size']             ? { lineHeight: '1.4' }                       : {}),
         }
         return (
           <div className="px-6 pt-4">
-            <p className="text-base text-stone-600 italic" style={inlineStyle}>"{data.tagline}"</p>
+            <p className="text-base text-stone-600 italic" style={inlineStyle}>{data.tagline}</p>
           </div>
         )
       })()}
