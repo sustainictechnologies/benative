@@ -32,11 +32,11 @@ export default async function HomePage() {
       {/* 03 — Introduction / BeNative proposition */}
       <IntroductionSection />
 
-      {/* 04 — How it Works */}
-      <HowItWorks />
-
-      {/* 06 — Final full-screen image */}
+      {/* 04 — Final full-screen image */}
       <FinalCTA imageMap={imageMap} />
+
+      {/* 05 — How it Works */}
+      <HowItWorks />
     </div>
   )
 }
