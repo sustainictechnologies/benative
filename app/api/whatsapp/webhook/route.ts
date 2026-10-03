@@ -12,9 +12,12 @@ export async function GET(req: NextRequest) {
   const token     = searchParams.get('hub.verify_token')
   const challenge = searchParams.get('hub.challenge')
 
+  const storedToken = whatsappConfig.verifyToken
+  console.log('[WhatsApp webhook] GET verify — received:', token, '| stored length:', storedToken.length, '| match:', token === storedToken)
+
   if (
     mode      === 'subscribe' &&
-    token     === whatsappConfig.verifyToken &&
+    token     === storedToken &&
     challenge
   ) {
     return new NextResponse(challenge, { status: 200 })
