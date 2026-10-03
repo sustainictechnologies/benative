@@ -26,5 +26,10 @@ export async function sendTextMessage(
     }),
   })
 
+  if (res.status !== 200) {
+    const errBody = await res.text()
+    console.error('[WhatsApp] reply error body:', errBody)
+  }
+
   return res.status
 }
