@@ -54,8 +54,9 @@ export async function POST(req: NextRequest) {
         }
       }
     }
-  } catch {
-    // Swallow errors — we must return 200 or Meta will keep retrying
+  } catch (err) {
+    // Log but still return 200 — Meta must not retry
+    console.error('[WhatsApp webhook] POST error:', err)
   }
 
   return NextResponse.json({ ok: true })
