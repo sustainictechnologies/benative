@@ -30,10 +30,13 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   // Always return 200 quickly so Meta doesn't retry
+  console.log('[WhatsApp webhook] POST received from:', req.headers.get('x-forwarded-for') ?? 'unknown')
   try {
     const body = (await req.json()) as MetaWebhookPayload
+    console.log('[WhatsApp webhook] POST body object:', body.object, '| entries:', body.entry?.length ?? 0)
 
     if (body.object !== 'whatsapp_business_account') {
+      console.log('[WhatsApp webhook] POST skipped — unexpected object:', body.object)
       return NextResponse.json({ ok: true })
     }
 
