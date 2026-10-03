@@ -60,10 +60,8 @@ export async function POST(req: NextRequest) {
           await storeInboundMessage(identity.id, msg)
 
           if (msg.messageType === 'text') {
-            // Fire-and-forget — do not await so webhook returns 200 immediately
-            sendTextMessage(msg.fromPhone, 'Hello from BeNative 👋')
-              .then(status => console.log('[WhatsApp] reply sent — status:', status))
-              .catch(err   => console.error('[WhatsApp] reply failed:', err))
+            const replyStatus = await sendTextMessage(msg.fromPhone, 'Hello from BeNative 👋')
+            console.log('[WhatsApp] reply sent — status:', replyStatus)
           }
         }
       }
