@@ -35,8 +35,12 @@ export interface MetaMessage {
   id:        string
   from:      string   // sender's WhatsApp phone number
   timestamp: string
-  type:      string   // 'text' | 'image' | 'audio' | 'document' | ...
+  type:      string   // 'text' | 'interactive' | 'image' | 'audio' | 'document' | ...
   text?:     { body: string }
+  interactive?: {
+    type:          string   // 'button_reply' when the user taps a reply button
+    button_reply?: { id: string; title: string }
+  }
 }
 
 export interface MetaStatus {

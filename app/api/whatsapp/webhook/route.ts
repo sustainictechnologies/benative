@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { whatsappConfig } from '@/lib/whatsapp/config'
-import { getOrCreateIdentity } from '@/lib/whatsapp/identityService'
+import { getOrCreateIdentity, linkIdentityToHomestay } from '@/lib/whatsapp/identityService'
 import { storeInboundMessage } from '@/lib/whatsapp/messageStore'
-import { sendTextMessage } from '@/lib/whatsapp/sender'
+import { sendTextMessage, sendButtonsMessage } from '@/lib/whatsapp/sender'
+import { findHomestaysByPhone } from '@/lib/whatsapp/hostMatcher'
+import { handleHostMessage } from '@/lib/whatsapp/assistant'
 import type { MetaWebhookPayload, InboundMessage } from '@/lib/whatsapp/types'
 
 // ── GET — Meta webhook verification ──────────────────────────────────────────
@@ -46,7 +48,8 @@ export async function POST(req: NextRequest) {
             metaMessageId: metaMsg.id,
             fromPhone:     metaMsg.from,
             messageType:   metaMsg.type,
-            messageText:   metaMsg.text?.body ?? null,
+            // A tapped reply button arrives as its title, the same as if it were typed
+            messageText:   metaMsg.text?.body ?? metaMsg.interactive?.button_reply?.title ?? null,
             rawPayload:    body,
           }
 
@@ -57,10 +60,29 @@ export async function POST(req: NextRequest) {
           )
 
           const identity = await getOrCreateIdentity(msg.fromPhone)
-          await storeInboundMessage(identity.id, msg)
+          const isNew    = await storeInboundMessage(identity.id, msg)
 
-          if (msg.messageType === 'text') {
-            const replyStatus = await sendTextMessage(msg.fromPhone, 'Hello from BeNative 👋')
+          // Meta may deliver the same message twice — act on it only once
+          if (!isNew) {
+            console.log('[WhatsApp] duplicate delivery — skipped:', msg.metaMessageId)
+            continue
+          }
+
+          if (msg.messageText !== null) {
+            const matches = await findHomestaysByPhone(msg.fromPhone)
+            console.log(
+              '[WhatsApp] host match — count:', matches.length,
+              '| homestays:', matches.map(m => m.title).join(', ') || 'none',
+            )
+
+            if (matches.length === 1 && identity.homestay_id !== matches[0].id) {
+              await linkIdentityToHomestay(identity.id, matches[0].id)
+            }
+
+            const reply       = await handleHostMessage(identity.id, matches, msg.messageText)
+            const replyStatus = reply.buttons
+              ? await sendButtonsMessage(msg.fromPhone, reply.text, reply.buttons)
+              : await sendTextMessage(msg.fromPhone, reply.text)
             console.log('[WhatsApp] reply sent — status:', replyStatus)
           }
         }

@@ -36,3 +36,72 @@ export async function getOrCreateIdentity(
 
   return created as WhatsAppIdentity
 }
+
+/**
+ * Links an identity to the homestay its phone number was matched to.
+ */
+export async function linkIdentityToHomestay(
+  identityId: string,
+  homestayId: string,
+): Promise<void> {
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('whatsapp_identities')
+    .update({ homestay_id: homestayId, is_verified: true })
+    .eq('id', identityId)
+
+  if (error) {
+    throw new Error(`Failed to link WhatsApp identity ${identityId}: ${error.message}`)
+  }
+}
+
+/**
+ * Returns the unfinished action stored for this identity, or null if there
+ * is none or it is older than maxAgeMinutes.
+ */
+export async function getPendingAction<T>(
+  identityId:    string,
+  maxAgeMinutes: number,
+): Promise<T | null> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('whatsapp_identities')
+    .select('pending_action, pending_updated_at')
+    .eq('id', identityId)
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to read pending action for ${identityId}: ${error.message}`)
+  }
+
+  if (!data.pending_action || !data.pending_updated_at) return null
+
+  const ageMs = Date.now() - new Date(data.pending_updated_at).getTime()
+  if (ageMs > maxAgeMinutes * 60_000) return null
+
+  return data.pending_action as T
+}
+
+/**
+ * Stores the unfinished action for this identity. Pass null to clear it.
+ */
+export async function setPendingAction(
+  identityId: string,
+  action:     object | null,
+): Promise<void> {
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('whatsapp_identities')
+    .update({
+      pending_action:     action,
+      pending_updated_at: action ? new Date().toISOString() : null,
+    })
+    .eq('id', identityId)
+
+  if (error) {
+    throw new Error(`Failed to store pending action for ${identityId}: ${error.message}`)
+  }
+}
