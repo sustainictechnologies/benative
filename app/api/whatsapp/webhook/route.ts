@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { whatsappConfig } from '@/lib/whatsapp/config'
 import { getOrCreateIdentity, linkIdentityToHomestay } from '@/lib/whatsapp/identityService'
 import { storeInboundMessage } from '@/lib/whatsapp/messageStore'
-import { sendTextMessage, sendButtonsMessage } from '@/lib/whatsapp/sender'
+import { sendTextMessage, sendButtonsMessage, sendListMessage } from '@/lib/whatsapp/sender'
 import { findHomestaysByPhone } from '@/lib/whatsapp/hostMatcher'
 import { handleHostMessage } from '@/lib/whatsapp/assistant'
 import type { MetaWebhookPayload, InboundMessage } from '@/lib/whatsapp/types'
@@ -44,12 +44,14 @@ export async function POST(req: NextRequest) {
         const messages = change.value.messages ?? []
 
         for (const metaMsg of messages) {
+          // A tapped button or menu row: its title is kept as the message text
+          const tapped = metaMsg.interactive?.button_reply ?? metaMsg.interactive?.list_reply
+
           const msg: InboundMessage = {
             metaMessageId: metaMsg.id,
             fromPhone:     metaMsg.from,
             messageType:   metaMsg.type,
-            // A tapped reply button arrives as its title, the same as if it were typed
-            messageText:   metaMsg.text?.body ?? metaMsg.interactive?.button_reply?.title ?? null,
+            messageText:   metaMsg.text?.body ?? tapped?.title ?? null,
             rawPayload:    body,
           }
 
@@ -79,10 +81,12 @@ export async function POST(req: NextRequest) {
               await linkIdentityToHomestay(identity.id, matches[0].id)
             }
 
-            const reply       = await handleHostMessage(identity.id, matches, msg.messageText)
-            const replyStatus = reply.buttons
-              ? await sendButtonsMessage(msg.fromPhone, reply.text, reply.buttons)
-              : await sendTextMessage(msg.fromPhone, reply.text)
+            const reply = await handleHostMessage(identity.id, matches, msg.messageText, tapped?.id ?? null)
+
+            const replyStatus =
+              reply.list    ? await sendListMessage(msg.fromPhone, reply.text, reply.list.button, reply.list.rows) :
+              reply.buttons ? await sendButtonsMessage(msg.fromPhone, reply.text, reply.buttons) :
+                              await sendTextMessage(msg.fromPhone, reply.text)
             console.log('[WhatsApp] reply sent — status:', replyStatus)
           }
         }

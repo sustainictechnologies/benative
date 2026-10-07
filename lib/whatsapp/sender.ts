@@ -64,8 +64,40 @@ export async function sendButtonsMessage(
       action: {
         buttons: buttons.map(button => ({
           type:  'reply',
-          reply: { id: button.id, title: button.title },
+          reply: { id: button.id, title: button.title.slice(0, 20) },
         })),
+      },
+    },
+  })
+}
+
+/**
+ * Sends a message with a tappable menu of up to ten rows. `button` is the
+ * label the user taps to open the menu.
+ * Returns the HTTP status code from the Graph API response.
+ */
+export async function sendListMessage(
+  toPhone: string,
+  text:    string,
+  button:  string,
+  rows:    { id: string; title: string; description?: string }[],
+): Promise<number> {
+  // Meta rejects the whole message if any of these run over their limit
+  return postMessage(toPhone, {
+    type:        'interactive',
+    interactive: {
+      type:   'list',
+      body:   { text },
+      action: {
+        button:   button.slice(0, 20),
+        sections: [{
+          title: 'Options',
+          rows:  rows.slice(0, 10).map(row => ({
+            id:    row.id,
+            title: row.title.slice(0, 24),
+            ...(row.description ? { description: row.description.slice(0, 72) } : {}),
+          })),
+        }],
       },
     },
   })

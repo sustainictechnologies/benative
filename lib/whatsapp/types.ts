@@ -38,8 +38,9 @@ export interface MetaMessage {
   type:      string   // 'text' | 'interactive' | 'image' | 'audio' | 'document' | ...
   text?:     { body: string }
   interactive?: {
-    type:          string   // 'button_reply' when the user taps a reply button
+    type:          string   // 'button_reply' or 'list_reply', when the user taps a button or a menu row
     button_reply?: { id: string; title: string }
+    list_reply?:   { id: string; title: string; description?: string }
   }
 }
 
