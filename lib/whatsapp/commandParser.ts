@@ -562,3 +562,58 @@ export function parseCountAnswer(text: string): number | null {
 export function parseNameAnswer(text: string): string | null {
   return cleanName(text)
 }
+
+/** An amount of money typed on its own: "2000", "2,000", "2k", "Rs 2000". */
+export function parseAmountAnswer(text: string): number | null {
+  const match = text.match(/(\d[\d,]*(?:\.\d{1,2})?)\s*(k\b)?/i)
+  return match ? toAmount(match[1], match[2]) : null
+}
+
+/** "5,000" → 5000, "5" with a k → 5000. Null when zero or too large to store. */
+export function toAmount(digits: string, thousands: string | undefined): number | null {
+  const amount = Number(digits.replace(/,/g, '')) * (thousands ? 1000 : 1)
+  return amount > 0 && amount < 100_000_000 ? amount : null
+}
+
+// ── Clock times ──────────────────────────────────────────────────────────────
+
+const TIME_12H_RE = /\b(\d{1,2})(?:[:.](\d{2}))?\s*(a\.?m\.?|p\.?m\.?)(?![a-z])/i
+const TIME_24H_RE = /\b(?:at|by|around)\s+([01]?\d|2[0-3]):([0-5]\d)\b/i
+
+/**
+ * Finds a clock time: "11 am", "3:30 pm", "at 14:30". An hour without am or
+ * pm is not taken, because it cannot be told from a date. Returns the time as
+ * HH:MM, and the text with the time removed.
+ */
+export function extractTime(text: string): { time: string | null; rest: string } {
+  const pad = (n: number) => String(n).padStart(2, '0')
+
+  const twelve = text.match(TIME_12H_RE)
+  if (twelve) {
+    const hour    = Number(twelve[1])
+    const minutes = Number(twelve[2] ?? 0)
+    if (hour >= 1 && hour <= 12 && minutes <= 59) {
+      const isPm   = twelve[3].toLowerCase().startsWith('p')
+      const hour24 = (hour % 12) + (isPm ? 12 : 0)
+      return { time: `${pad(hour24)}:${pad(minutes)}`, rest: text.replace(twelve[0], ' ') }
+    }
+  }
+
+  const twentyFour = text.match(TIME_24H_RE)
+  if (twentyFour) {
+    return {
+      time: `${pad(Number(twentyFour[1]))}:${twentyFour[2]}`,
+      rest: text.replace(twentyFour[0], ' '),
+    }
+  }
+
+  return { time: null, rest: text }
+}
+
+/** "11:00" or "11:00:00" → "11 AM"; "15:30" → "3:30 PM" */
+export function formatTime(time: string): string {
+  const [hour, minutes] = time.split(':').map(Number)
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12
+  const suffix = hour < 12 ? 'AM' : 'PM'
+  return minutes === 0 ? `${hour12} ${suffix}` : `${hour12}:${String(minutes).padStart(2, '0')} ${suffix}`
+}

@@ -10,14 +10,14 @@ import type { MatchedHomestay } from './hostMatcher'
 import type { Intent } from './intents'
 import { readMessage, type HostRequest, type DateRange, type ListKind } from './messageReader'
 import {
-  parseStayAnswer, parseCountAnswer, parseNameAnswer,
-  todayISO, addDays, nightsBetween, formatDate, formatDayMonth,
+  parseStayAnswer, parseCountAnswer, parseNameAnswer, parseAmountAnswer, extractTime,
+  todayISO, addDays, nightsBetween, formatDate, formatDayMonth, formatTime,
   type BookingDraft, type DateQuestion,
 } from './commandParser'
 import {
-  getTotalRooms, setTotalRooms, getBookedRooms, createBooking, getBooking,
+  getCapacity, setTotalRooms, setMaxGuests, getPeakOccupancy, createBooking, getBooking,
   listUpcomingBookings, listBookingsInRange, updateBooking, cancelBooking,
-  type Booking, type BookingUpdate,
+  type Booking, type BookingUpdate, type Capacity,
 } from './bookingService'
 
 export interface ReplyButton {
@@ -43,16 +43,26 @@ interface Context {
 }
 
 type CreateField = 'guestName' | 'checkIn' | 'checkOut' | 'guests'
-type ChangeStep  = 'what' | 'dates' | 'checkOut' | 'guests' | 'phone' | 'name' | 'note' | 'confirm'
-type Topic       = 'availability' | 'who' | 'find' | 'rooms'
+type ChangeStep  =
+  | 'what' | 'dates' | 'checkOut' | 'guests' | 'phone' | 'name' | 'note' | 'payment' | 'time'
+  | 'confirm'
+type Topic       = 'availability' | 'who' | 'find' | 'rooms' | 'limit'
+
+/** Details of a booking that are kept only when the host mentions them. */
+interface Extras {
+  phone:   string | null
+  notes:   string | null
+  total:   number | null
+  advance: number | null
+  time:    string | null   // check-in time, HH:MM
+}
 
 /** A new booking still being completed, or waiting for a Yes. */
 interface PendingCreate {
   type:       'create'
   homestayId: string
   draft:      BookingDraft
-  phone:      string | null
-  notes:      string | null
+  extras:     Extras
   step:       CreateField | 'confirm'
 }
 
@@ -103,7 +113,10 @@ const CREATE_ORDER: CreateField[] = ['guestName', 'checkIn', 'checkOut', 'guests
 // whatever is in progress, not a new request
 const CORRECTION_INTENTS = new Set<Intent>([
   'create', 'move', 'change', 'extend', 'shorten', 'checkout', 'guests', 'details',
+  'payment', 'time',
 ])
+
+const NO_EXTRAS: Extras = { phone: null, notes: null, total: null, advance: null, time: null }
 
 const YES_WORDS = new Set([
   'yes', 'y', 'ya', 'yeah', 'yep', 'ok', 'okay', 'sure', 'confirm', 'save', 'done',
@@ -138,6 +151,7 @@ const MENU_ROWS: ReplyRow[] = [
   { id: 'menu_change', title: 'Change a booking',   description: 'Or type: Move Rahul to 15 to 17 Oct' },
   { id: 'menu_cancel', title: 'Cancel a booking',   description: "Or type: Cancel Rahul's booking" },
   { id: 'menu_rooms',  title: 'Set room count',     description: 'Or type: ROOMS 3' },
+  { id: 'menu_limit',  title: 'Set guest limit',    description: 'Or type: max guests 6' },
 ]
 
 const DATES_EXAMPLE = '(example: 12 Oct, or 12 Oct to 15 Oct)'
@@ -167,11 +181,27 @@ function bookingLine(b: Booking): string {
   return `#${b.booking_no} ${b.guest_name}, ${shortStay(b.check_in, b.check_out)}, ${plural(b.guests, 'guest')}, ${plural(b.rooms, 'room')}`
 }
 
-/** The booking line, plus its status, phone and note when it has them. */
+/** 5000 → "₹5,000" */
+function money(amount: number): string {
+  return `₹${Number(amount).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+}
+
+/** The total, the advance, and what is still due when both are known. */
+function paymentLines(total: number | null, advance: number | null): string[] {
+  const lines: string[] = []
+  if (total   !== null) lines.push(`Total: ${money(total)}`)
+  if (advance !== null) lines.push(`Advance paid: ${money(advance)}`)
+  if (total !== null && advance !== null && total >= advance) lines.push(`Pending: ${money(total - advance)}`)
+  return lines
+}
+
+/** The booking line, plus its status and whichever extra details it has. */
 function bookingDetails(b: Booking): string {
   const lines = [bookingLine(b) + (b.status === 'cancelled' ? ' (cancelled)' : '')]
-  if (b.guest_phone) lines.push(`   Phone: ${b.guest_phone}`)
-  if (b.notes)       lines.push(`   Note: ${b.notes}`)
+  if (b.check_in_time) lines.push(`   Check-in time: ${formatTime(b.check_in_time)}`)
+  if (b.guest_phone)   lines.push(`   Phone: ${b.guest_phone}`)
+  for (const line of paymentLines(b.total_amount, b.advance_paid)) lines.push(`   ${line}`)
+  if (b.notes)         lines.push(`   Note: ${b.notes}`)
   return lines.join('\n')
 }
 
@@ -198,23 +228,69 @@ function stopText(pending: Pending): string {
   return 'Okay, nothing was changed.'
 }
 
-// ── Room count ───────────────────────────────────────────────────────────────
+// ── Room count and guest limit ───────────────────────────────────────────────
 
 async function askRoomCount(ctx: Context): Promise<AssistantReply> {
-  const total = await getTotalRooms(ctx.homestay.id)
+  const { totalRooms } = await getCapacity(ctx.homestay.id)
   await remember(ctx, { type: 'ask', homestayId: ctx.homestay.id, about: 'rooms' })
 
   const title = ctx.homestay.title
   return {
-    text: total === null
+    text: totalRooms === null
       ? `First tell me how many rooms "${title}" has in total. Send a number, for example: 3`
-      : `"${title}" has ${plural(total, 'room')} in total. Send the new number to change it, or send: forget it`,
+      : `"${title}" has ${plural(totalRooms, 'room')} in total. Send the new number to change it, or send: forget it`,
   }
 }
 
 async function setRoomCount(ctx: Context, count: number): Promise<AssistantReply> {
   await setTotalRooms(ctx.homestay.id, count)
   return { text: `"${ctx.homestay.title}" now has ${plural(count, 'room')} in total.` }
+}
+
+async function askGuestLimit(ctx: Context): Promise<AssistantReply> {
+  const { maxGuests } = await getCapacity(ctx.homestay.id)
+  await remember(ctx, { type: 'ask', homestayId: ctx.homestay.id, about: 'limit' })
+
+  const title = ctx.homestay.title
+  return {
+    text: maxGuests === null
+      ? `How many guests can "${title}" take at one time, at most? Send a number, for example: 6`
+      : `"${title}" takes at most ${plural(maxGuests, 'guest')} at one time. Send the new number to change it, or send: forget it`,
+  }
+}
+
+async function setGuestLimit(ctx: Context, count: number): Promise<AssistantReply> {
+  await setMaxGuests(ctx.homestay.id, count)
+  return { text: `"${ctx.homestay.title}" now takes at most ${plural(count, 'guest')} at one time.` }
+}
+
+/**
+ * Why a stay cannot be taken, or null when it can: not enough free rooms, or
+ * more guests than the homestay's limit. Pass excludeBookingNo when the stay
+ * is a booking being changed, so it is not counted against itself.
+ */
+async function stayProblem(
+  ctx:               Context,
+  capacity:          Capacity,
+  stay:              { checkIn: string; checkOut: string; rooms: number; guests: number },
+  excludeBookingNo?: number,
+): Promise<string | null> {
+  const peak = await getPeakOccupancy(ctx.homestay.id, stay.checkIn, stay.checkOut, excludeBookingNo)
+  const when = describeStay(stay.checkIn, stay.checkOut)
+
+  if (capacity.totalRooms !== null) {
+    const free = Math.max(capacity.totalRooms - peak.rooms, 0)
+    if (free === 0) return `${when} is fully booked.`
+    if (stay.rooms > free) {
+      return `Only ${free} of ${plural(capacity.totalRooms, 'room')} ${free === 1 ? 'is' : 'are'} free for ${when}, and this booking needs ${plural(stay.rooms, 'room')}.`
+    }
+  }
+
+  if (capacity.maxGuests !== null && peak.guests + stay.guests > capacity.maxGuests) {
+    return `"${ctx.homestay.title}" takes at most ${plural(capacity.maxGuests, 'guest')} at one time, and there would be ${peak.guests + stay.guests} during ${when}.`
+  }
+
+  return null
 }
 
 // ── Add a booking ────────────────────────────────────────────────────────────
@@ -227,7 +303,7 @@ const CREATE_QUESTIONS: Record<CreateField, string> = {
 }
 
 /** "Got it: Rahul, 12 Oct to 14 Oct, 3 guests." — or nothing, when nothing is known yet. */
-function knownSoFar(draft: BookingDraft): string {
+function knownSoFar(draft: BookingDraft, extras: Extras): string {
   const parts: string[] = []
   if (draft.guestName) parts.push(draft.guestName)
 
@@ -237,7 +313,32 @@ function knownSoFar(draft: BookingDraft): string {
   if (draft.guests !== null) parts.push(plural(draft.guests, 'guest'))
   if (draft.rooms  !== null) parts.push(plural(draft.rooms, 'room'))
 
+  if (extras.time)             parts.push(`arriving ${formatTime(extras.time)}`)
+  if (extras.total !== null)   parts.push(`total ${money(extras.total)}`)
+  if (extras.advance !== null) parts.push(`advance ${money(extras.advance)}`)
+
   return parts.length > 0 ? `Got it: ${parts.join(', ')}.` : ''
+}
+
+/** The extra details a message mentions, over those already known. */
+function extrasFrom(request: HostRequest, known: Extras = NO_EXTRAS): Extras {
+  return {
+    phone:   request.phone   ?? known.phone,
+    notes:   request.note    ?? known.notes,
+    total:   request.total   ?? known.total,
+    advance: request.advance ?? known.advance,
+    time:    request.time    ?? known.time,
+  }
+}
+
+/** The lines of a confirmation that show the extra details. */
+function extraLines(extras: Extras): string[] {
+  const lines: string[] = []
+  if (extras.time)  lines.push(`Check-in time: ${formatTime(extras.time)}`)
+  if (extras.phone) lines.push(`Phone: ${extras.phone}`)
+  lines.push(...paymentLines(extras.total, extras.advance))
+  if (extras.notes) lines.push(`Note: ${extras.notes}`)
+  return lines
 }
 
 function draftFrom(request: HostRequest): BookingDraft {
@@ -255,13 +356,13 @@ function draftFrom(request: HostRequest): BookingDraft {
 async function continueCreate(
   ctx:      Context,
   input:    BookingDraft,
-  extras:   { phone: string | null; notes: string | null },
+  extras:   Extras,
   question: DateQuestion | null = null,
 ): Promise<AssistantReply> {
   const { homestay } = ctx
 
-  const total = await getTotalRooms(homestay.id)
-  if (total === null) return askRoomCount(ctx)
+  const capacity = await getCapacity(homestay.id)
+  if (capacity.totalRooms === null) return askRoomCount(ctx)
 
   const draft = { ...input }
   let note = ''
@@ -278,10 +379,10 @@ async function continueCreate(
 
   const missing = CREATE_ORDER.find(field => draft[field] === null)
   if (missing) {
-    await remember(ctx, { type: 'create', homestayId: homestay.id, draft, ...extras, step: missing })
+    await remember(ctx, { type: 'create', homestayId: homestay.id, draft, extras, step: missing })
 
     const unclear = question && missing === 'checkIn' ? question : null
-    const text    = [note, knownSoFar(draft), unclear?.text ?? CREATE_QUESTIONS[missing]]
+    const text    = [note, knownSoFar(draft, extras), unclear?.text ?? CREATE_QUESTIONS[missing]]
       .filter(Boolean)
       .join('\n')
     return unclear ? { text, buttons: dateButtons(unclear) } : { text }
@@ -294,15 +395,10 @@ async function continueCreate(
   const rooms     = draft.rooms ?? 1
   const stay      = describeStay(checkIn, checkOut)
 
-  const booked = await getBookedRooms(homestay.id, checkIn, checkOut)
-  const free   = Math.max(total - booked, 0)
-  if (rooms > free) {
+  const problem = await stayProblem(ctx, capacity, { checkIn, checkOut, rooms, guests })
+  if (problem) {
     await forget(ctx)
-    return {
-      text: free === 0
-        ? `${guestName} can't be booked for ${stay}: those dates are fully booked. I haven't added the booking.`
-        : `${guestName} can't be booked for ${stay}: only ${free} of ${plural(total, 'room')} ${free === 1 ? 'is' : 'are'} free. I haven't added the booking.`,
-    }
+    return { text: `${guestName} can't be booked. ${problem}\nI haven't added the booking.` }
   }
 
   const upcoming = await listUpcomingBookings(homestay.id, todayISO(), SEARCH_LIMIT)
@@ -311,12 +407,10 @@ async function continueCreate(
   )
 
   await remember(ctx, {
-    type: 'create', homestayId: homestay.id, draft: { ...draft, rooms }, ...extras, step: 'confirm',
+    type: 'create', homestayId: homestay.id, draft: { ...draft, rooms }, extras, step: 'confirm',
   })
 
-  const lines = [guestName, stay, `${plural(guests, 'guest')}, ${plural(rooms, 'room')}`]
-  if (extras.phone) lines.push(`Phone: ${extras.phone}`)
-  if (extras.notes) lines.push(`Note: ${extras.notes}`)
+  const lines = [guestName, stay, `${plural(guests, 'guest')}, ${plural(rooms, 'room')}`, ...extraLines(extras)]
   lines.push('')
   if (similar) {
     lines.push(
@@ -341,26 +435,30 @@ async function saveBooking(ctx: Context, pending: PendingCreate): Promise<Assist
   }
 
   // Rooms may have been taken since the question was asked
-  const total = await getTotalRooms(homestay.id)
-  if (total === null) return askRoomCount(ctx)
+  const capacity = await getCapacity(homestay.id)
+  if (capacity.totalRooms === null) return askRoomCount(ctx)
 
-  const free = Math.max(total - await getBookedRooms(homestay.id, checkIn, checkOut), 0)
-  if (rooms > free) {
-    return { text: `Those dates are no longer free: ${free} of ${plural(total, 'room')} left. I haven't added the booking.` }
-  }
+  const problem = await stayProblem(ctx, capacity, { checkIn, checkOut, rooms, guests })
+  if (problem) return { text: `${problem}\nI haven't added the booking.` }
 
+  const extras    = pending.extras ?? NO_EXTRAS
   const bookingNo = await createBooking({
-    homestayId: homestay.id,
-    identityId: ctx.identityId,
+    homestayId:  homestay.id,
+    identityId:  ctx.identityId,
     guestName, checkIn, checkOut, rooms, guests,
-    guestPhone: pending.phone,
-    notes:      pending.notes,
+    guestPhone:  extras.phone,
+    notes:       extras.notes,
+    totalAmount: extras.total,
+    advancePaid: extras.advance,
+    checkInTime: extras.time,
   })
 
-  return {
-    text: `Done 👍 ${guestName}'s booking has been added.\n`
-      + `#${bookingNo} ${guestName}, ${describeStay(checkIn, checkOut)}, ${plural(guests, 'guest')}, ${plural(rooms, 'room')}`,
-  }
+  const lines = [
+    `Done 👍 ${guestName}'s booking has been added.`,
+    `#${bookingNo} ${guestName}, ${describeStay(checkIn, checkOut)}, ${plural(guests, 'guest')}, ${plural(rooms, 'room')}`,
+    ...extraLines(extras).map(line => `   ${line}`),
+  ]
+  return { text: lines.join('\n') }
 }
 
 /** Reads a reply given while a new booking is in progress: an answer, a correction, or a Yes. */
@@ -373,9 +471,10 @@ async function answerCreate(
 ): Promise<AssistantReply> {
   if (pending.step === 'confirm' && yes) return saveBooking(ctx, pending)
 
+  const known  = pending.extras ?? NO_EXTRAS
   const draft  = { ...pending.draft }
-  const extras = { phone: request.phone ?? pending.phone, notes: request.note ?? pending.notes }
-  const before = JSON.stringify([draft, extras])
+  const extras = extrasFrom(request, known)
+  const before = JSON.stringify([draft, known])
 
   // Anything stated with its unit is taken, whatever was asked: "sorry, 5 guests"
   if (request.rooms  !== null) draft.rooms  = request.rooms
@@ -423,15 +522,21 @@ async function availabilityReply(ctx: Context, checkIn: string, checkOut: string
     return { text: 'The check-out date must be after the check-in date, and within a year of it.' }
   }
 
-  const total = await getTotalRooms(ctx.homestay.id)
-  if (total === null) return askRoomCount(ctx)
+  const { totalRooms, maxGuests } = await getCapacity(ctx.homestay.id)
+  if (totalRooms === null) return askRoomCount(ctx)
 
-  const booked = await getBookedRooms(ctx.homestay.id, checkIn, checkOut)
-  const free   = Math.max(total - booked, 0)
-  const stay   = describeStay(checkIn, checkOut)
+  const peak = await getPeakOccupancy(ctx.homestay.id, checkIn, checkOut)
+  const free = Math.max(totalRooms - peak.rooms, 0)
+  const stay = describeStay(checkIn, checkOut)
 
-  if (free === 0) return { text: `${stay}: fully booked. 0 of ${plural(total, 'room')} free.` }
-  return { text: `${stay}: available. ${free} of ${plural(total, 'room')} free.` }
+  if (free === 0) return { text: `${stay}: fully booked. 0 of ${plural(totalRooms, 'room')} free.` }
+
+  const lines = [`${stay}: available. ${free} of ${plural(totalRooms, 'room')} free.`]
+  if (maxGuests !== null) {
+    const spaces = Math.max(maxGuests - peak.guests, 0)
+    lines.push(`Room for ${plural(spaces, 'more guest')}, out of ${maxGuests}.`)
+  }
+  return { text: lines.join('\n') }
 }
 
 async function startAvailability(ctx: Context, request: HostRequest): Promise<AssistantReply> {
@@ -484,9 +589,10 @@ async function listReply(ctx: Context, kind: ListKind, range: DateRange | null):
     lines.push(`${when}, ${heading}:`)
     for (const b of shown.slice(0, 2 * LIST_LIMIT)) {
       const guests = plural(b.guests, 'guest')
+      const time   = b.check_in_time ? `, ${formatTime(b.check_in_time)}` : ''
       if (!oneDay)      lines.push(`• ${shortStay(b.check_in, b.check_out)}: ${b.guest_name}, ${guests}`)
       else if (leaving) lines.push(`• ${b.guest_name}, ${guests}, since ${formatDayMonth(b.check_in)}`)
-      else              lines.push(`• ${b.guest_name}, ${guests}, until ${formatDayMonth(b.check_out)}`)
+      else              lines.push(`• ${b.guest_name}, ${guests}${time}, until ${formatDayMonth(b.check_out)}`)
     }
     const totalGuests = shown.reduce((sum, b) => sum + b.guests, 0)
     lines.push(`Total: ${plural(shown.length, 'booking')}, ${plural(totalGuests, 'guest')}`)
@@ -672,64 +778,72 @@ async function askChange(
   return buttons ? { text, buttons } : { text }
 }
 
-/** Why the booking cannot take these dates, or null when it can. */
-async function datesProblem(
-  ctx:      Context,
-  booking:  Booking,
-  checkIn:  string,
-  checkOut: string,
-): Promise<string | null> {
-  const total = await getTotalRooms(ctx.homestay.id)
-  if (total === null) return null
+/**
+ * Why a change to the dates or the guest count cannot be made, or null when
+ * it can — or when the change touches neither.
+ */
+async function changeProblem(ctx: Context, booking: Booking, update: BookingUpdate): Promise<string | null> {
+  const movesDates   = update.checkIn !== undefined || update.checkOut !== undefined
+  const changesCount = update.guests !== undefined
+  if (!movesDates && !changesCount) return null
 
-  const booked = await getBookedRooms(ctx.homestay.id, checkIn, checkOut, booking.booking_no)
-  const free   = Math.max(total - booked, 0)
-  if (booking.rooms <= free) return null
+  const checkIn  = update.checkIn  ?? booking.check_in
+  const checkOut = update.checkOut ?? booking.check_out
+  const guests   = update.guests   ?? booking.guests
 
-  const stay = describeStay(checkIn, checkOut)
-  return free === 0
-    ? `${stay} is fully booked.`
-    : `Only ${free} of ${plural(total, 'room')} ${free === 1 ? 'is' : 'are'} free for ${stay}, and this booking needs ${plural(booking.rooms, 'room')}.`
+  if (movesDates) {
+    if (checkOut <= checkIn || nightsBetween(checkIn, checkOut) > MAX_NIGHTS) {
+      return 'The check-out date must be after the check-in date, and within a year of it.'
+    }
+    if (checkIn === booking.check_in && checkOut === booking.check_out) {
+      return 'Those are the same dates as now.'
+    }
+  }
+  if (changesCount && guests === booking.guests) {
+    return `The booking already has ${plural(booking.guests, 'guest')}.`
+  }
+
+  const capacity = await getCapacity(ctx.homestay.id)
+  return stayProblem(ctx, capacity, { checkIn, checkOut, rooms: booking.rooms, guests }, booking.booking_no)
 }
 
 /** Checks a change and, if it can be made, shows it for a Yes. */
 async function proposeChange(ctx: Context, booking: Booking, update: BookingUpdate): Promise<AssistantReply> {
   const name    = booking.guest_name
-  const current = `${name}'s current booking is ${shortStay(booking.check_in, booking.check_out)}.`
+  const stayNow = shortStay(booking.check_in, booking.check_out)
+  const current = `${name}'s current booking is ${stayNow}.`
+
+  const problem = await changeProblem(ctx, booking, update)
+  if (problem) {
+    await forget(ctx)
+    return { text: `${current}\n${problem}\nNothing was changed.` }
+  }
+
   const lines: string[] = []
 
   if (update.checkIn !== undefined || update.checkOut !== undefined) {
     const checkIn  = update.checkIn  ?? booking.check_in
     const checkOut = update.checkOut ?? booking.check_out
-
-    let problem: string | null = null
-    if (checkOut <= checkIn || nightsBetween(checkIn, checkOut) > MAX_NIGHTS) {
-      problem = 'The check-out date must be after the check-in date, and within a year of it.'
-    } else if (checkIn === booking.check_in && checkOut === booking.check_out) {
-      problem = 'Those are the same dates as now.'
-    } else {
-      problem = await datesProblem(ctx, booking, checkIn, checkOut)
-    }
-
-    if (problem) {
-      await forget(ctx)
-      return { text: `${current}\n${problem}\nNothing was changed.` }
-    }
-
     lines.push(current, `${describeStay(checkIn, checkOut)} is available.`, `Change it to ${shortStay(checkIn, checkOut)}?`)
   }
 
   if (update.guests !== undefined) {
-    if (update.guests === booking.guests) {
-      await forget(ctx)
-      return { text: `${name}'s booking already has ${plural(booking.guests, 'guest')}. Nothing was changed.` }
-    }
-    lines.push(`Change ${name}'s booking (${shortStay(booking.check_in, booking.check_out)}) from ${plural(booking.guests, 'guest')} to ${plural(update.guests, 'guest')}?`)
+    lines.push(`Change ${name}'s booking (${stayNow}) from ${plural(booking.guests, 'guest')} to ${plural(update.guests, 'guest')}?`)
   }
 
-  if (update.guestName  !== undefined) lines.push(`Rename ${name}'s booking to "${update.guestName}"?`)
-  if (update.guestPhone !== undefined) lines.push(`Set the phone number for ${name}'s booking to ${update.guestPhone}?`)
-  if (update.notes      !== undefined) lines.push(`Add this note to ${name}'s booking?\n"${update.notes}"`)
+  if (update.guestName   !== undefined) lines.push(`Rename ${name}'s booking to "${update.guestName}"?`)
+  if (update.guestPhone  !== undefined) lines.push(`Set the phone number for ${name}'s booking to ${update.guestPhone}?`)
+  if (update.notes       !== undefined) lines.push(`Add this note to ${name}'s booking?\n"${update.notes}"`)
+  if (update.checkInTime !== undefined) lines.push(`Set the check-in time for ${name}'s booking to ${formatTime(update.checkInTime)}?`)
+  if (update.totalAmount !== undefined) lines.push(`Set the total for ${name}'s booking to ${money(update.totalAmount)}?`)
+
+  if (update.advancePaid !== undefined) {
+    const total = update.totalAmount ?? booking.total_amount
+    const due   = total !== null && total >= update.advancePaid
+      ? ` That leaves ${money(total - update.advancePaid)} pending.`
+      : ''
+    lines.push(`Set the advance paid on ${name}'s booking to ${money(update.advancePaid)}?${due}`)
+  }
 
   await remember(ctx, {
     type: 'change', homestayId: ctx.homestay.id, bookingNo: booking.booking_no, step: 'confirm', update,
@@ -742,12 +856,8 @@ async function applyChange(ctx: Context, booking: Booking, update: BookingUpdate
   await forget(ctx)
 
   // Rooms may have been taken since the question was asked
-  if (update.checkIn !== undefined || update.checkOut !== undefined) {
-    const problem = await datesProblem(
-      ctx, booking, update.checkIn ?? booking.check_in, update.checkOut ?? booking.check_out,
-    )
-    if (problem) return { text: `${problem}\nNothing was changed.` }
-  }
+  const problem = await changeProblem(ctx, booking, update)
+  if (problem) return { text: `${problem}\nNothing was changed.` }
 
   const updated = await updateBooking(ctx.homestay.id, booking.booking_no, update)
   if (!updated) {
@@ -810,6 +920,25 @@ async function changeBooking(ctx: Context, booking: Booking, request: HostReques
       return proposeChange(ctx, booking, { guests })
     }
 
+    case 'payment': {
+      const update: BookingUpdate = {}
+      if (request.total !== null) update.totalAmount = request.total
+      if (request.advance !== null) {
+        // "paid 2000 more" adds to what was paid before
+        update.advancePaid = request.advanceMore
+          ? (booking.advance_paid ?? 0) + request.advance
+          : request.advance
+      }
+      if (Object.keys(update).length > 0) return proposeChange(ctx, booking, update)
+
+      return askChange(ctx, booking, 'payment', `How much has ${name} paid in advance? You can also send the total, for example: total 5000, advance 2000`)
+    }
+
+    case 'time': {
+      if (request.time) return proposeChange(ctx, booking, { checkInTime: request.time })
+      return askChange(ctx, booking, 'time', `What time will ${name} check in? (example: 11 am)`)
+    }
+
     case 'details': {
       const update: BookingUpdate = {}
       if (request.newName) update.guestName  = request.newName
@@ -858,7 +987,9 @@ async function answerChange(
       if (tapId === 'change_dates'  || /date/.test(lower))         return askChange(ctx, booking, 'dates', `What are the new dates for ${name}? (example: 15 Oct to 17 Oct)`)
       if (tapId === 'change_guests' || /guest|people/.test(lower)) return askChange(ctx, booking, 'guests', `How many guests should ${name}'s booking have?`)
       if (tapId === 'change_cancel' || /cancel/.test(lower))       return confirmCancel(ctx, booking)
-      return askChange(ctx, booking, 'what', 'Please choose what to change.', CHANGE_BUTTONS)
+      // Typed, not tapped: the payment and the check-in time have no button
+      if (request.intent === 'payment' || request.intent === 'time') return changeBooking(ctx, booking, request)
+      return askChange(ctx, booking, 'what', 'Please choose what to change, or type it, for example: advance 2000', CHANGE_BUTTONS)
 
     case 'dates': {
       const stay = parseStayAnswer(text, todayISO())
@@ -903,6 +1034,25 @@ async function answerChange(
       if (!notes) return retry('note', `What note should I add to ${name}'s booking?`)
       return proposeChange(ctx, booking, { notes })
     }
+
+    case 'payment': {
+      // A bare number answers the question that was asked: the advance
+      const advance = request.advance ?? (request.total === null ? parseAmountAnswer(text) : null)
+
+      const update: BookingUpdate = {}
+      if (request.total !== null) update.totalAmount = request.total
+      if (advance !== null)       update.advancePaid = advance
+      if (Object.keys(update).length === 0) {
+        return retry('payment', `How much has ${name} paid in advance? (example: 2000)`)
+      }
+      return proposeChange(ctx, booking, update)
+    }
+
+    case 'time': {
+      const time = request.time ?? extractTime(text).time
+      if (!time) return retry('time', `What time will ${name} check in? Include am or pm, for example: 11 am`)
+      return proposeChange(ctx, booking, { checkInTime: time })
+    }
   }
 }
 
@@ -943,6 +1093,13 @@ async function answerAsk(
       await forget(ctx)
       return setRoomCount(ctx, count)
     }
+
+    case 'limit': {
+      const count = parseCountAnswer(text)
+      if (count === null) return { text: `Please send the most guests you take at one time, for example: 6\n${STOP_HINT}` }
+      await forget(ctx)
+      return setGuestLimit(ctx, count)
+    }
   }
 }
 
@@ -957,7 +1114,7 @@ async function startFromMenu(ctx: Context, tapId: string): Promise<AssistantRepl
       return continueCreate(
         ctx,
         { guestName: null, checkIn: null, checkOut: null, rooms: null, guests: null },
-        { phone: null, notes: null },
+        NO_EXTRAS,
       )
 
     case 'menu_check':
@@ -981,6 +1138,9 @@ async function startFromMenu(ctx: Context, tapId: string): Promise<AssistantRepl
     case 'menu_rooms':
       return askRoomCount(ctx)
 
+    case 'menu_limit':
+      return askGuestLimit(ctx)
+
     default:
       return menuReply(ctx.homestay)
   }
@@ -992,7 +1152,7 @@ async function startFromMenu(ctx: Context, tapId: string): Promise<AssistantRepl
 async function handleRequest(ctx: Context, request: HostRequest): Promise<AssistantReply> {
   switch (request.intent) {
     case 'create':
-      return continueCreate(ctx, draftFrom(request), { phone: request.phone, notes: request.note }, request.dateQuestion)
+      return continueCreate(ctx, draftFrom(request), extrasFrom(request), request.dateQuestion)
 
     case 'availability':
       return startAvailability(ctx, request)
@@ -1012,11 +1172,18 @@ async function handleRequest(ctx: Context, request: HostRequest): Promise<Assist
     case 'checkout':
     case 'guests':
     case 'details':
+    case 'payment':
+    case 'time':
     case 'change':
       return selectBooking(ctx, await candidates(ctx, request, false), 'change', request)
 
     case 'rooms':
       return request.rooms !== null ? setRoomCount(ctx, request.rooms) : askRoomCount(ctx)
+
+    case 'limit': {
+      const count = request.guests ?? parseCountAnswer(request.text)
+      return count !== null ? setGuestLimit(ctx, count) : askGuestLimit(ctx)
+    }
 
     case 'stop':
       return { text: "There is nothing in progress. To cancel a saved booking, send for example: Cancel Rahul's booking" }
@@ -1027,7 +1194,7 @@ async function handleRequest(ctx: Context, request: HostRequest): Promise<Assist
     default:
       // A name with dates and nothing else, "Rahul 12 to 14 Oct", is a booking
       if (request.guestName && request.dates.length > 0) {
-        return continueCreate(ctx, draftFrom(request), { phone: request.phone, notes: request.note })
+        return continueCreate(ctx, draftFrom(request), extrasFrom(request))
       }
       console.log('[WhatsApp] not understood —', request.text)
       return menuReply(ctx.homestay, `Sorry, I did not understand that. What would you like to do for "${ctx.homestay.title}"?`)

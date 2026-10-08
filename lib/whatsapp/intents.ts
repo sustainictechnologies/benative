@@ -9,6 +9,7 @@
 
 export type Intent =
   | 'stop'
+  | 'limit'
   | 'guests'
   | 'extend'
   | 'shorten'
@@ -17,10 +18,12 @@ export type Intent =
   | 'cancel'
   | 'availability'
   | 'list'
+  | 'time'
   | 'move'
   | 'change'
   | 'find'
   | 'create'
+  | 'payment'
   | 'rooms'
   | 'menu'
 
@@ -31,6 +34,15 @@ export const INTENT_PHRASES: { intent: Intent; phrases: string[] }[] = [
     phrases: [
       'forget it', 'never mind', 'nevermind', 'leave it', 'stop', 'discard',
       "don't book", 'dont book', 'do not book', 'cancel this', 'cancel it',
+    ],
+  },
+
+  // The most guests the homestay takes at one time
+  {
+    intent:  'limit',
+    phrases: [
+      'max guests', 'maximum guests', 'max people', 'maximum people',
+      'guest limit', 'guests limit', 'capacity', 'max capacity',
     ],
   },
 
@@ -111,6 +123,16 @@ export const INTENT_PHRASES: { intent: Intent; phrases: string[] }[] = [
     ],
   },
 
+  // The time of day a guest will arrive
+  {
+    intent:  'time',
+    phrases: [
+      'check-in time', 'checkin time', 'check in time', 'arrival time',
+      'arriving at', 'arrives at', 'arrive at', 'coming at', 'reaching at',
+      'reach at', 'reach by', 'will reach',
+    ],
+  },
+
   // Move a booking to other dates
   {
     intent:  'move',
@@ -143,6 +165,16 @@ export const INTENT_PHRASES: { intent: Intent; phrases: string[] }[] = [
       'book', 'add', 'coming', 'will come', 'will stay', 'is staying', 'staying',
       'got a booking', 'new booking', 'booking for', 'booking from', 'reserve',
       'reservation',
+    ],
+  },
+
+  // Money received or due on a booking. It comes after "add a booking", so
+  // that "Book Rahul ..., advance 2000" is still a new booking.
+  {
+    intent:  'payment',
+    phrases: [
+      'paid', 'advance', 'deposit', 'payment', 'received', 'balance',
+      'total is', 'total amount',
     ],
   },
 

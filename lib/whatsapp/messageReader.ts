@@ -4,8 +4,8 @@
 
 import { INTENT_PHRASES, type Intent } from './intents'
 import {
-  tokenize, extractDates, extractCount, readCount, cleanName, matchCommandWord,
-  isRoomWord, isGuestWord, isNightWord, isMonthWord,
+  tokenize, extractDates, extractCount, extractTime, readCount, cleanName, matchCommandWord,
+  isRoomWord, isGuestWord, isNightWord, isMonthWord, toAmount,
   todayISO, addDays, formatDate,
   type DateQuestion,
 } from './commandParser'
@@ -33,6 +33,10 @@ export interface HostRequest {
   phone:        string | null
   note:         string | null
   newName:      string | null         // "name is actually Rahul Patil"
+  total:        number | null         // "total 5000"
+  advance:      number | null         // "advance 2000", "paid 2000"
+  advanceMore:  boolean               // "paid 2000 more": on top of what was paid before
+  time:         string | null         // check-in time as HH:MM, from "at 11 am"
   listKind:     ListKind
   listRange:    DateRange | null      // null means all upcoming bookings
 }
@@ -56,6 +60,14 @@ const PHONE_INTL_RE = /(\+\d[\d\s-]{8,14}\d)/
 const NOTE_RE     = /\b(?:add\s+(?:a\s+)?note(?:\s+that)?|note\s+that|notes?\s*:)\s*(.+)$/i
 const NEW_NAME_RE = /\bname\s+is\s+(?:actually\s+)?(.+)$/i
 const RENAME_RE   = /\brename\s+(.*?)\s+to\s+(.+)$/i
+
+// Money. The word may come first ("total 5000", "paid ₹2,000") or last
+// ("5000 total"). A number followed by a unit, "total 3 guests", is not money.
+const TOTAL_RE         = /\b(?:total(?:\s+amount)?|amount|price|charges?|rent|bill)(?:\s*(?:is|of|was|to|rs\.?|inr|₹|:|=|-))*\s*(\d[\d,]*(?:\.\d{1,2})?)\s*(k\b)?(?!\s*(?:guests?|people|persons?|rooms?|nights?|days?|adults?|members?)\b)/i
+const TOTAL_AFTER_RE   = /(\d[\d,]*(?:\.\d{1,2})?)\s*(k\b)?\s*(?:rs\.?|rupees|inr|\/-)?\s*(?:in\s+)?total\b/i
+const ADVANCE_RE       = /\b(?:advance|paid|deposit|received)(?:\s*(?:is|of|was|to|amount|rs\.?|inr|₹|:|=|-))*\s*(\d[\d,]*(?:\.\d{1,2})?)\s*(k\b)?(?!\s*(?:guests?|people|persons?|rooms?|nights?|days?|adults?|members?)\b)/i
+const ADVANCE_AFTER_RE = /(\d[\d,]*(?:\.\d{1,2})?)\s*(k\b)?\s*(?:rs\.?|rupees|inr|\/-)?\s*(?:as\s+|in\s+)?(?:advance|paid|deposit|received)\b/i
+const PAID_MORE_RE     = /\b(?:more|another|additional)\b/
 
 const BOOKING_NO_RE    = /#\s*(\d{1,6})\b/
 const LEGACY_CANCEL_RE = /^cancel\s+(\d{1,6})$/
@@ -93,7 +105,9 @@ const NAME_STOP_WORDS = new Set((
   'starting start from to till until upto for on - ' +
   'more less fewer extra another early earlier later longer next confirm confirmed ' +
   'status pending note notes phone mobile number contact name named rename ' +
-  'reservation reserve want wants need needs like let lets set total'
+  'reservation reserve want wants need needs like let lets set total ' +
+  'amount advance paid pay payment deposit balance received rs rupees inr price ' +
+  'am pm reach reaching max maximum limit capacity'
 ).split(' '))
 
 // ── Intent ───────────────────────────────────────────────────────────────────
@@ -178,6 +192,28 @@ function readNightsChange(normal: string): number | null {
   const early = normal.match(NIGHTS_EARLY_RE)
   const count = early ? wordToCount(early[1]) : null
   return count === null ? null : -count
+}
+
+/**
+ * The total and the advance stated in a message, and the message without
+ * them, so that the amounts are not read as dates or counts.
+ */
+function readAmounts(text: string): { total: number | null; advance: number | null; rest: string } {
+  let rest = text
+
+  // The word-first form is tried first: in "advance 2000 total 5000" the
+  // number before "total" belongs to the advance
+  const take = (first: RegExp, second: RegExp): number | null => {
+    const match = rest.match(first) ?? rest.match(second)
+    if (!match) return null
+    rest = rest.replace(match[0], ' ')
+    return toAmount(match[1], match[2])
+  }
+
+  // The advance is read first, so that "advance amount 2000" is not a total
+  const advance = take(ADVANCE_RE, ADVANCE_AFTER_RE)
+  const total   = take(TOTAL_RE, TOTAL_AFTER_RE)
+  return { total, advance, rest }
 }
 
 /** The first unbroken run of words that could be a name. */
@@ -287,6 +323,11 @@ export function readMessage(text: string, fuzzy: boolean = true): HostRequest {
     main  = main.replace(phoneMatch[1], ' ')
   }
 
+  // So would amounts of money and a time of day
+  const amounts = readAmounts(main)
+  const clock   = extractTime(amounts.rest)
+  main          = clock.rest
+
   const tokens = tokenize(main)
   const used   = new Set<number>()
 
@@ -308,13 +349,32 @@ export function readMessage(text: string, fuzzy: boolean = true): HostRequest {
   const asksQuestion =
     QUESTION_STARTS.has(firstWord) ||
     (text.trim().endsWith('?') && !REQUEST_STARTS.has(firstWord))
-  if (intent === 'create' && asksQuestion) intent = guestName ? 'find' : 'list'
+  if (asksQuestion && (intent === 'create' || intent === 'payment' || intent === 'time')) {
+    intent = guestName ? 'find' : 'list'
+  }
+
+  const hasDates  = found.dates.length > 0 || found.question !== null
+  const hasMoney  = amounts.total !== null || amounts.advance !== null
+  const noStay    = !hasDates && unitGuests === null && nights === null
+  const newStay   = INTENT_PHRASES.some(group =>
+    group.intent === 'create' && group.phrases.some(phrase => hasPhrase(normal, phrase)))
+
+  // "Add 2000 advance for Rahul" and "Rahul will come at 11 am" say nothing
+  // about a stay: they add to a booking that exists
+  if (intent === 'create' && noStay && hasMoney)                 intent = 'payment'
+  else if (intent === 'create' && noStay && clock.time !== null) intent = 'time'
+
+  // "Rahul is coming at 11 am tomorrow" is a new booking that has a time
+  if (intent === 'time' && hasDates && newStay) intent = 'create'
 
   // "Change ..." on its own says nothing about what; the rest of the message does
   if (intent === 'change') {
-    const hasDates = found.dates.length > 0 || found.question !== null
     if (guestChange.guests !== null || guestChange.change !== null) {
       intent = 'guests'
+    } else if (hasMoney || /\b(?:advance|payment|paid|deposit|total|amount|balance)\b/.test(normal)) {
+      intent = 'payment'
+    } else if (clock.time !== null || /\btime\b/.test(normal)) {
+      intent = 'time'
     } else if (!hasDates && /\b(?:phone|mobile|number|name|note)\b/.test(normal)) {
       intent = 'details'
     } else if (/\b(?:guests?|people|persons?)\b/.test(normal)) {
@@ -349,6 +409,10 @@ export function readMessage(text: string, fuzzy: boolean = true): HostRequest {
     phone,
     note,
     newName,
+    total:        amounts.total,
+    advance:      amounts.advance,
+    advanceMore:  amounts.advance !== null && PAID_MORE_RE.test(normal),
+    time:         clock.time,
     listKind,
     listRange:    readListRange(normal, found.dates, today),
   }
