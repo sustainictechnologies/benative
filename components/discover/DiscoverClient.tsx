@@ -311,35 +311,61 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, im
           </div>
         </div>
       ) : (
-        /* Category selected — hero banner + sub-categories */
+        /* Category selected — its card grows in place, the others stay beside it */
         <div className="border-b border-stone-200">
-          {/* Hero banner */}
-          <div className="px-4 sm:px-6">
-          <div className="relative h-48 sm:h-64 overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageMap[`cat_${selectedCat.key}`] ?? selectedCat.img}
-              alt={selectedCat.alt}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/60" />
-            <div className="absolute inset-0 flex flex-col justify-end px-6 sm:px-10 pb-8">
-              <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-2">
-                Explore by Category
-              </p>
-              <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight mb-1">
-                {selectedCat.label}
-              </h2>
-              <p className="text-white/80 text-sm sm:text-base">
-                {selectedCat.subtitle}
-              </p>
-            </div>
-          </div>
-          </div>
-
-          {/* Back + sub-categories */}
           <div className="bg-[#f8f7f2] px-4 sm:px-6 py-6">
             <div className="max-w-7xl mx-auto">
+
+              {/* Category switcher. On a phone the selected card takes the full first row. */}
+              <div className="flex flex-wrap sm:flex-nowrap gap-3 mb-6">
+                {CATEGORIES.map((cat) => {
+                  const isSelected = cat.key === selectedCat.key
+                  return (
+                    <button
+                      key={cat.key}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => { if (!isSelected) handleCatClick(cat) }}
+                      className={`group relative min-w-0 rounded-xl overflow-hidden text-left transition-[flex-grow] duration-500 ease-out motion-reduce:transition-none ${
+                        isSelected
+                          ? 'order-first sm:order-none basis-full sm:flex-[3] h-44 sm:h-52 lg:h-60 cursor-default ring-2 ring-brand-700 ring-offset-2 ring-offset-[#f8f7f2]'
+                          : 'flex-1 h-24 sm:h-52 lg:h-60'
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imageMap[`cat_${cat.key}`] ?? cat.img}
+                        alt={cat.alt}
+                        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 ${
+                          isSelected ? '' : 'group-hover:scale-[1.03]'
+                        }`}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/65" />
+                      {isSelected ? (
+                        <span className="absolute inset-0 flex flex-col justify-end px-5 sm:px-8 pb-5 sm:pb-7">
+                          <span className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-2">
+                            Explore by Category
+                          </span>
+                          <span className="text-white text-2xl sm:text-3xl font-bold leading-tight mb-1">
+                            {cat.label}
+                          </span>
+                          <span className="text-white/80 text-sm sm:text-base">
+                            {cat.subtitle}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="absolute inset-0 flex flex-col items-center justify-center sm:justify-end gap-1.5 sm:gap-2.5 px-2 sm:pb-7">
+                          <cat.icon size={26} className="text-white/90 drop-shadow-md" />
+                          <span className="text-white font-semibold text-xs sm:text-sm leading-tight text-center">
+                            {cat.label}
+                          </span>
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
               <button
                 type="button"
                 onClick={() => { setSelectedCatKey(null); setSelectedSubCat(null) }}

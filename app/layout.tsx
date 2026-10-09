@@ -48,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PageViewTracker />
         <main className="flex-1">{children}</main>
 
-        <footer className="bg-stone-900 text-stone-400 mx-4 sm:mx-6">
+        <footer className="bg-stone-900 text-stone-400">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-6 grid grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Logo — full width on mobile */}
             <div className="col-span-2 lg:col-span-1">
