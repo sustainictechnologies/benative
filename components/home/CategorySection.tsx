@@ -10,10 +10,10 @@ type MainCat = {
 }
 
 const CATEGORIES: MainCat[] = [
-  { key: 'place',      label: 'By the Place',      icon: MapPin,    img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=70', alt: 'Coastal place'         },
-  { key: 'home',       label: 'By the Home',        icon: Home,      img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=70', alt: 'Family home'           },
-  { key: 'trip',       label: 'By the Trip',        icon: Compass,   img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=70', alt: 'Travel and trip'       },
-  { key: 'experience', label: 'By the Experience',  icon: Sparkles,  img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=70', alt: 'Local experience'      },
+  { key: 'place',      label: 'By Place',                       icon: MapPin,    img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=70', alt: 'Coastal place'    },
+  { key: 'home',       label: 'By Type of Home',                icon: Home,      img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=70', alt: 'Family home'      },
+  { key: 'trip',       label: 'By Kind of Trip',                icon: Compass,   img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=70', alt: 'Travel and trip'  },
+  { key: 'experience', label: 'By What You Want to Experience', icon: Sparkles,  img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=70', alt: 'Local experience' },
 ]
 
 export default function CategorySection({ imageMap = {} }: { imageMap?: Record<string, string> }) {

@@ -12,9 +12,15 @@ interface Props {
   highlightedId?: string | null
   onHover?: (id: string | null) => void
   isLoading?: boolean
+  emptyTitle?: string   // shown when there are no stays
+  emptyHint?: string
 }
 
-export default function PlaceGrid({ homestays, highlightedId, onHover, isLoading }: Props) {
+export default function PlaceGrid({
+  homestays, highlightedId, onHover, isLoading,
+  emptyTitle = 'No homestays match these filters.',
+  emptyHint  = 'Try widening your selection.',
+}: Props) {
   const [page, setPage] = useState(0)
   const totalPages = Math.ceil(homestays.length / PAGE_SIZE)
   const visible = homestays.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
@@ -41,8 +47,8 @@ export default function PlaceGrid({ homestays, highlightedId, onHover, isLoading
     <div className="flex flex-col">
       {homestays.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-          <p className="text-stone-400 text-sm">No homestays match these filters.</p>
-          <p className="text-stone-300 text-xs mt-1">Try widening your selection.</p>
+          <p className="text-stone-400 text-sm">{emptyTitle}</p>
+          <p className="text-stone-300 text-xs mt-1">{emptyHint}</p>
         </div>
       ) : (
         <>

@@ -3,7 +3,13 @@
 import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import type L from 'leaflet'
-import { SlidersHorizontal, ChevronDown, ChevronUp, MapPin, Home, Compass, Sparkles, X, Waves, Mountain, TreePine, Sun, Wind, Droplets, Bird, Clock, Car, Anchor, Leaf } from 'lucide-react'
+import {
+  SlidersHorizontal, ChevronDown, ChevronUp, MapPin, Home, Compass, Sparkles, X,
+  Waves, Droplets, Mountain, TreePine, Wheat, Wind,
+  Users, Tractor, Landmark, Leaf, Fence,
+  Snail, CalendarDays, Clock, Baby, Heart, User, Laptop,
+  Utensils, Sunrise, BookOpen, WifiOff, HeartHandshake, Armchair,
+} from 'lucide-react'
 import PracticalFiltersDrawer from './PracticalFiltersDrawer'
 import PlaceGrid from './PlaceGrid'
 import { EMPTY_PRACTICAL_FILTERS, type PracticalFilters } from './types'
@@ -14,66 +20,90 @@ interface MapBounds { south: number; north: number; west: number; east: number }
 
 const INDIA = { south: 8.0, north: 37.5, west: 68.0, east: 97.5 }
 
-type SubCat = { label: string; img: string; alt: string; icon: React.ElementType; intentSlug?: string; landscapeSlugs?: string[] }
+// key is stored in homestays.sub_categories and set per homestay in the admin panel
+type SubCat = { key: string; label: string; img: string; alt: string; icon: React.ElementType }
 type MainCat = { key: string; label: string; subtitle: string; icon: React.ElementType; img: string; alt: string; subCats: SubCat[] }
+
+// Stock photos until an image is uploaded to the sub-category's slot (sub_<key>) in the admin panel
+const photo = (id: string) => `https://images.unsplash.com/photo-${id}?w=400&q=70`
+const SEA    = photo('1507525428034-b723cf961d3e')
+const RIVER  = photo('1439066615861-d1af74d74000')
+const HILLS  = photo('1464822759023-fed622ff2c3b')
+const FOREST = photo('1448375240586-882707db888b')
+const FARM   = photo('1500382017468-9049fed747ef')
+const WILD   = photo('1506929562872-bb421503ef21')
+const NATURE = photo('1441974231531-c6227db76b6e')
+const ROOM   = photo('1502672260266-1c1ef2d93688')
+const ROAD   = photo('1476514525535-07fb3b4ae5f1')
+const HOUSE  = photo('1564013799919-ab600027ffc6')
+const FOOD   = photo('1414235077428-338989a2e8c0')
+const GROVE  = photo('1425913397330-cf8af2ff40a1')
+const MEADOW = photo('1501854140801-50d01698950b')
 
 const CATEGORIES: MainCat[] = [
   {
     key: 'place',
-    label: 'By the Place',
+    label: 'By Place',
     subtitle: 'Find homestays in the setting that feels right for you.',
     icon: MapPin,
     img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=70',
     alt: 'Coastal place',
     subCats: [
-      { label: 'By the Sea',       icon: Waves,    img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=70', alt: 'Sea',    landscapeSlugs: ['env_coastal'] },
-      { label: 'Beside the Water', icon: Droplets, img: 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=400&q=70', alt: 'River',  landscapeSlugs: ['env_riverside'] },
-      { label: 'In the Hills',     icon: Mountain, img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=70', alt: 'Hills',  landscapeSlugs: ['env_mountain_valley'] },
-      { label: 'In the Forest',    icon: TreePine, img: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=70', alt: 'Forest', landscapeSlugs: ['env_forest_border'] },
-      { label: 'On the Farm',      icon: Sun,      img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&q=70', alt: 'Farm',   landscapeSlugs: ['env_agricultural'] },
-      { label: 'Away from It All', icon: Wind,     img: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=400&q=70', alt: 'Wild',   landscapeSlugs: ['env_rocky_plateau', 'env_sacred_grove', 'env_wetland'] },
+      { key: 'by_the_sea',         label: 'By the Sea',         icon: Waves,    img: SEA,    alt: 'Sea' },
+      { key: 'beside_the_water',   label: 'Beside the Water',   icon: Droplets, img: RIVER,  alt: 'River' },
+      { key: 'in_the_hills',       label: 'In the Hills',       icon: Mountain, img: HILLS,  alt: 'Hills' },
+      { key: 'among_the_green',    label: 'Among the Green',    icon: TreePine, img: FOREST, alt: 'Forest' },
+      { key: 'in_the_countryside', label: 'In the Countryside', icon: Wheat,    img: FARM,   alt: 'Countryside' },
+      { key: 'away_from_it_all',   label: 'Away from It All',   icon: Wind,     img: WILD,   alt: 'Remote landscape' },
     ],
   },
   {
     key: 'home',
-    label: 'By the Home',
+    label: 'By Type of Home',
     subtitle: 'Choose a home that matches the way you like to stay.',
     icon: Home,
     img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=70',
     alt: 'Family home',
     subCats: [
-      { label: 'Nature & Wildlife', icon: Bird,    img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=70', alt: 'Nature', intentSlug: 'nature_habitat' },
-      { label: 'Rural Immersion',   icon: Home,    img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&q=70', alt: 'Rural',  intentSlug: 'rural_immersion' },
-      { label: 'Long Stays',        icon: Clock,   img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&q=70', alt: 'Long',   intentSlug: 'long_stay_retreat' },
-      { label: 'Road Stops',        icon: Car,     img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&q=70', alt: 'Road',   intentSlug: 'transit_pitstop' },
+      { key: 'family_homes',     label: 'Family Homes',       icon: Users,    img: HOUSE,  alt: 'Family home' },
+      { key: 'farm_stays',       label: 'Farm Stays',         icon: Tractor,  img: FARM,   alt: 'Farm' },
+      { key: 'heritage_homes',   label: 'Heritage Homes',     icon: Landmark, img: GROVE,  alt: 'Heritage home' },
+      { key: 'village_homes',    label: 'Village Homes',      icon: Home,     img: MEADOW, alt: 'Village' },
+      { key: 'eco_nature_homes', label: 'Eco & Nature Homes', icon: Leaf,     img: NATURE, alt: 'Nature' },
+      { key: 'homesteads',       label: 'Homesteads',         icon: Fence,    img: ROOM,   alt: 'Homestead' },
     ],
   },
   {
     key: 'trip',
-    label: 'By the Trip',
+    label: 'By Kind of Trip',
     subtitle: 'Find the right stay for the kind of trip you\'re on.',
     icon: Compass,
     img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=70',
     alt: 'Travel and trip',
     subCats: [
-      { label: 'Nature & Wildlife', icon: Bird,    img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=70', alt: 'Nature', intentSlug: 'nature_habitat' },
-      { label: 'Rural Immersion',   icon: Home,    img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&q=70', alt: 'Rural',  intentSlug: 'rural_immersion' },
-      { label: 'Long Stays',        icon: Clock,   img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&q=70', alt: 'Long',   intentSlug: 'long_stay_retreat' },
-      { label: 'Road Stops',        icon: Car,     img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&q=70', alt: 'Road',   intentSlug: 'transit_pitstop' },
+      { key: 'slow_escapes',             label: 'Slow Escapes',             icon: Snail,        img: MEADOW, alt: 'Quiet landscape' },
+      { key: 'weekend_getaways',         label: 'Weekend Getaways',         icon: CalendarDays, img: ROAD,   alt: 'Road trip' },
+      { key: 'long_stays',               label: 'Long Stays',               icon: Clock,        img: ROOM,   alt: 'Room' },
+      { key: 'family_time',              label: 'Family Time',              icon: Baby,         img: HOUSE,  alt: 'Family home' },
+      { key: 'for_two',                  label: 'For Two',                  icon: Heart,        img: SEA,    alt: 'Sunset by the sea' },
+      { key: 'solo_stays',               label: 'Solo Stays',               icon: User,         img: HILLS,  alt: 'Hills' },
+      { key: 'work_from_somewhere_else', label: 'Work From Somewhere Else', icon: Laptop,       img: ROOM,   alt: 'Workspace' },
     ],
   },
   {
     key: 'experience',
-    label: 'By the Experience',
+    label: 'By What You Want to Experience',
     subtitle: 'Stay somewhere that gives you a story to tell.',
     icon: Sparkles,
     img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=70',
     alt: 'Local experience',
     subCats: [
-      { label: 'Forest Stays',     icon: TreePine, img: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=70', alt: 'Forest',  landscapeSlugs: ['env_forest_border'] },
-      { label: 'Riverside',        icon: Waves,    img: 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=400&q=70', alt: 'River',   landscapeSlugs: ['env_riverside'] },
-      { label: 'Coastal Villages', icon: Anchor,   img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=70', alt: 'Coast',   landscapeSlugs: ['env_coastal'] },
-      { label: 'Sacred Groves',    icon: Leaf,     img: 'https://images.unsplash.com/photo-1425913397330-cf8af2ff40a1?w=400&q=70', alt: 'Sacred',  landscapeSlugs: ['env_sacred_grove'] },
+      { key: 'eat_like_a_local',      label: 'Eat Like a Local',      icon: Utensils,       img: FOOD,   alt: 'Local food' },
+      { key: 'wake_up_in_nature',     label: 'Wake Up in Nature',     icon: Sunrise,        img: NATURE, alt: 'Nature' },
+      { key: 'learn_something_new',   label: 'Learn Something New',   icon: BookOpen,       img: GROVE,  alt: 'Grove' },
+      { key: 'go_offline',            label: 'Go Offline',            icon: WifiOff,        img: FOREST, alt: 'Forest' },
+      { key: 'meet_the_people',       label: 'Meet the People',       icon: HeartHandshake, img: FOOD,   alt: 'Shared meal' },
+      { key: 'do_absolutely_nothing', label: 'Do Absolutely Nothing', icon: Armchair,       img: WILD,   alt: 'Quiet place' },
     ],
   },
 ]
@@ -218,13 +248,13 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, im
       const west  = mapBounds?.west  ?? INDIA.west
       const east  = mapBounds?.east  ?? INDIA.east
 
-      const { data, error } = await supabase.rpc('filter_homestays_spatial', {
+      // Sub-categories come from homestays.sub_categories (see supabase/discover_sub_categories.sql)
+      const { data, error } = await supabase.rpc('discover_homestays', {
         min_lat:         south,
         max_lat:         north,
         min_lng:         west,
         max_lng:         east,
-        intent_slug:     selectedSubCat?.intentSlug     ?? null,
-        landscape_slugs: selectedSubCat?.landscapeSlugs ?? [],
+        sub_category:    selectedSubCat?.key ?? null,
         practical_slugs: practicalFilters.practicalSlugs,
       })
 
@@ -366,30 +396,23 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, im
                 })}
               </div>
 
-              <button
-                type="button"
-                onClick={() => { setSelectedCatKey(null); setSelectedSubCat(null) }}
-                className="flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-700 transition-colors mb-6"
-              >
-                ← Back to Categories
-              </button>
-
               {selectedCat.subCats.length > 0 && (
                 <>
                   <p className="text-sm font-bold text-stone-700 mb-4">Sub-categories</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                  {/* On desktop all of a category's sub-categories share one row, six or seven */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-none lg:grid-flow-col lg:auto-cols-fr gap-3">
                     {selectedCat.subCats.map((sub) => (
                       <button
-                        key={sub.label}
+                        key={sub.key}
                         type="button"
                         onClick={() => handleSubCatClick(sub)}
                         className={`group relative rounded-xl overflow-hidden aspect-[3/2] text-left transition-all duration-200 ${
-                          selectedSubCat?.label === sub.label ? 'ring-2 ring-brand-600 ring-offset-1' : ''
+                          selectedSubCat?.key === sub.key ? 'ring-2 ring-brand-600 ring-offset-1' : ''
                         }`}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={sub.img}
+                          src={imageMap[`sub_${sub.key}`] ?? sub.img}
                           alt={sub.alt}
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                         />
@@ -522,6 +545,10 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, im
             highlightedId={highlightedId}
             onHover={setHighlightedId}
             isLoading={isLoading}
+            {...(selectedSubCat && totalActiveFilters === 1 && {
+              emptyTitle: `No stays in ${selectedSubCat.label} yet.`,
+              emptyHint:  'Homestays are still being added to this collection. Try another sub-category.',
+            })}
           />
         </div>
 
