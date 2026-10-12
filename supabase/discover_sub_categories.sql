@@ -10,15 +10,14 @@
 -- but NOT the spec_* tags, which the Filters button still uses.
 --
 -- Sub-category keys, by main category:
---   By Place:            by_the_sea, beside_the_water, in_the_hills,
+--   By the Place:        by_the_sea, beside_the_water, in_the_hills,
 --                        among_the_green, in_the_countryside, away_from_it_all
---   By Type of Home:     family_homes, farm_stays, heritage_homes,
+--   By the Home:         family_homes, farm_stays, heritage_homes,
 --                        village_homes, eco_nature_homes, homesteads
---   By Kind of Trip:     slow_escapes, weekend_getaways, long_stays,
---                        family_time, for_two, solo_stays,
+--   By the Trip:         slow_escapes, weekend_getaways, long_stays,
+--                        family_time, transit_stays, solo_stays,
 --                        work_from_somewhere_else
---   By What You Want to Experience:
---                        eat_like_a_local, wake_up_in_nature,
+--   By the Experience:   eat_like_a_local, wake_up_in_nature,
 --                        learn_something_new, go_offline, meet_the_people,
 --                        do_absolutely_nothing
 -- ============================================================
@@ -50,6 +49,7 @@ WITH mapping (tag_slug, sub_category) AS (
     ('rural_immersion',       'village_homes'),
     ('nature_habitat',        'eco_nature_homes'),
     ('long_stay_retreat',     'long_stays'),
+    ('transit_pitstop',       'transit_stays'),
     ('spec_quiet_work_setup', 'work_from_somewhere_else'),
     ('nature_habitat',        'wake_up_in_nature'),
     ('spec_native_guide',     'learn_something_new')

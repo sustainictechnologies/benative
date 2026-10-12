@@ -7,7 +7,7 @@ import {
   SlidersHorizontal, ChevronDown, ChevronUp, MapPin, Home, Compass, Sparkles, X,
   Waves, Droplets, Mountain, TreePine, Wheat, Wind,
   Users, Tractor, Landmark, Leaf, Fence,
-  Snail, CalendarDays, Clock, Baby, Heart, User, Laptop,
+  Snail, CalendarDays, Clock, Baby, Car, User, Laptop,
   Utensils, Sunrise, BookOpen, WifiOff, HeartHandshake, Armchair,
 } from 'lucide-react'
 import PracticalFiltersDrawer from './PracticalFiltersDrawer'
@@ -43,7 +43,7 @@ const MEADOW = photo('1501854140801-50d01698950b')
 const CATEGORIES: MainCat[] = [
   {
     key: 'place',
-    label: 'By Place',
+    label: 'By the Place',
     subtitle: 'Find homestays in the setting that feels right for you.',
     icon: MapPin,
     img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=70',
@@ -59,7 +59,7 @@ const CATEGORIES: MainCat[] = [
   },
   {
     key: 'home',
-    label: 'By Type of Home',
+    label: 'By the Home',
     subtitle: 'Choose a home that matches the way you like to stay.',
     icon: Home,
     img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=70',
@@ -75,7 +75,7 @@ const CATEGORIES: MainCat[] = [
   },
   {
     key: 'trip',
-    label: 'By Kind of Trip',
+    label: 'By the Trip',
     subtitle: 'Find the right stay for the kind of trip you\'re on.',
     icon: Compass,
     img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=70',
@@ -85,14 +85,14 @@ const CATEGORIES: MainCat[] = [
       { key: 'weekend_getaways',         label: 'Weekend Getaways',         icon: CalendarDays, img: ROAD,   alt: 'Road trip' },
       { key: 'long_stays',               label: 'Long Stays',               icon: Clock,        img: ROOM,   alt: 'Room' },
       { key: 'family_time',              label: 'Family Time',              icon: Baby,         img: HOUSE,  alt: 'Family home' },
-      { key: 'for_two',                  label: 'For Two',                  icon: Heart,        img: SEA,    alt: 'Sunset by the sea' },
+      { key: 'transit_stays',            label: 'Transit Stays',            icon: Car,          img: ROAD,   alt: 'Road' },
       { key: 'solo_stays',               label: 'Solo Stays',               icon: User,         img: HILLS,  alt: 'Hills' },
       { key: 'work_from_somewhere_else', label: 'Work From Somewhere Else', icon: Laptop,       img: ROOM,   alt: 'Workspace' },
     ],
   },
   {
     key: 'experience',
-    label: 'By What You Want to Experience',
+    label: 'By the Experience',
     subtitle: 'Stay somewhere that gives you a story to tell.',
     icon: Sparkles,
     img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=70',
