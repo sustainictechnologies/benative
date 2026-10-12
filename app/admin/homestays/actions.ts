@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { SUB_CATEGORY_KEYS } from '@/lib/subCategories'
 
 export async function linkHostAccount(
   homestayId: string,
@@ -111,4 +112,24 @@ export async function saveCategories(homestayId: string, selectedSlugs: string[]
   revalidatePath('/admin/homestays')
   revalidatePath('/discover')
   return { success: true, count: tags.length }
+}
+
+// Sets the Discover sub-categories of a homestay (homestays.sub_categories).
+// The Discover page reads this column; see supabase/discover_sub_categories.sql.
+export async function saveSubCategories(homestayId: string, selectedKeys: string[]) {
+  const supabase = createAdminClient()
+
+  // Only keep known keys, each once
+  const cleanKeys = Array.from(new Set(selectedKeys.filter(k => SUB_CATEGORY_KEYS.has(k)))).sort()
+
+  const { error } = await supabase
+    .from('homestays')
+    .update({ sub_categories: cleanKeys })
+    .eq('id', homestayId)
+
+  if (error) return { error: `Failed to save sub-categories: ${error.message}` }
+
+  revalidatePath('/admin/homestays')
+  revalidatePath('/discover')
+  return { success: true, count: cleanKeys.length }
 }

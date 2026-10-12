@@ -15,98 +15,88 @@ import PlaceGrid from './PlaceGrid'
 import { EMPTY_PRACTICAL_FILTERS, type PracticalFilters } from './types'
 import type { HomestayWithCategories } from '@/types/blocks.types'
 import { createClient } from '@/lib/supabase/client'
+import { SUB_CATEGORY_GROUPS, type SubCategory } from '@/lib/subCategories'
 
 interface MapBounds { south: number; north: number; west: number; east: number }
 
 const INDIA = { south: 8.0, north: 37.5, west: 68.0, east: 97.5 }
 
-// key is stored in homestays.sub_categories and set per homestay in the admin panel
-type SubCat = { key: string; label: string; img: string; alt: string; icon: React.ElementType }
-type MainCat = { key: string; label: string; subtitle: string; icon: React.ElementType; img: string; alt: string; subCats: SubCat[] }
+// The names and keys come from the shared list; this file adds how each one looks
+type Visual  = { icon: React.ElementType; img: string; alt: string }
+type SubCat  = SubCategory & Visual
+type MainCat = { key: string; label: string; subtitle: string; subCats: SubCat[] } & Visual
 
-// Stock photos until an image is uploaded to the sub-category's slot (sub_<key>) in the admin panel
+// Indian stock photos, one per sub-category, until an image is uploaded to its slot (sub_<key>) in the admin panel
 const photo = (id: string) => `https://images.unsplash.com/photo-${id}?w=400&q=70`
-const SEA    = photo('1507525428034-b723cf961d3e')
-const RIVER  = photo('1439066615861-d1af74d74000')
-const HILLS  = photo('1464822759023-fed622ff2c3b')
-const FOREST = photo('1448375240586-882707db888b')
-const FARM   = photo('1500382017468-9049fed747ef')
-const WILD   = photo('1506929562872-bb421503ef21')
 const NATURE = photo('1441974231531-c6227db76b6e')
-const ROOM   = photo('1502672260266-1c1ef2d93688')
-const ROAD   = photo('1476514525535-07fb3b4ae5f1')
-const HOUSE  = photo('1564013799919-ab600027ffc6')
-const FOOD   = photo('1414235077428-338989a2e8c0')
-const GROVE  = photo('1425913397330-cf8af2ff40a1')
-const MEADOW = photo('1501854140801-50d01698950b')
 
-const CATEGORIES: MainCat[] = [
-  {
-    key: 'place',
-    label: 'By the Place',
+const MAIN_VISUALS: Record<string, Visual & { subtitle: string }> = {
+  place: {
     subtitle: 'Find homestays in the setting that feels right for you.',
     icon: MapPin,
     img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=70',
     alt: 'Coastal place',
-    subCats: [
-      { key: 'by_the_sea',         label: 'By the Sea',         icon: Waves,    img: SEA,    alt: 'Sea' },
-      { key: 'beside_the_water',   label: 'Beside the Water',   icon: Droplets, img: RIVER,  alt: 'River' },
-      { key: 'in_the_hills',       label: 'In the Hills',       icon: Mountain, img: HILLS,  alt: 'Hills' },
-      { key: 'among_the_green',    label: 'Among the Green',    icon: TreePine, img: FOREST, alt: 'Forest' },
-      { key: 'in_the_countryside', label: 'In the Countryside', icon: Wheat,    img: FARM,   alt: 'Countryside' },
-      { key: 'away_from_it_all',   label: 'Away from It All',   icon: Wind,     img: WILD,   alt: 'Remote landscape' },
-    ],
   },
-  {
-    key: 'home',
-    label: 'By the Home',
+  home: {
     subtitle: 'Choose a home that matches the way you like to stay.',
     icon: Home,
     img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=70',
     alt: 'Family home',
-    subCats: [
-      { key: 'family_homes',     label: 'Family Homes',       icon: Users,    img: HOUSE,  alt: 'Family home' },
-      { key: 'farm_stays',       label: 'Farm Stays',         icon: Tractor,  img: FARM,   alt: 'Farm' },
-      { key: 'heritage_homes',   label: 'Heritage Homes',     icon: Landmark, img: GROVE,  alt: 'Heritage home' },
-      { key: 'village_homes',    label: 'Village Homes',      icon: Home,     img: MEADOW, alt: 'Village' },
-      { key: 'eco_nature_homes', label: 'Eco & Nature Homes', icon: Leaf,     img: NATURE, alt: 'Nature' },
-      { key: 'homesteads',       label: 'Homesteads',         icon: Fence,    img: ROOM,   alt: 'Homestead' },
-    ],
   },
-  {
-    key: 'trip',
-    label: 'By the Trip',
+  trip: {
     subtitle: 'Find the right stay for the kind of trip you\'re on.',
     icon: Compass,
     img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=70',
     alt: 'Travel and trip',
-    subCats: [
-      { key: 'slow_escapes',             label: 'Slow Escapes',             icon: Snail,        img: MEADOW, alt: 'Quiet landscape' },
-      { key: 'weekend_getaways',         label: 'Weekend Getaways',         icon: CalendarDays, img: ROAD,   alt: 'Road trip' },
-      { key: 'long_stays',               label: 'Long Stays',               icon: Clock,        img: ROOM,   alt: 'Room' },
-      { key: 'family_time',              label: 'Family Time',              icon: Baby,         img: HOUSE,  alt: 'Family home' },
-      { key: 'transit_stays',            label: 'Transit Stays',            icon: Car,          img: ROAD,   alt: 'Road' },
-      { key: 'solo_stays',               label: 'Solo Stays',               icon: User,         img: HILLS,  alt: 'Hills' },
-      { key: 'work_from_somewhere_else', label: 'Work From Somewhere Else', icon: Laptop,       img: ROOM,   alt: 'Workspace' },
-    ],
   },
-  {
-    key: 'experience',
-    label: 'By the Experience',
+  experience: {
     subtitle: 'Stay somewhere that gives you a story to tell.',
     icon: Sparkles,
     img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=70',
     alt: 'Local experience',
-    subCats: [
-      { key: 'eat_like_a_local',      label: 'Eat Like a Local',      icon: Utensils,       img: FOOD,   alt: 'Local food' },
-      { key: 'wake_up_in_nature',     label: 'Wake Up in Nature',     icon: Sunrise,        img: NATURE, alt: 'Nature' },
-      { key: 'learn_something_new',   label: 'Learn Something New',   icon: BookOpen,       img: GROVE,  alt: 'Grove' },
-      { key: 'go_offline',            label: 'Go Offline',            icon: WifiOff,        img: FOREST, alt: 'Forest' },
-      { key: 'meet_the_people',       label: 'Meet the People',       icon: HeartHandshake, img: FOOD,   alt: 'Shared meal' },
-      { key: 'do_absolutely_nothing', label: 'Do Absolutely Nothing', icon: Armchair,       img: WILD,   alt: 'Quiet place' },
-    ],
   },
-]
+}
+
+const SUB_VISUALS: Record<string, Visual> = {
+  by_the_sea:         { icon: Waves,    img: photo('1593359652766-b77c5795bd65'), alt: 'Palm-lined beach' },
+  beside_the_water:   { icon: Droplets, img: photo('1678780910715-9592ca6d2098'), alt: 'House beside a palm-lined lake' },
+  in_the_hills:       { icon: Mountain, img: photo('1711192702535-eac61a78ecb0'), alt: 'Tea gardens in the hills' },
+  among_the_green:    { icon: TreePine, img: photo('1734373810472-4c246b1ea5b9'), alt: 'Misty forest road' },
+  in_the_countryside: { icon: Wheat,    img: photo('1694011772133-dc4b3ff3f24f'), alt: 'Paddy fields and coconut palms' },
+  away_from_it_all:   { icon: Wind,     img: photo('1617159156637-dfb8655c9f95'), alt: 'Remote mountain village' },
+
+  family_homes:     { icon: Users,    img: photo('1642667670006-6b3059ccf96d'), alt: 'Family house with a flowering garden' },
+  farm_stays:       { icon: Tractor,  img: photo('1620901433789-1d2f85a93653'), alt: 'Farmer ploughing with oxen' },
+  heritage_homes:   { icon: Landmark, img: photo('1682414180825-c0df1934387f'), alt: 'Old haveli entrance' },
+  village_homes:    { icon: Home,     img: photo('1643474003587-8bbf4bbc01d9'), alt: 'Mud house with a tiled roof' },
+  eco_nature_homes: { icon: Leaf,     img: photo('1785407446300-3d89e2158956'), alt: 'Tiled-roof home among trees' },
+  homesteads:       { icon: Fence,    img: photo('1672579738105-227fa89d0527'), alt: 'Tiled-roof homestead on a green lawn' },
+
+  slow_escapes:             { icon: Snail,        img: photo('1506461883276-594a12b11cf3'), alt: 'Boat on the backwaters' },
+  weekend_getaways:         { icon: CalendarDays, img: photo('1579609424835-16beba97e3c2'), alt: 'River valley seen from the hills' },
+  long_stays:               { icon: Clock,        img: photo('1647771167457-c82f4850bb7e'), alt: 'Cottage with a shaded porch' },
+  family_time:              { icon: Baby,         img: photo('1687660187066-dc7e95eb3c5e'), alt: 'Family sitting on a rock at dusk' },
+  transit_stays:            { icon: Car,          img: photo('1596829568009-bc436aac1b63'), alt: 'Highway through green hills' },
+  solo_stays:               { icon: User,         img: photo('1774539570465-8c389151758a'), alt: 'Hiker looking over a green valley' },
+  work_from_somewhere_else: { icon: Laptop,       img: photo('1632229910777-131718197ea7'), alt: 'Laptop on a table facing green hills' },
+
+  eat_like_a_local:      { icon: Utensils,       img: photo('1788619378696-c77352c43a88'), alt: 'Meal served on a banana leaf' },
+  wake_up_in_nature:     { icon: Sunrise,        img: photo('1707111762867-a88c90b7d9fa'), alt: 'Sunrise over the hills' },
+  learn_something_new:   { icon: BookOpen,       img: photo('1613833684971-9411a2b00970'), alt: 'Hands shaping a clay pot' },
+  go_offline:            { icon: WifiOff,        img: photo('1663745430674-180c6858f46c'), alt: 'Green cliffs and a deep valley' },
+  meet_the_people:       { icon: HeartHandshake, img: photo('1601689892697-b64daa00ff6d'), alt: 'Villagers gathered outside a home' },
+  do_absolutely_nothing: { icon: Armchair,       img: photo('1643474004450-78bac5b408e0'), alt: 'Cat resting under a charpai' },
+}
+
+// A category or sub-category added to the shared list shows with this until it is given its own look
+const DEFAULT_VISUAL: Visual = { icon: Sparkles, img: NATURE, alt: 'Homestay' }
+
+const CATEGORIES: MainCat[] = SUB_CATEGORY_GROUPS.map(group => ({
+  key:     group.key,
+  label:   group.label,
+  ...(MAIN_VISUALS[group.key] ?? { ...DEFAULT_VISUAL, subtitle: '' }),
+  subCats: group.subCategories.map(sub => ({ ...sub, ...(SUB_VISUALS[sub.key] ?? DEFAULT_VISUAL) })),
+}))
 
 const PRACTICAL_ITEMS = [
   { slug: 'spec_stable_network',       name: 'Stable Network'        },

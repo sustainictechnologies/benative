@@ -8,8 +8,9 @@ import {
   ExternalLink, Layers, AlertTriangle, X, Check, Tag, Globe, UserCheck,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { saveCategories, toggleShowOnHomepage, linkHostAccount, unlinkHostAccount } from '../actions'
+import { saveCategories, saveSubCategories, toggleShowOnHomepage, linkHostAccount, unlinkHostAccount } from '../actions'
 import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
+import { SUB_CATEGORY_GROUPS } from '@/lib/subCategories'
 
 interface Homestay {
   id:                string
@@ -25,6 +26,7 @@ interface Homestay {
   cover_image_url:   string | null
   block_count:       number
   category_slugs:    string[]
+  sub_categories:    string[]
   has_draft:         boolean
   show_on_homepage:  boolean
   host_user_id:      string | null
@@ -193,14 +195,17 @@ function LinkHostPanel({
 function TaxonomyPanel({
   homestayId,
   initialSlugs,
+  initialSubCategories,
   onClose,
   onSaved,
 }: {
-  homestayId:   string
-  initialSlugs: string[]
-  onClose:      () => void
-  onSaved:      () => void
+  homestayId:           string
+  initialSlugs:         string[]
+  initialSubCategories: string[]
+  onClose:              () => void
+  onSaved:              () => void
 }) {
+  const [subCategories, setSubCategories] = useState<string[]>(initialSubCategories)
   const [intentSlug,    setIntentSlug]    = useState<string | null>(
     initialSlugs.find(s => INTENT_SLUGS_SET.has(s)) ?? null
   )
@@ -228,6 +233,13 @@ function TaxonomyPanel({
     setSaved(false)
   }
 
+  function toggleSubCategory(key: string) {
+    setSubCategories(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    )
+    setSaved(false)
+  }
+
   async function handleSave() {
     setSaving(true)
     setError(null)
@@ -236,10 +248,13 @@ function TaxonomyPanel({
       ...landscapeSlugs,
       ...practicalSlugs,
     ]
-    const result = await saveCategories(homestayId, selected)
+    // The old tags and the new sub-categories are stored separately; save both
+    const result    = await saveCategories(homestayId, selected)
+    const subResult = result.error ? null : await saveSubCategories(homestayId, subCategories)
     setSaving(false)
-    if (result.error) {
-      setError(result.error)
+    const failure = result.error ?? subResult?.error
+    if (failure) {
+      setError(failure)
     } else {
       setSaved(true)
       setTimeout(() => onSaved(), 900)
@@ -257,6 +272,39 @@ function TaxonomyPanel({
           <X size={14} />
         </button>
       </div>
+
+      {/* Discover sub-categories (multi-select) — the new Discover page reads these */}
+      <div className="mb-5 pb-5 border-b border-stone-200">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-3">
+          Discover sub-categories · {subCategories.length} selected
+        </p>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {SUB_CATEGORY_GROUPS.map(group => (
+            <div key={group.key}>
+              <p className="text-xs font-semibold text-stone-700 mb-2">{group.label}</p>
+              <div className="space-y-1.5">
+                {group.subCategories.map(sub => (
+                  <label key={sub.key} className="flex items-center gap-2 cursor-pointer group/s">
+                    <input
+                      type="checkbox"
+                      checked={subCategories.includes(sub.key)}
+                      onChange={() => toggleSubCategory(sub.key)}
+                      className="w-3.5 h-3.5 rounded border-stone-300 accent-brand-600 cursor-pointer"
+                    />
+                    <span className="text-xs text-stone-600 group-hover/s:text-stone-900 transition-colors">
+                      {sub.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-[10px] text-stone-400 mb-3">
+        Layers 1 and 2 are the earlier categories, still used by the live site. Layer 3 feeds the Filters button.
+      </p>
 
       <div className="grid sm:grid-cols-3 gap-6 mb-4">
         {/* Layer 1: Travel Intent (single select) */}
@@ -619,6 +667,7 @@ export default function HomestaysClient({ homestays }: Props) {
                   <TaxonomyPanel
                     homestayId={h.id}
                     initialSlugs={h.category_slugs}
+                    initialSubCategories={h.sub_categories}
                     onClose={() => setExpandedId(null)}
                     onSaved={() => { setExpandedId(null); router.refresh() }}
                   />
