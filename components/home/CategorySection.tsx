@@ -22,7 +22,7 @@ const CATEGORIES: MainCat[] = [
 
 export default function CategorySection({ imageMap = {} }: { imageMap?: Record<string, string> }) {
   return (
-    <section className="bg-[#f8f7f2] px-4 sm:px-6 py-20 sm:py-24">
+    <section className="bg-[#f8f7f2] px-4 sm:px-6 pt-10 pb-20 sm:pt-12 sm:pb-24">
       <div className="max-w-7xl mx-auto">
 
         <div className="mb-10">

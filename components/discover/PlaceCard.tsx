@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { MapPin, Check } from 'lucide-react'
+import { MapPin, Check, ArrowRight } from 'lucide-react'
 import type { HomestayWithCategories } from '@/types/blocks.types'
 
 interface Props {
@@ -19,21 +19,26 @@ export default function PlaceCard({ homestay: h, isHighlighted, onMouseEnter, on
       onMouseLeave={onMouseLeave}
       className="group flex flex-col gap-2.5 min-w-0"
     >
-      {/* Photo */}
+      {/* Photo — the green ring marks the card picked on the map; under the mouse the lift and label do that job */}
       <div
-        className={`relative aspect-[4/3] overflow-hidden rounded-xl bg-stone-100 transition-shadow duration-200 ${
-          isHighlighted
-            ? 'ring-2 ring-brand-400 shadow-card-hover'
-            : 'shadow-card group-hover:shadow-card-hover'
+        className={`relative aspect-[4/3] overflow-hidden rounded-xl bg-stone-100 transition-shadow duration-200 shadow-[0_4px_16px_rgba(0,0,0,0.14)] group-hover:shadow-[0_14px_34px_rgba(0,0,0,0.24)] ${
+          isHighlighted ? 'ring-2 ring-brand-400 group-hover:ring-0' : ''
         }`}
       >
         {h.cover_image_url ? (
-          <img
-            src={h.cover_image_url}
-            alt={h.title}
-            className="w-full h-full object-cover saturate-[1.18] contrast-[1.06] brightness-[1.03] transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-          />
+          <>
+            <img
+              src={h.cover_image_url}
+              alt={h.title}
+              className="w-full h-full object-cover saturate-[1.38] contrast-[1.10] brightness-[1.03] transition-transform duration-300 group-hover:scale-[1.06]"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/[0.38] to-transparent to-45% pointer-events-none" />
+            <span className="absolute right-2.5 bottom-2.5 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11.5px] font-semibold text-brand-700 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+              View stay
+              <ArrowRight size={12} />
+            </span>
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <MapPin size={28} className="text-stone-300" />
