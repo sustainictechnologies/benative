@@ -6,7 +6,7 @@ import type L from 'leaflet'
 import {
   SlidersHorizontal, ChevronDown, ChevronUp, MapPin, Home, Compass, Sparkles, X,
   Waves, Droplets, Mountain, TreePine, Wheat, Wind,
-  Users, Tractor, Landmark, Leaf, Fence,
+  Users, Tractor, Landmark, Leaf,
   Snail, CalendarDays, Clock, Baby, Car, User, Laptop,
   Utensils, Sunrise, BookOpen, WifiOff, HeartHandshake, Armchair,
 } from 'lucide-react'
@@ -59,7 +59,7 @@ const MAIN_VISUALS: Record<string, Visual & { subtitle: string }> = {
 
 const SUB_VISUALS: Record<string, Visual> = {
   by_the_sea:         { icon: Waves,    img: photo('1593359652766-b77c5795bd65'), alt: 'Palm-lined beach' },
-  beside_the_water:   { icon: Droplets, img: photo('1678780910715-9592ca6d2098'), alt: 'House beside a palm-lined lake' },
+  beside_the_water:   { icon: Droplets, img: photo('1644071300780-7475aa7ecf93'), alt: 'Footbridge over a stream, with palms' },
   in_the_hills:       { icon: Mountain, img: photo('1711192702535-eac61a78ecb0'), alt: 'Tea gardens in the hills' },
   among_the_green:    { icon: TreePine, img: photo('1734373810472-4c246b1ea5b9'), alt: 'Misty forest road' },
   in_the_countryside: { icon: Wheat,    img: photo('1694011772133-dc4b3ff3f24f'), alt: 'Paddy fields and coconut palms' },
@@ -70,9 +70,8 @@ const SUB_VISUALS: Record<string, Visual> = {
   heritage_homes:   { icon: Landmark, img: photo('1682414180825-c0df1934387f'), alt: 'Old haveli entrance' },
   village_homes:    { icon: Home,     img: photo('1643474003587-8bbf4bbc01d9'), alt: 'Mud house with a tiled roof' },
   eco_nature_homes: { icon: Leaf,     img: photo('1785407446300-3d89e2158956'), alt: 'Tiled-roof home among trees' },
-  homesteads:       { icon: Fence,    img: photo('1672579738105-227fa89d0527'), alt: 'Tiled-roof homestead on a green lawn' },
 
-  slow_escapes:             { icon: Snail,        img: photo('1506461883276-594a12b11cf3'), alt: 'Boat on the backwaters' },
+  slow_escapes:             { icon: Snail,        img: photo('1578981320111-c7e9426cd6e8'), alt: 'Boat on still water at sunset' },
   weekend_getaways:         { icon: CalendarDays, img: photo('1579609424835-16beba97e3c2'), alt: 'River valley seen from the hills' },
   long_stays:               { icon: Clock,        img: photo('1647771167457-c82f4850bb7e'), alt: 'Cottage with a shaded porch' },
   family_time:              { icon: Baby,         img: photo('1687660187066-dc7e95eb3c5e'), alt: 'Family sitting on a rock at dusk' },
@@ -529,7 +528,7 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, im
       {/* ── Split view: cards left, map right ── */}
       <div ref={splitRef} className="max-w-7xl mx-auto w-full flex flex-col md:flex-row">
 
-        <div className="w-full md:w-3/5 flex flex-col md:border-r border-stone-100 order-2 md:order-1">
+        <div className="w-full md:w-2/3 flex flex-col md:border-r border-stone-100 order-2 md:order-1">
           <PlaceGrid
             homestays={homestays}
             highlightedId={highlightedId}
@@ -542,7 +541,7 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, im
           />
         </div>
 
-        <div className="w-full h-[300px] p-3 md:w-2/5 md:h-[520px] md:shrink-0 order-1 md:order-2">
+        <div className="w-full h-[300px] p-3 md:w-1/3 md:h-[520px] md:shrink-0 order-1 md:order-2">
           <div className="h-full rounded-xl overflow-hidden">
             <DiscoverMap
               homestays={homestays}

@@ -13,7 +13,7 @@
 --   By the Place:        by_the_sea, beside_the_water, in_the_hills,
 --                        among_the_green, in_the_countryside, away_from_it_all
 --   By the Home:         family_homes, farm_stays, heritage_homes,
---                        village_homes, eco_nature_homes, homesteads
+--                        village_homes, eco_nature_homes
 --   By the Trip:         slow_escapes, weekend_getaways, long_stays,
 --                        family_time, transit_stays, solo_stays,
 --                        work_from_somewhere_else

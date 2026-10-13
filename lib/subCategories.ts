@@ -38,7 +38,6 @@ export const SUB_CATEGORY_GROUPS: SubCategoryGroup[] = [
       { key: 'heritage_homes',   label: 'Heritage Homes' },
       { key: 'village_homes',    label: 'Village Homes' },
       { key: 'eco_nature_homes', label: 'Eco & Nature Homes' },
-      { key: 'homesteads',       label: 'Homesteads' },
     ],
   },
   {
@@ -49,7 +48,7 @@ export const SUB_CATEGORY_GROUPS: SubCategoryGroup[] = [
       { key: 'weekend_getaways',         label: 'Weekend Getaways' },
       { key: 'long_stays',               label: 'Long Stays' },
       { key: 'family_time',              label: 'Family Time' },
-      { key: 'transit_stays',            label: 'Transit Stays' },
+      { key: 'transit_stays',            label: 'In Transit Stays' },
       { key: 'solo_stays',               label: 'Solo Stays' },
       { key: 'work_from_somewhere_else', label: 'Work From Somewhere Else' },
     ],

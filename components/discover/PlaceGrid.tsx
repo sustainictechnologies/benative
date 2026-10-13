@@ -29,13 +29,13 @@ export default function PlaceGrid({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-2">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-3.5 gap-y-5 p-4 md:gap-x-5 md:gap-y-6 md:p-5">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="flex flex-col bg-white border border-stone-100 rounded-xl overflow-hidden animate-pulse">
-            <div className="aspect-[4/3] bg-stone-100" />
-            <div className="px-2 py-2 space-y-1.5">
-              <div className="h-3 bg-stone-100 rounded w-3/4" />
-              <div className="h-2.5 bg-stone-100 rounded w-1/2" />
+          <div key={i} className="flex flex-col gap-2.5 animate-pulse">
+            <div className="aspect-[4/3] rounded-xl bg-stone-100" />
+            <div className="px-0.5 space-y-1.5">
+              <div className="h-3.5 bg-stone-100 rounded w-3/4" />
+              <div className="h-3 bg-stone-100 rounded w-1/2" />
             </div>
           </div>
         ))}
@@ -52,7 +52,7 @@ export default function PlaceGrid({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-3.5 gap-y-5 p-4 md:gap-x-5 md:gap-y-6 md:p-5">
             {visible.map((h) => (
               <PlaceCard
                 key={h.id}
@@ -65,7 +65,7 @@ export default function PlaceGrid({
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-2 pb-2 pt-0.5">
+            <div className="flex items-center justify-between px-4 md:px-5 pb-4 pt-0.5">
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
