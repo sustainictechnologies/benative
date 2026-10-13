@@ -1,22 +1,31 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Home, Loader2, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import GoogleSignInButton from '@/components/GoogleSignInButton'
 
 export default function LoginForm() {
-  const router = useRouter()
   const params = useSearchParams()
-  const next = params.get('next') ?? '/'
 
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
+  // Only ever return to a page on this site
+  const requested = params.get('next') ?? '/'
+  const next = requested.startsWith('/') && !requested.startsWith('//') ? requested : '/'
+
+  // ?mode=signup opens straight on "Create account"
+  const [mode, setMode] = useState<'login' | 'signup'>(params.get('mode') === 'signup' ? 'signup' : 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  // ?error=signin is set by /auth/callback when a Google sign-in does not complete
+  const [error, setError] = useState<string | null>(
+    params.get('error') === 'signin'
+      ? 'Google sign-in did not complete. Please try again, or use your email instead.'
+      : null
+  )
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -31,11 +40,11 @@ export default function LoginForm() {
         setError('Invalid email or password. Please try again.')
         setLoading(false)
       } else {
-        router.push(next)
-        router.refresh()
+        // A full page load, so the page is fetched again with the visitor signed in
+        window.location.assign(next)
       }
     } else {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { full_name: name } },
@@ -43,9 +52,12 @@ export default function LoginForm() {
       if (error) {
         setError(error.message)
         setLoading(false)
+      } else if (!data.session) {
+        // The account exists but is not signed in yet (email confirmation is switched on)
+        setError('Please confirm your email using the link we sent you, then log in.')
+        setLoading(false)
       } else {
-        router.push(next)
-        router.refresh()
+        window.location.assign(next)
       }
     }
   }
@@ -76,9 +88,18 @@ export default function LoginForm() {
           </h1>
           <p className="text-stone-500 text-sm mb-6">
             {mode === 'login'
-              ? 'Login to view host contact details.'
-              : 'Join BeNative to connect directly with local hosts.'}
+              ? 'Login to see full homestay details and host contacts.'
+              : 'Join BeNative to see full homestay details and connect directly with local hosts.'}
           </p>
+
+          <div className="flex flex-col gap-4 mb-5">
+            <GoogleSignInButton next={next} className="w-full" />
+            <div className="flex items-center gap-3 text-xs text-stone-400">
+              <span className="flex-1 h-px bg-stone-200" />
+              or
+              <span className="flex-1 h-px bg-stone-200" />
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (

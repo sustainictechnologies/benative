@@ -25,6 +25,7 @@ interface Props {
   homestay: HomestayMeta
   isLoggedIn: boolean
   slug: string
+  teaser?: boolean   // hero only: the photo and tagline, without the text added below them
 }
 
 function LayoutRenderer({ block }: { block: HomestayBlock }) {
@@ -122,7 +123,7 @@ function SubTexts({ block }: { block: HomestayBlock }) {
   )
 }
 
-export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Props) {
+export default function BlockRenderer({ block, homestay, isLoggedIn, slug, teaser }: Props) {
   if ((block.content_data as any)?.hidden === true) return null
 
   const bgColor = ((block.content_data as any)?.styles?.['_bg-color'] as string | undefined) || undefined
@@ -138,8 +139,12 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Pro
           hostName={homestay.host_name}
         />
         <div className="px-6 pb-4">
-          <LayoutRenderer block={block} />
-          <SubTexts block={block} />
+          {!teaser && (
+            <>
+              <LayoutRenderer block={block} />
+              <SubTexts block={block} />
+            </>
+          )}
         </div>
       </div>
     )
