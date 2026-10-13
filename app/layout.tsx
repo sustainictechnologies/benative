@@ -119,8 +119,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Link>
           </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-6 flex flex-wrap items-center gap-x-4 gap-y-1">
             <p className="text-xs text-stone-600">© 2026 BeNative</p>
+            <Link href="/privacy" className="text-xs hover:text-white transition-colors">Privacy Policy</Link>
           </div>
         </footer>
 
