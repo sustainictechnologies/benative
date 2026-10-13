@@ -42,12 +42,6 @@ export const PRIVACY_SECTIONS: PolicySection[] = [
     ],
   },
   {
-    heading: `Hosts and the WhatsApp assistant`,
-    paragraphs: [
-      `If you are a host and use our WhatsApp assistant, we receive the messages you send to it, your WhatsApp number and the booking details you record with it, such as guest names, dates, number of guests and payments. We keep these so the assistant can show them back to you. Guest details that you record are used only for this purpose.`,
-    ],
-  },
-  {
     heading: `How we use your information`,
     points: [
       `To create and manage your account.`,
@@ -68,24 +62,6 @@ export const PRIVACY_SECTIONS: PolicySection[] = [
       `A host's contact details are shown only to visitors who are signed in.`,
       `Reviews are public and show the reviewer's name.`,
       `Your email address and password are never shown to other visitors.`,
-    ],
-  },
-  {
-    heading: `Services we rely on`,
-    paragraphs: [
-      `We use a small number of outside services to run BeNative. They handle information only to provide their service to us.`,
-    ],
-    points: [
-      `Supabase stores our database, accounts and uploaded photos.`,
-      `Vercel hosts the website.`,
-      `Google provides sign-in with Google and the email service we use to send and receive messages.`,
-      `Meta (WhatsApp) delivers messages to and from our host assistant.`,
-      `OpenStreetMap provides the maps and the place search. Your browser connects to it directly when you view a map.`,
-      `YouTube plays the videos on homestay pages, in its privacy-enhanced mode.`,
-      `Some photos are loaded from Unsplash.`,
-    ],
-    closing: [
-      `Some of these services may store or process information outside India.`,
     ],
   },
   {
