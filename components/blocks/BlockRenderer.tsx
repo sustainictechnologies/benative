@@ -25,7 +25,6 @@ interface Props {
   homestay: HomestayMeta
   isLoggedIn: boolean
   slug: string
-  teaser?: boolean   // hero only: the photo and tagline, without the text added below them
 }
 
 function LayoutRenderer({ block }: { block: HomestayBlock }) {
@@ -123,7 +122,7 @@ function SubTexts({ block }: { block: HomestayBlock }) {
   )
 }
 
-export default function BlockRenderer({ block, homestay, isLoggedIn, slug, teaser }: Props) {
+export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Props) {
   if ((block.content_data as any)?.hidden === true) return null
 
   const bgColor = ((block.content_data as any)?.styles?.['_bg-color'] as string | undefined) || undefined
@@ -139,12 +138,8 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug, tease
           hostName={homestay.host_name}
         />
         <div className="px-6 pb-4">
-          {!teaser && (
-            <>
-              <LayoutRenderer block={block} />
-              <SubTexts block={block} />
-            </>
-          )}
+          <LayoutRenderer block={block} />
+          <SubTexts block={block} />
         </div>
       </div>
     )
@@ -164,12 +159,13 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug, tease
 
   switch (block.block_type) {
     case 'contact':
+      // Without an account only the host's name is passed on, so the contact details never reach the browser
       content = (
         <ContactBlock
-          data={block.content_data as any}
+          data={isLoggedIn ? (block.content_data as any) : { host_name: (block.content_data as any)?.host_name }}
           hostName={homestay.host_name}
-          phone={homestay.contact_phone}
-          callingWindow={homestay.calling_window}
+          phone={isLoggedIn ? homestay.contact_phone : ''}
+          callingWindow={isLoggedIn ? homestay.calling_window : ''}
           isLoggedIn={isLoggedIn}
           slug={slug}
         />
@@ -211,11 +207,14 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug, tease
       return null
   }
 
+  // Text added under the contact section may repeat the contact details, so it is held back with them
+  const showAddedText = isLoggedIn || block.block_type !== 'contact'
+
   return (
     <>
       {content}
-      <LayoutRenderer block={block} />
-      <SubTexts block={block} />
+      {showAddedText && <LayoutRenderer block={block} />}
+      {showAddedText && <SubTexts block={block} />}
     </>
   )
 }

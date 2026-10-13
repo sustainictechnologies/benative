@@ -13,21 +13,6 @@ interface Props {
   params: { slug: string }
 }
 
-// How each section of a homestay page is named in the sign-up box shown to visitors without an account
-const SECTION_LABELS: Record<string, string> = {
-  'host-story':    "Host's story",
-  'activity-log':  'Activity log',
-  'rooms':         'Rooms',
-  'food':          'Food',
-  'gallery':       'Photos',
-  'video':         'Video',
-  'how-to-reach':  'How to reach',
-  'rules-block':   'House rules',
-  'map':           'Location',
-  'google-rating': 'Google rating',
-  'contact':       'Contact details',
-}
-
 // Cached so generateMetadata and the page share one DB round-trip per request
 const getHomestay = cache(async (slug: string) => {
   const supabase = createClient()
@@ -80,16 +65,18 @@ export default async function HomestayPage({ params }: Props) {
     youtube_video_id: homestay.youtube_video_id ?? null,
   }
 
-  // A visitor without an account sees the main photo and a sign-up box in place of everything else
-  const shownBlocks = blocks.filter((b) => (b.content_data as any)?.hidden !== true)
-  const heroBlock   = shownBlocks.find((b) => b.block_type === 'hero')
-  const lockedSections = [
-    ...Array.from(new Set(shownBlocks.map((b) => SECTION_LABELS[b.block_type]).filter(Boolean))),
-    'Guest reviews',
-  ]
+  // A visitor without an account gets the page blurred, cut short and out of reach, under a sign-in pop-up.
+  // React 18 only sets `inert` when it is given as an empty string, which its types do not allow, hence `object`.
+  const lockedProps: object = isLoggedIn ? {} : { 'aria-hidden': true, inert: '' }
 
   return (
-    <article className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-2">
+    <>
+    <article
+      className={`max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-2 ${
+        isLoggedIn ? '' : 'blur-[6px] pointer-events-none select-none max-h-[160vh] overflow-hidden'
+      }`}
+      {...lockedProps}
+    >
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -137,34 +124,26 @@ export default async function HomestayPage({ params }: Props) {
         </div>
       </div>
 
-      {isLoggedIn ? (
-        <>
-          {/* Dynamic blocks */}
-          <div className="space-y-6">
-            {blocks.map((block) => (
-              <BlockRenderer
-                key={block.id}
-                block={block}
-                isLoggedIn={isLoggedIn}
-                slug={params.slug}
-                homestay={meta}
-              />
-            ))}
-          </div>
+      {/* Dynamic blocks */}
+      <div className="space-y-6">
+        {blocks.map((block) => (
+          <BlockRenderer
+            key={block.id}
+            block={block}
+            isLoggedIn={isLoggedIn}
+            slug={params.slug}
+            homestay={meta}
+          />
+        ))}
+      </div>
 
-          {/* Reviews */}
-          <div className="pt-8 border-t border-stone-200 mt-10">
-            <ReviewSection homestayId={homestay.id} slug={params.slug} />
-          </div>
-        </>
-      ) : (
-        <div className="space-y-6">
-          {heroBlock && (
-            <BlockRenderer block={heroBlock} teaser isLoggedIn={false} slug={params.slug} homestay={meta} />
-          )}
-          <SignupGate slug={params.slug} sections={lockedSections} />
-        </div>
-      )}
+      {/* Reviews */}
+      <div className="pt-8 border-t border-stone-200 mt-10">
+        <ReviewSection homestayId={homestay.id} slug={params.slug} />
+      </div>
     </article>
+
+    {!isLoggedIn && <SignupGate slug={params.slug} />}
+    </>
   )
 }

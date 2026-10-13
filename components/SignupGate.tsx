@@ -1,50 +1,52 @@
 import Link from 'next/link'
-import { Lock } from 'lucide-react'
 import GoogleSignInButton from './GoogleSignInButton'
 
-interface Props {
-  slug: string
-  sections: string[]   // what the visitor will see after signing up
-}
-
-// Shown on a homestay page, in place of its details, to a visitor without an account
-export default function SignupGate({ slug, sections }: Props) {
+// The sign-in pop-up shown over a blurred homestay page to a visitor without an account.
+// It starts below the site header (h-16, z-[1000]) so the menu stays usable.
+export default function SignupGate({ slug }: { slug: string }) {
   const next = `/homestays/${slug}`
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white px-6 py-9 text-center">
-      <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-3.5">
-        <Lock size={20} className="text-brand-600" />
-      </div>
-      <h2 className="text-xl font-bold text-stone-900 mb-1.5">Create a free account to see this homestay</h2>
-      <p className="text-sm text-stone-500 leading-relaxed max-w-md mx-auto mb-4">
-        It takes less than a minute. Then you can see everything about this stay:
-      </p>
+    <div
+      role="dialog"
+      aria-labelledby="signup-gate-title"
+      className="fixed inset-x-0 top-16 bottom-0 z-[900] flex items-center justify-center bg-stone-900/40 p-4"
+    >
+      <div className="w-full max-w-sm rounded-2xl bg-white px-6 pt-7 pb-5 text-center shadow-2xl">
+        <h2 id="signup-gate-title" className="text-xl font-bold text-stone-900 mb-2">Sign in to continue</h2>
+        <p className="text-sm text-stone-500 leading-relaxed mb-5">
+          Create a free account to see the photos, rooms, how to reach and the host&apos;s contact details.
+        </p>
 
-      <ul className="flex flex-wrap justify-center gap-1.5 max-w-xl mx-auto mb-6">
-        {sections.map(label => (
-          <li key={label} className="text-xs font-medium bg-stone-100 text-stone-600 px-3 py-1 rounded-full">
-            {label}
-          </li>
-        ))}
-      </ul>
+        <GoogleSignInButton next={next} className="w-full" />
 
-      <div className="flex flex-wrap justify-center gap-2.5">
-        <GoogleSignInButton next={next} />
+        <div className="flex items-center gap-3 text-xs text-stone-400 my-3.5">
+          <span className="flex-1 h-px bg-stone-200" />
+          or
+          <span className="flex-1 h-px bg-stone-200" />
+        </div>
+
         <Link
           href={`/login?mode=signup&next=${next}`}
-          className="inline-flex items-center justify-center bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
+          className="flex w-full items-center justify-center bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
         >
           Sign up with email
         </Link>
-      </div>
 
-      <p className="text-[13px] text-stone-500 mt-4">
-        Already have an account?{' '}
-        <Link href={`/login?next=${next}`} className="text-brand-600 hover:text-brand-800 font-semibold">
-          Log in
+        <p className="text-[13px] text-stone-500 mt-4">
+          Already have an account?{' '}
+          <Link href={`/login?next=${next}`} className="text-brand-600 hover:text-brand-800 font-semibold">
+            Log in
+          </Link>
+        </p>
+
+        <Link
+          href="/discover"
+          className="block mt-4 pt-3.5 border-t border-stone-100 text-[12.5px] font-medium text-stone-400 hover:text-stone-600 transition-colors"
+        >
+          ← Back to Discover
         </Link>
-      </p>
+      </div>
     </div>
   )
 }
