@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import type { CanvasBlock } from '../BuilderTypes'
-import { ShieldCheck, MapPin, Ban, ScrollText, Globe2, X, Plus, LayoutGrid, Type, Image as ImageIcon, List, Navigation, Fish, Utensils, Sun, Heart, Leaf, Home, Sprout, Coffee, Wheat, Disc2, Salad, BedDouble, Users, Beef, Drumstick, Egg, ChefHat, Flame, Apple, Soup, Pizza, Sandwich, Carrot, Cherry, Cookie } from 'lucide-react'
+import { ShieldCheck, MapPin, Ban, ScrollText, Globe2, X, Plus, LayoutGrid, Info, Type, Image as ImageIcon, List, Navigation, Fish, Utensils, Sun, Heart, Leaf, Home, Sprout, Coffee, Wheat, Disc2, Salad, BedDouble, Users, Beef, Drumstick, Egg, ChefHat, Flame, Apple, Soup, Pizza, Sandwich, Carrot, Cherry, Cookie } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import EditableImage from '../EditableImage'
 import EditableText from '../EditableText'
@@ -31,6 +31,14 @@ function HeroPreview({ id }: { id: string }) {
           wrapperClassName="w-full h-full"
           className="w-full h-full object-cover"
         />
+      </div>
+      {/* Builder only: what this photo is used for on the site */}
+      <div className="flex items-start gap-2 px-6 py-2.5 bg-brand-50 border-b border-brand-100 text-xs text-brand-800">
+        <Info size={14} className="mt-0.5 shrink-0" />
+        <p>
+          This photo is used as the homestay&apos;s card image on Discover. The homestay page opens with the
+          photo gallery instead, if the homestay has one.
+        </p>
       </div>
       <div className="px-6 py-4">
         <EditableText

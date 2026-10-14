@@ -5,12 +5,13 @@ import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 interface Props {
   data: HeroBlockData & { layout?: any }
   hostName: string
+  hideCover?: boolean   // the photo gallery opens the page instead
 }
 
-export default function HeroBlock({ data, hostName }: Props) {
+export default function HeroBlock({ data, hostName, hideCover }: Props) {
   return (
     <>
-      {data.cover_image_url && (
+      {data.cover_image_url && !hideCover && (
         <div className="relative w-full h-56 sm:h-72 bg-stone-100 overflow-hidden">
           <Image
             src={supabaseImgUrl(data.cover_image_url, { width: 1200, quality: 80 })}

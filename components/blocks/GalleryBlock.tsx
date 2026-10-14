@@ -15,13 +15,10 @@ interface Props {
   }
 }
 
-const RATIO_CLASS: Record<string, string> = {
-  square:    'aspect-square',
-  landscape: 'aspect-video',
-  portrait:  'aspect-[3/4]',
-}
-
-const VISIBLE_LIMIT = 6
+// The first photo large across the block, whatever shape (ratio) was picked in the builder; the next ones in a
+// single row of small photos below: six on a computer, four on a phone, with "+N" on the last one shown.
+const SMALL_ON_COMPUTER = 6
+const SMALL_ON_PHONE    = 4
 
 export default function GalleryBlock({ data }: Props) {
   const photos: GalleryItem[] = data.items
@@ -48,51 +45,62 @@ export default function GalleryBlock({ data }: Props) {
 
   if (photos.length === 0) return null
 
-  // Count by grid cells (landscape = 3 cols, others = 1) so cut is always at exactly 2 rows
-  let cellCount = 0
-  let visibleCount = photos.length
-  for (let i = 0; i < photos.length; i++) {
-    const cells = (photos[i].ratio ?? 'square') === 'landscape' ? 3 : 1
-    if (cellCount + cells > VISIBLE_LIMIT) { visibleCount = i; break }
-    cellCount += cells
-  }
-
-  const visiblePhotos   = photos.slice(0, visibleCount)
-  const hiddenCount     = photos.length - visibleCount
-  const showPlusOverlay = hiddenCount > 0
+  const rest         = photos.slice(1, 1 + SMALL_ON_COMPUTER)        // small photos (index in `photos` is i + 1)
+  const hiddenPhone  = photos.length - 1 - SMALL_ON_PHONE           // photos after the last small one shown
+  const hiddenDesk   = photos.length - 1 - SMALL_ON_COMPUTER
 
   return (
     <>
       <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden">
-        <div className="grid grid-cols-3 gap-px items-start grid-flow-row-dense">
-          {visiblePhotos.map((photo, i) => {
-            const ratio = photo.ratio ?? 'square'
-            const isLastVisible = i === visiblePhotos.length - 1 && showPlusOverlay
-            return (
-              <div
-                key={i}
-                className={`relative ${ratio === 'landscape' ? 'col-span-3' : 'col-span-1'}`}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={supabaseImgUrl(photo.url, { width: 800, quality: 75 })}
-                  alt={`Gallery photo ${i + 1}`}
-                  onClick={() => setSelected(i)}
-                  className={`w-full object-cover cursor-pointer hover:opacity-90 transition-opacity ${RATIO_CLASS[ratio]}`}
-                />
-                {isLastVisible && (
-                  <div
-                    onClick={() => setSelected(visibleCount)}
-                    className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center cursor-pointer gap-1"
-                  >
-                    <span className="text-white text-2xl font-bold">+{hiddenCount}</span>
-                    <span className="text-white/80 text-xs font-medium">more photos</span>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={supabaseImgUrl(photos[0].url, { width: 1600, quality: 80 })}
+          alt={`Gallery photo 1 of ${photos.length}`}
+          onClick={() => setSelected(0)}
+          className="w-full aspect-video object-cover cursor-pointer hover:opacity-95 transition-opacity"
+        />
+
+        {rest.length > 0 && (
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-0.5 mt-0.5">
+            {rest.map((photo, i) => {
+              const onPhone   = i < SMALL_ON_PHONE
+              const lastPhone = i === SMALL_ON_PHONE - 1 && hiddenPhone > 0
+              const lastDesk  = i === SMALL_ON_COMPUTER - 1 && hiddenDesk > 0
+              return (
+                <div key={i} className={`relative aspect-[4/3] ${onPhone ? '' : 'hidden sm:block'}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={supabaseImgUrl(photo.url, { width: 400, quality: 70 })}
+                    alt={`Gallery photo ${i + 2} of ${photos.length}`}
+                    loading="lazy"
+                    onClick={() => setSelected(i + 1)}
+                    className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  />
+                  {lastPhone && (
+                    <button
+                      type="button"
+                      onClick={() => setSelected(i + 2)}
+                      className="sm:hidden absolute inset-0 bg-black/55 flex flex-col items-center justify-center gap-0.5 text-white"
+                    >
+                      <span className="text-lg font-bold">+{hiddenPhone}</span>
+                      <span className="text-[10px] font-medium text-white/80">more photos</span>
+                    </button>
+                  )}
+                  {lastDesk && (
+                    <button
+                      type="button"
+                      onClick={() => setSelected(i + 2)}
+                      className="hidden sm:flex absolute inset-0 bg-black/55 flex-col items-center justify-center gap-1 text-white"
+                    >
+                      <span className="text-2xl font-bold">+{hiddenDesk}</span>
+                      <span className="text-xs font-medium text-white/80">more photos</span>
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Lightbox */}

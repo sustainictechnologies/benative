@@ -25,6 +25,7 @@ interface Props {
   homestay: HomestayMeta
   isLoggedIn: boolean
   slug: string
+  hideHeroCover?: boolean   // the photo gallery opens the page, so the hero shows its text only
 }
 
 function LayoutRenderer({ block }: { block: HomestayBlock }) {
@@ -122,7 +123,7 @@ function SubTexts({ block }: { block: HomestayBlock }) {
   )
 }
 
-export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Props) {
+export default function BlockRenderer({ block, homestay, isLoggedIn, slug, hideHeroCover }: Props) {
   if ((block.content_data as any)?.hidden === true) return null
 
   const bgColor = ((block.content_data as any)?.styles?.['_bg-color'] as string | undefined) || undefined
@@ -131,11 +132,16 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug }: Pro
   // Hero and host-story: BlockRenderer owns the outer border so LayoutRenderer
   // can sit inside it — keeping added text/image/list blocks within the card border.
   if (block.block_type === 'hero') {
+    // Without its cover photo, a hero that has no text would be an empty box
+    const d = block.content_data as any
+    if (hideHeroCover && !d?.tagline && !d?.layout?.rows?.length && !d?.sub_texts?.length) return null
+
     return (
       <div className="rounded-2xl overflow-hidden border border-stone-200 bg-white" style={bgStyle}>
         <HeroBlock
           data={block.content_data as any}
           hostName={homestay.host_name}
+          hideCover={hideHeroCover}
         />
         <div className="px-6 pb-4">
           <LayoutRenderer block={block} />

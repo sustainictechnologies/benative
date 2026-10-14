@@ -65,6 +65,15 @@ export default async function HomestayPage({ params }: Props) {
     youtube_video_id: homestay.youtube_video_id ?? null,
   }
 
+  // The first photo gallery with photos opens the page, and the hero then shows its text without its cover photo.
+  // A homestay without gallery photos keeps its cover photo and the order set in the builder.
+  const gallery = blocks.find((b) => {
+    const d = b.content_data as any
+    return b.block_type === 'gallery' && d?.hidden !== true &&
+      ((d?.items ?? []).some((item: any) => item?.url) || (d?.images ?? []).some(Boolean))
+  })
+  const orderedBlocks = gallery ? [gallery, ...blocks.filter((b) => b !== gallery)] : blocks
+
   // A visitor without an account gets the page blurred, cut short and out of reach, under a sign-in pop-up.
   // React 18 only sets `inert` when it is given as an empty string, which its types do not allow, hence `object`.
   const lockedProps: object = isLoggedIn ? {} : { 'aria-hidden': true, inert: '' }
@@ -124,15 +133,16 @@ export default async function HomestayPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Dynamic blocks */}
+      {/* Dynamic blocks — the photo gallery always comes first */}
       <div className="space-y-6">
-        {blocks.map((block) => (
+        {orderedBlocks.map((block) => (
           <BlockRenderer
             key={block.id}
             block={block}
             isLoggedIn={isLoggedIn}
             slug={params.slug}
             homestay={meta}
+            hideHeroCover={!!gallery}
           />
         ))}
       </div>
