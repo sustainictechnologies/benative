@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Topbar from '../_components/Topbar'
-import { Monitor, Users, RefreshCw, Smartphone, Laptop, Tablet } from 'lucide-react'
+import { Monitor, Users, RefreshCw, Smartphone, Laptop, Tablet, Home, ChevronDown } from 'lucide-react'
 
 interface PageView {
   id: string
@@ -16,6 +16,14 @@ interface PageView {
 interface PageStat {
   path: string
   count: number
+}
+
+interface HomestayVisits {
+  slug: string
+  title: string
+  today: number
+  week: number
+  total: number
 }
 
 function getDevice(ua: string | null) {
@@ -38,7 +46,10 @@ export default function AnalyticsPage() {
   const [todayCount, setToday]      = useState(0)
   const [weekCount, setWeek]        = useState(0)
   const [topPages, setTopPages]     = useState<PageStat[]>([])
-  const [refreshed, setRefreshed]   = useState<Date>(new Date())
+  const [homestayVisits, setHomestayVisits] = useState<HomestayVisits[]>([])
+  const [showHomestays, setShowHomestays]   = useState(false)   // the table opens from the Homestay visits card
+  // Set only in the browser after the first fetch, so the server and the browser never print different times
+  const [refreshed, setRefreshed]   = useState<Date | null>(null)
   const [loading, setLoading]       = useState(true)
 
   const fetchData = useCallback(async () => {
@@ -69,11 +80,25 @@ export default function AnalyticsPage() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 6)
 
+    // Visits to each homestay's page: today, last 7 days and all time. Every homestay is listed, even with no visits.
+    const { data: homestays } = await supabase.from('homestays').select('title, slug')
+    const perHomestay = await Promise.all((homestays ?? []).map(async (h) => {
+      const path = `/homestays/${h.slug}`
+      const [{ count: t }, { count: w }, { count: all }] = await Promise.all([
+        supabase.from('page_views').select('*', { count: 'exact', head: true }).eq('path', path).gte('created_at', startOfDay),
+        supabase.from('page_views').select('*', { count: 'exact', head: true }).eq('path', path).gte('created_at', startOfWeek),
+        supabase.from('page_views').select('*', { count: 'exact', head: true }).eq('path', path),
+      ])
+      return { slug: h.slug, title: h.title, today: t || 0, week: w || 0, total: all || 0 }
+    }))
+    perHomestay.sort((a, b) => b.week - a.week || b.total - a.total)
+
     setRecent(recentData || [])
     setActive(active || 0)
     setToday(today || 0)
     setWeek(week || 0)
     setTopPages(sorted)
+    setHomestayVisits(perHomestay)
     setRefreshed(new Date())
     setLoading(false)
   }, [])
@@ -91,7 +116,7 @@ export default function AnalyticsPage() {
       <main className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
 
         {/* Stat cards */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           {[
             { label: 'Active now', value: activeCount, sub: 'last 5 minutes', icon: Monitor, bg: 'bg-emerald-50', color: 'text-emerald-600', bar: 'bg-emerald-400' },
             { label: 'Visits today', value: todayCount, sub: 'since midnight',  icon: Users,   bg: 'bg-brand-50',   color: 'text-brand-600',   bar: 'bg-brand-400'   },
@@ -107,7 +132,89 @@ export default function AnalyticsPage() {
               <div className={`mt-3 h-1 rounded-full ${bg}`} />
             </div>
           ))}
+
+          {/* Homestay visits: opens and closes the table of visits per homestay */}
+          <button
+            type="button"
+            onClick={() => setShowHomestays((open) => !open)}
+            aria-expanded={showHomestays}
+            className={`text-left bg-white rounded-2xl border p-5 shadow-sm transition-colors ${
+              showHomestays ? 'border-amber-300 ring-2 ring-amber-100' : 'border-stone-100 hover:border-amber-200'
+            }`}
+          >
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mb-3">
+              <Home size={18} className="text-amber-600" />
+            </div>
+            <p className="text-2xl font-bold text-stone-900">{homestayVisits.reduce((sum, h) => sum + h.week, 0)}</p>
+            <p className="text-sm text-stone-400 mt-0.5">Homestay visits</p>
+            <p className="text-xs text-stone-300 mt-0.5 flex items-center gap-1">
+              last 7 days · {showHomestays ? 'hide list' : 'see each homestay'}
+              <ChevronDown size={12} className={`transition-transform ${showHomestays ? 'rotate-180' : ''}`} />
+            </p>
+            <div className="mt-3 h-1 rounded-full bg-amber-50" />
+          </button>
         </div>
+
+        {/* Homestay visits, opened from the card above */}
+        {showHomestays && (
+          <div className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-stone-700">Homestay Visits</h3>
+              <span className="text-xs text-stone-300">Sorted by last 7 days</span>
+            </div>
+
+            {loading ? (
+              <div className="space-y-2">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-9 bg-stone-50 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : homestayVisits.length === 0 ? (
+              <p className="text-sm text-stone-400 text-center py-10">No homestays yet</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-xs text-stone-400 border-b border-stone-100">
+                      <th className="text-left font-medium pb-2">Homestay</th>
+                      <th className="text-right font-medium pb-2 w-20">Today</th>
+                      <th className="text-right font-medium pb-2 w-28">Last 7 days</th>
+                      <th className="text-right font-medium pb-2 w-24">All time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {homestayVisits.map((h) => {
+                      const busiest = homestayVisits[0]?.week || 1
+                      return (
+                        <tr key={h.slug} className="border-b border-stone-50 last:border-0">
+                          <td className="py-2.5 pr-4">
+                            <a
+                              href={`/homestays/${h.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-stone-700 hover:text-brand-700 transition-colors"
+                            >
+                              {h.title}
+                            </a>
+                            <div className="mt-1.5 h-1.5 max-w-xs bg-stone-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-brand-400 rounded-full transition-all duration-500"
+                                style={{ width: `${(h.week / busiest) * 100}%` }}
+                              />
+                            </div>
+                          </td>
+                          <td className="py-2.5 text-right tabular-nums text-stone-600">{h.today}</td>
+                          <td className="py-2.5 text-right tabular-nums font-semibold text-stone-800">{h.week}</td>
+                          <td className="py-2.5 text-right tabular-nums text-stone-600">{h.total}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Main grid */}
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
@@ -117,7 +224,7 @@ export default function AnalyticsPage() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-stone-700">Recent Visits</h3>
               <span className="text-xs text-stone-300 flex items-center gap-1">
-                <RefreshCw size={10} /> {refreshed.toLocaleTimeString()}
+                <RefreshCw size={10} /> {refreshed?.toLocaleTimeString()}
               </span>
             </div>
 
