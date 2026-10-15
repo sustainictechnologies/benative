@@ -6,7 +6,7 @@ import ReviewSection from '@/components/reviews/ReviewSection'
 import SignupGate from '@/components/SignupGate'
 import type { HomestayBlock } from '@/types/blocks.types'
 import { SUB_CATEGORY_GROUPS } from '@/lib/subCategories'
-import { MapPin, Globe2, ShieldCheck, Clock } from 'lucide-react'
+import { MapPin, Globe2, Clock } from 'lucide-react'
 
 export const revalidate = 60
 
@@ -111,15 +111,7 @@ export default async function HomestayPage({ params }: Props) {
     >
       {/* Header */}
       <div className="mb-5">
-        {/* The other tags have their own block, below the gallery unless placed elsewhere in the builder */}
-        {homestay.is_verified && (
-          <div className="mb-3">
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-full">
-              <ShieldCheck size={12} /> Verified Host
-            </span>
-          </div>
-        )}
-
+        {/* The tags have their own block, below the gallery unless placed elsewhere in the builder */}
         <h1 className="text-3xl font-bold text-stone-900 mb-2">{homestay.title}</h1>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-stone-500">
