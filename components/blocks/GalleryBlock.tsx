@@ -15,10 +15,11 @@ interface Props {
   }
 }
 
-// The first photo large across the block, whatever shape (ratio) was picked in the builder; the next ones in a
-// single row of small photos below: six on a computer, four on a phone, with "+N" on the last one shown.
-const SMALL_ON_COMPUTER = 6
+// Whatever shape (ratio) was picked in the builder:
+// Phone: the first photo large, a row of up to four small photos below, "+N" on the last one shown.
+// Computer: the first photo large with up to four small ones beside it, "+N" on the last one shown.
 const SMALL_ON_PHONE    = 4
+const SMALL_ON_COMPUTER = 4
 
 export default function GalleryBlock({ data }: Props) {
   const photos: GalleryItem[] = data.items
@@ -45,62 +46,93 @@ export default function GalleryBlock({ data }: Props) {
 
   if (photos.length === 0) return null
 
-  const rest         = photos.slice(1, 1 + SMALL_ON_COMPUTER)        // small photos (index in `photos` is i + 1)
-  const hiddenPhone  = photos.length - 1 - SMALL_ON_PHONE           // photos after the last small one shown
-  const hiddenDesk   = photos.length - 1 - SMALL_ON_COMPUTER
+  const phoneSmall  = photos.slice(1, 1 + SMALL_ON_PHONE)      // index in `photos` is i + 1
+  const phoneHidden = photos.length - 1 - SMALL_ON_PHONE        // photos after the last small one shown
+  const deskSmall   = photos.slice(1, 1 + SMALL_ON_COMPUTER)
+  const deskHidden  = photos.length - 1 - SMALL_ON_COMPUTER
+  // Two columns of small photos when there are three or four; with three, the last one runs along the bottom
+  const deskColumns = deskSmall.length >= 3 ? 'grid-cols-[2fr_1fr_1fr]' : deskSmall.length > 0 ? 'grid-cols-[2fr_1fr]' : 'grid-cols-1'
 
   return (
     <>
-      <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={supabaseImgUrl(photos[0].url, { width: 1600, quality: 80 })}
-          alt={`Gallery photo 1 of ${photos.length}`}
-          onClick={() => setSelected(0)}
-          className="w-full aspect-video object-cover cursor-pointer hover:opacity-95 transition-opacity"
-        />
-
-        {rest.length > 0 && (
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-0.5 mt-0.5">
-            {rest.map((photo, i) => {
-              const onPhone   = i < SMALL_ON_PHONE
-              const lastPhone = i === SMALL_ON_PHONE - 1 && hiddenPhone > 0
-              const lastDesk  = i === SMALL_ON_COMPUTER - 1 && hiddenDesk > 0
-              return (
-                <div key={i} className={`relative aspect-[4/3] ${onPhone ? '' : 'hidden sm:block'}`}>
+      {/* One wrapper, so the hidden layout does not add page spacing */}
+      <div>
+        {/* Phone */}
+        <div className="sm:hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={supabaseImgUrl(photos[0].url, { width: 1600, quality: 80 })}
+            alt={`Gallery photo 1 of ${photos.length}`}
+            onClick={() => setSelected(0)}
+            className="w-full aspect-video object-cover rounded-lg cursor-pointer"
+          />
+          {phoneSmall.length > 0 && (
+            <div className="grid grid-cols-4 gap-1.5 mt-1.5">
+              {phoneSmall.map((photo, i) => (
+                <div key={i} className="relative aspect-[4/3] rounded-lg overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={supabaseImgUrl(photo.url, { width: 400, quality: 70 })}
                     alt={`Gallery photo ${i + 2} of ${photos.length}`}
                     loading="lazy"
                     onClick={() => setSelected(i + 1)}
-                    className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                    className="w-full h-full object-cover cursor-pointer"
                   />
-                  {lastPhone && (
+                  {i === SMALL_ON_PHONE - 1 && phoneHidden > 0 && (
                     <button
                       type="button"
                       onClick={() => setSelected(i + 2)}
-                      className="sm:hidden absolute inset-0 bg-black/55 flex flex-col items-center justify-center gap-0.5 text-white"
+                      className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center gap-0.5 text-white"
                     >
-                      <span className="text-lg font-bold">+{hiddenPhone}</span>
+                      <span className="text-lg font-bold">+{phoneHidden}</span>
                       <span className="text-[10px] font-medium text-white/80">more photos</span>
                     </button>
                   )}
-                  {lastDesk && (
-                    <button
-                      type="button"
-                      onClick={() => setSelected(i + 2)}
-                      className="hidden sm:flex absolute inset-0 bg-black/55 flex-col items-center justify-center gap-1 text-white"
-                    >
-                      <span className="text-2xl font-bold">+{hiddenDesk}</span>
-                      <span className="text-xs font-medium text-white/80">more photos</span>
-                    </button>
-                  )}
                 </div>
-              )
-            })}
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Computer */}
+        <div className="hidden sm:block">
+          <div className={`grid gap-1.5 h-[420px] grid-rows-2 ${deskColumns}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={supabaseImgUrl(photos[0].url, { width: 1600, quality: 80 })}
+              alt={`Gallery photo 1 of ${photos.length}`}
+              onClick={() => setSelected(0)}
+              className="w-full h-full row-span-2 object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
+            />
+            {deskSmall.map((photo, i) => (
+              <div
+                key={i}
+                className={`relative min-h-0 rounded-lg overflow-hidden ${
+                  deskSmall.length === 1 ? 'row-span-2' : deskSmall.length === 3 && i === 2 ? 'col-span-2' : ''
+                }`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={supabaseImgUrl(photo.url, { width: 600, quality: 75 })}
+                  alt={`Gallery photo ${i + 2} of ${photos.length}`}
+                  loading="lazy"
+                  onClick={() => setSelected(i + 1)}
+                  className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                />
+                {i === SMALL_ON_COMPUTER - 1 && deskHidden > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSelected(i + 2)}
+                    className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center gap-1 text-white"
+                  >
+                    <span className="text-2xl font-bold">+{deskHidden}</span>
+                    <span className="text-xs font-medium text-white/80">more photos</span>
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Lightbox */}
