@@ -1107,6 +1107,30 @@ function ReviewsPreview() {
   )
 }
 
+/* ─── 9b. TAGS ───────────────────────────────────────────── */
+// The real tags come from the homestay itself, so the builder shows a sample of how they look
+function TagsPreview() {
+  return (
+    <div className="space-y-2.5">
+      <div className="flex flex-wrap gap-2">
+        {['Among the Green', 'Farm Stays', 'Wake Up in Nature'].map(label => (
+          <span key={label} className="text-xs font-medium bg-brand-50 text-brand-700 px-2.5 py-1 rounded-full">{label}</span>
+        ))}
+        {['Gated Parking', 'Power Backup', 'Running Hot Water / Geyser'].map(label => (
+          <span key={label} className="text-xs bg-stone-100 text-stone-600 px-2.5 py-1 rounded-full">{label}</span>
+        ))}
+      </div>
+      <div className="flex items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2 text-xs text-brand-800">
+        <Info size={14} className="mt-0.5 shrink-0" />
+        <p>
+          Sample tags. The homestay page shows this homestay&apos;s own sub-categories and facilities here, as set in
+          Admin → Homestays. Without this block, they appear right below the photo gallery.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 /* ─── 10. FOOD SECTION ───────────────────────────────────── */
 
 const FOOD_ICON_MAP: Record<string, { Icon: LucideIcon; bg: string; color: string; tagBg: string; tagText: string; tagBorder: string }> = {
@@ -1752,6 +1776,7 @@ function BlockContent({ block }: { block: CanvasBlock }) {
     case 'gallery':      return <GalleryPreview id={id} />
     case 'rooms':        return <RoomsPreview id={id} />
     case 'reviews':      return <ReviewsPreview />
+    case 'tags':         return <TagsPreview />
     case 'food':         return <FoodPreview id={id} />
     case 'whatsapp':     return <WhatsappPreview />
     case 'map':           return <MapPreview id={id} />

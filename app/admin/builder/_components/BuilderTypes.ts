@@ -6,6 +6,7 @@ export type BlockType =
   | 'how-to-reach'
   | 'video'
   | 'gallery'
+  | 'tags'
 
   | 'rooms'
   | 'reviews'
@@ -58,6 +59,7 @@ export const PALETTE = [
   { type: 'how-to-reach' as BlockType, label: 'How to Reach',     emoji: '🗺️', desc: 'Directions by road/train/air',  group: 'Core' },
   { type: 'video'       as BlockType, label: 'Video',            emoji: '🎥', desc: 'YouTube embed + caption', group: 'Core' },
   { type: 'gallery'     as BlockType, label: 'Gallery',          emoji: '🖼️', desc: 'Photo grid showcase', group: 'Extra' },
+  { type: 'tags'        as BlockType, label: 'Tags',             emoji: '🏷️', desc: 'Sub-categories & facilities', group: 'Extra' },
 
   { type: 'rooms'       as BlockType, label: 'Rooms',            emoji: '🛏️', desc: 'Room types & pricing', group: 'Extra' },
   { type: 'reviews'     as BlockType, label: 'Reviews',          emoji: '⭐', desc: 'Guest testimonials', group: 'Extra' },

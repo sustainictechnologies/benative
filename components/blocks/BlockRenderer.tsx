@@ -12,12 +12,14 @@ import MapBlock from './MapBlock'
 import RoomsBlock from './RoomsBlock'
 import FoodBlock from './FoodBlock'
 import GoogleRatingBlock from './GoogleRatingBlock'
+import TagsBlock from './TagsBlock'
 
 interface HomestayMeta {
   host_name: string
   contact_phone: string
   calling_window: string
   youtube_video_id: string | null
+  tags?: { subCategories: string[]; facilities: string[] }
 }
 
 interface Props {
@@ -208,6 +210,9 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug, hideH
       break
     case 'google-rating':
       content = <GoogleRatingBlock data={block.content_data as any} />
+      break
+    case 'tags':
+      content = <TagsBlock subCategories={homestay.tags?.subCategories ?? []} facilities={homestay.tags?.facilities ?? []} />
       break
     default:
       return null

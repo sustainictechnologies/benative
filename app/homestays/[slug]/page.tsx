@@ -5,6 +5,7 @@ import BlockRenderer from '@/components/blocks/BlockRenderer'
 import ReviewSection from '@/components/reviews/ReviewSection'
 import SignupGate from '@/components/SignupGate'
 import type { HomestayBlock } from '@/types/blocks.types'
+import { SUB_CATEGORY_GROUPS } from '@/lib/subCategories'
 import { MapPin, Globe2, ShieldCheck, Clock } from 'lucide-react'
 
 export const revalidate = 60
@@ -12,6 +13,10 @@ export const revalidate = 60
 interface Props {
   params: { slug: string }
 }
+
+const SUB_CATEGORY_LABELS = new Map(
+  SUB_CATEGORY_GROUPS.flatMap((group) => group.subCategories.map((sub) => [sub.key, sub.label] as [string, string])),
+)
 
 // Cached so generateMetadata and the page share one DB round-trip per request
 const getHomestay = cache(async (slug: string) => {
@@ -22,7 +27,7 @@ const getHomestay = cache(async (slug: string) => {
       id, title, slug, village_name, location_district, is_verified,
       host_name, contact_phone, calling_window, languages_spoken,
       address, whatsapp_number, email, youtube_video_id,
-      created_at, updated_at,
+      created_at, updated_at, sub_categories,
       homestay_tags ( tags ( id, name, slug ) ),
       homestay_blocks ( id, block_type, sort_order, content_data )
     `)
@@ -55,6 +60,14 @@ export default async function HomestayPage({ params }: Props) {
     homestay.homestay_tags ?? []
   ).map((ht: any) => ht.tags).filter(Boolean)
 
+  // The Tags block shows the Discover sub-categories and the facility (spec_*) tags; the older category tags are left out
+  const tags = {
+    subCategories: ((homestay.sub_categories ?? []) as string[])
+      .map((key) => SUB_CATEGORY_LABELS.get(key))
+      .filter((label): label is string => !!label),
+    facilities: categories.filter((c) => c.slug.startsWith('spec_')).map((c) => c.name),
+  }
+
   const blocks: HomestayBlock[] = (homestay.homestay_blocks ?? [])
     .sort((a: any, b: any) => a.sort_order - b.sort_order)
 
@@ -63,6 +76,7 @@ export default async function HomestayPage({ params }: Props) {
     contact_phone: homestay.contact_phone,
     calling_window: homestay.calling_window,
     youtube_video_id: homestay.youtube_video_id ?? null,
+    tags,
   }
 
   // The first photo gallery with photos opens the page, and the hero then shows its text without its cover photo.
@@ -72,7 +86,16 @@ export default async function HomestayPage({ params }: Props) {
     return b.block_type === 'gallery' && d?.hidden !== true &&
       ((d?.items ?? []).some((item: any) => item?.url) || (d?.images ?? []).some(Boolean))
   })
-  const orderedBlocks = gallery ? [gallery, ...blocks.filter((b) => b !== gallery)] : blocks
+  let orderedBlocks = gallery ? [gallery, ...blocks.filter((b) => b !== gallery)] : blocks
+
+  // The tags appear where the builder's Tags block is placed. Without one, right below the gallery
+  // (or first, when there is no gallery).
+  if (!blocks.some((b) => b.block_type === 'tags')) {
+    const tagsBlock: HomestayBlock = { id: 'tags-default', homestay_id: homestay.id, sort_order: 0, block_type: 'tags', content_data: {} }
+    orderedBlocks = gallery
+      ? [orderedBlocks[0], tagsBlock, ...orderedBlocks.slice(1)]
+      : [tagsBlock, ...orderedBlocks]
+  }
 
   // A visitor without an account gets the page blurred, cut short and out of reach, under a sign-in pop-up.
   // React 18 only sets `inert` when it is given as an empty string, which its types do not allow, hence `object`.
@@ -87,22 +110,15 @@ export default async function HomestayPage({ params }: Props) {
       {...lockedProps}
     >
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          {homestay.is_verified && (
+      <div className="mb-5">
+        {/* The other tags have their own block, below the gallery unless placed elsewhere in the builder */}
+        {homestay.is_verified && (
+          <div className="mb-3">
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-full">
               <ShieldCheck size={12} /> Verified Host
             </span>
-          )}
-          {categories.map((c) => (
-            <span
-              key={c.id}
-              className="text-xs bg-stone-100 text-stone-600 px-2.5 py-1 rounded-full"
-            >
-              {c.name}
-            </span>
-          ))}
-        </div>
+          </div>
+        )}
 
         <h1 className="text-3xl font-bold text-stone-900 mb-2">{homestay.title}</h1>
 
