@@ -18,6 +18,18 @@ export interface SubCategoryGroup {
 
 export const SUB_CATEGORY_GROUPS: SubCategoryGroup[] = [
   {
+    key:   'experience',
+    label: 'By the Experience',
+    subCategories: [
+      { key: 'eat_like_a_local',      label: 'Eat Like a Local' },
+      { key: 'wake_up_in_nature',     label: 'Wake Up in Nature' },
+      { key: 'learn_something_new',   label: 'Learn Something New' },
+      { key: 'go_offline',            label: 'Go Offline' },
+      { key: 'meet_the_people',       label: 'Meet the People' },
+      { key: 'do_absolutely_nothing', label: 'Do Absolutely Nothing' },
+    ],
+  },
+  {
     key:   'place',
     label: 'By the Place',
     subCategories: [
@@ -51,18 +63,6 @@ export const SUB_CATEGORY_GROUPS: SubCategoryGroup[] = [
       { key: 'transit_stays',            label: 'In Transit Stays' },
       { key: 'solo_stays',               label: 'Solo Stays' },
       { key: 'work_from_somewhere_else', label: 'Work From Somewhere Else' },
-    ],
-  },
-  {
-    key:   'experience',
-    label: 'By the Experience',
-    subCategories: [
-      { key: 'eat_like_a_local',      label: 'Eat Like a Local' },
-      { key: 'wake_up_in_nature',     label: 'Wake Up in Nature' },
-      { key: 'learn_something_new',   label: 'Learn Something New' },
-      { key: 'go_offline',            label: 'Go Offline' },
-      { key: 'meet_the_people',       label: 'Meet the People' },
-      { key: 'do_absolutely_nothing', label: 'Do Absolutely Nothing' },
     ],
   },
 ]

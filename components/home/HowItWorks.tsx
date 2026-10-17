@@ -35,11 +35,11 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section className="bg-[#f8f7f2] px-4 sm:px-6 py-20 sm:py-28">
+    <section className="bg-[#f8f7f2] px-4 sm:px-6 py-12 sm:py-16">
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <div className="mb-16">
+        <div className="mb-12">
           <h2 className="text-2xl sm:text-3xl font-bold text-brand-800 mb-3">
             How it Works
           </h2>

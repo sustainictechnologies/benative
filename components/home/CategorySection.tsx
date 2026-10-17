@@ -13,16 +13,17 @@ type MainCat = {
 // The category names come from the shared list, so they match the Discover page
 const labelOf = (key: string) => SUB_CATEGORY_GROUPS.find(group => group.key === key)?.label ?? ''
 
+// Same order as the Discover page (lib/subCategories.ts)
 const CATEGORIES: MainCat[] = [
+  { key: 'experience', label: labelOf('experience'), icon: Sparkles,  img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=70', alt: 'Local experience' },
   { key: 'place',      label: labelOf('place'),      icon: MapPin,    img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=70', alt: 'Coastal place'    },
   { key: 'home',       label: labelOf('home'),       icon: Home,      img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=70', alt: 'Family home'      },
   { key: 'trip',       label: labelOf('trip'),       icon: Compass,   img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=70', alt: 'Travel and trip'  },
-  { key: 'experience', label: labelOf('experience'), icon: Sparkles,  img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=70', alt: 'Local experience' },
 ]
 
 export default function CategorySection({ imageMap = {} }: { imageMap?: Record<string, string> }) {
   return (
-    <section className="bg-[#f8f7f2] px-4 sm:px-6 pt-10 pb-20 sm:pt-12 sm:pb-24">
+    <section className="bg-[#f8f7f2] px-4 sm:px-6 py-10 sm:py-12">
       <div className="max-w-7xl mx-auto">
 
         <div className="mb-10">
