@@ -14,7 +14,7 @@ export interface PolicySection {
   closing?:    string[]
 }
 
-export const PRIVACY_UPDATED = '13 October 2026'
+export const PRIVACY_UPDATED = '17 October 2026'
 
 export const PRIVACY_INTRO = `This page explains what information BeNative collects when you use our website, why we collect it and what choices you have. We have tried to keep it short and plain.`
 
@@ -52,7 +52,7 @@ export const PRIVACY_SECTIONS: PolicySection[] = [
       `To understand how the website is used and to improve it.`,
     ],
     closing: [
-      `We do not sell your information, and we do not use it for advertising.`,
+      `We do not sell your information. BeNative may show advertisements, but we do not give advertisers your name, email address or phone number.`,
     ],
   },
   {
@@ -67,7 +67,7 @@ export const PRIVACY_SECTIONS: PolicySection[] = [
   {
     heading: `Cookies`,
     paragraphs: [
-      `We use cookies only to keep you signed in. We do not use advertising cookies. A video you choose to play may set cookies from YouTube.`,
+      `We use cookies to keep you signed in. A video you choose to play may set cookies from YouTube. If we start showing ads from an advertising service such as Google, that service may also use cookies to choose which ads to show. We will update this page before that starts, and explain how to turn off personalised ads.`,
     ],
   },
   {
