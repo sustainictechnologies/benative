@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/adminAuth'
 import { revalidatePath } from 'next/cache'
 import { SUB_CATEGORY_KEYS } from '@/lib/subCategories'
 
@@ -9,6 +10,7 @@ export async function linkHostAccount(
   homestayId: string,
   email: string,
 ): Promise<{ error?: string; success?: boolean; email?: string }> {
+  assertAdmin()
   const supabase = createAdminClient()
 
   const { data: { users }, error } = await supabase.auth.admin.listUsers({ perPage: 1000 })
@@ -31,6 +33,7 @@ export async function linkHostAccount(
 export async function unlinkHostAccount(
   homestayId: string,
 ): Promise<{ error?: string; success?: boolean }> {
+  assertAdmin()
   const supabase = createAdminClient()
 
   const { error } = await supabase
@@ -45,6 +48,7 @@ export async function unlinkHostAccount(
 }
 
 export async function toggleShowOnHomepage(id: string, current: boolean) {
+  assertAdmin()
   const supabase = createAdminClient()
   const { error } = await supabase
     .from('homestays')
@@ -74,6 +78,7 @@ const VALID_SLUGS = new Set([
 ])
 
 export async function saveCategories(homestayId: string, selectedSlugs: string[]) {
+  assertAdmin()
   const supabase = createClient()
 
   // Only keep known slugs
@@ -117,6 +122,7 @@ export async function saveCategories(homestayId: string, selectedSlugs: string[]
 // Sets the Discover sub-categories of a homestay (homestays.sub_categories).
 // The Discover page reads this column; see supabase/discover_sub_categories.sql.
 export async function saveSubCategories(homestayId: string, selectedKeys: string[]) {
+  assertAdmin()
   const supabase = createAdminClient()
 
   // Only keep known keys, each once

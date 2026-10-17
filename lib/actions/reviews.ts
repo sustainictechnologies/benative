@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/adminAuth'
 import { revalidatePath } from 'next/cache'
 
 export async function submitReview(
@@ -40,6 +41,8 @@ export async function deleteReview(
   reviewId: string,
   slug: string
 ): Promise<{ error?: string; success?: boolean }> {
+  // Only the admin Reviews page deletes reviews
+  assertAdmin()
   const supabase = createAdminClient()
 
   const { error } = await supabase.from('reviews').delete().eq('id', reviewId)

@@ -1,11 +1,13 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/adminAuth'
 import { revalidatePath } from 'next/cache'
 
 export async function uploadHomepageImage(
   formData: FormData,
 ): Promise<{ error?: string; success?: boolean; url?: string }> {
+  assertAdmin()
   const slot = formData.get('slot') as string
   const file = formData.get('file') as File
   if (!slot || !file) return { error: 'Missing slot or file' }
@@ -42,6 +44,7 @@ export async function uploadHomepageImage(
 export async function clearHomepageImage(
   slot: string,
 ): Promise<{ error?: string; success?: boolean }> {
+  assertAdmin()
   const supabase = createAdminClient()
 
   const { error } = await supabase

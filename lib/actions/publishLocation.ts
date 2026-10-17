@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/adminAuth'
 import type { CanvasBlock } from '@/app/admin/builder/_components/BuilderTypes'
 import { serializeBlock } from '@/lib/blockSerializer'
 
@@ -22,6 +23,7 @@ export interface PublishPayload {
 
 
 export async function publishHomestay(payload: PublishPayload) {
+  assertAdmin()
   const supabase = createClient()
 
   const parts    = payload.address.split(',').map(s => s.trim())

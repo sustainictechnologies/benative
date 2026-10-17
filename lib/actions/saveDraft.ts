@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/adminAuth'
 import type { CanvasBlock } from '@/app/admin/builder/_components/BuilderTypes'
 
 export interface DraftPayload {
@@ -27,6 +28,7 @@ function toDraftSlug(name: string): string {
 export async function saveDraft(
   payload: DraftPayload
 ): Promise<{ success: boolean; slug?: string; error?: string }> {
+  assertAdmin()
   const supabase = createAdminClient()
 
   const draft_data = {

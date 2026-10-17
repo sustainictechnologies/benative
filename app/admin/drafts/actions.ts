@@ -1,9 +1,11 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/adminAuth'
 import { revalidatePath } from 'next/cache'
 
 export async function discardDraft(slug: string, deleteRecord: boolean) {
+  assertAdmin()
   const supabase = createAdminClient()
 
   if (deleteRecord) {

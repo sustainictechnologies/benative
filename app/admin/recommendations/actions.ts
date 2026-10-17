@@ -1,9 +1,11 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/adminAuth'
 import { revalidatePath } from 'next/cache'
 
 export async function updateRecommendationStatus(id: string, status: string) {
+  assertAdmin()
   const supabase = createAdminClient()
   const { error } = await supabase
     .from('homestay_recommendations')
@@ -16,6 +18,7 @@ export async function updateRecommendationStatus(id: string, status: string) {
 }
 
 export async function deleteRecommendation(id: string) {
+  assertAdmin()
   const supabase = createAdminClient()
   const { error } = await supabase
     .from('homestay_recommendations')

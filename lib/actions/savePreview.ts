@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/adminAuth'
 import type { CanvasBlock } from '@/app/admin/builder/_components/BuilderTypes'
 import { serializeBlock } from '@/lib/blockSerializer'
 
@@ -15,6 +16,7 @@ export async function savePreview(
   slug?:    string | null,
   pageMeta?: PreviewMeta,
 ): Promise<{ token: string } | { error: string }> {
+  assertAdmin()
   const supabase  = createAdminClient()
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 

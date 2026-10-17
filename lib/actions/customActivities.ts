@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/adminAuth'
 
 export async function createCustomActivity(payload: {
   label:       string
@@ -8,6 +9,7 @@ export async function createCustomActivity(payload: {
   emoji:       string
   icon_url:    string | null
 }) {
+  assertAdmin()
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('custom_activities')
