@@ -18,15 +18,15 @@ const SUB_CATEGORY_LABELS = new Map(
   SUB_CATEGORY_GROUPS.flatMap((group) => group.subCategories.map((sub) => [sub.key, sub.label] as [string, string])),
 )
 
-// Cached so generateMetadata and the page share one DB round-trip per request
+// Cached so generateMetadata and the page share one DB round-trip per request.
+// The host's phone number is not part of it: signed-out visitors cannot read it (see the page below).
 const getHomestay = cache(async (slug: string) => {
   const supabase = createClient()
   const { data } = await supabase
     .from('homestays')
     .select(`
       id, title, slug, village_name, location_district, is_verified,
-      host_name, contact_phone, calling_window, languages_spoken,
-      address, whatsapp_number, email, youtube_video_id,
+      host_name, calling_window, languages_spoken, youtube_video_id,
       created_at, updated_at, sub_categories,
       homestay_tags ( tags ( id, name, slug ) ),
       homestay_blocks ( id, block_type, sort_order, content_data )
@@ -56,6 +56,13 @@ export default async function HomestayPage({ params }: Props) {
 
   if (!homestay || homestay.latitude === 0) notFound()
 
+  // The host's phone number is fetched for signed-in visitors only
+  let contactPhone = ''
+  if (isLoggedIn) {
+    const { data } = await supabase.from('homestays').select('contact_phone').eq('id', homestay.id).single()
+    contactPhone = data?.contact_phone ?? ''
+  }
+
   const categories: { id: number; name: string; slug: string }[] = (
     homestay.homestay_tags ?? []
   ).map((ht: any) => ht.tags).filter(Boolean)
@@ -73,7 +80,7 @@ export default async function HomestayPage({ params }: Props) {
 
   const meta = {
     host_name: homestay.host_name,
-    contact_phone: homestay.contact_phone,
+    contact_phone: contactPhone,
     calling_window: homestay.calling_window,
     youtube_video_id: homestay.youtube_video_id ?? null,
     tags,

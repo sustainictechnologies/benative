@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import PreviewClient from './PreviewClient'
 
@@ -9,7 +9,9 @@ interface Props {
 }
 
 export default async function PreviewPage({ params }: Props) {
-  const supabase = createClient()
+  // Read on the server with the private key, so the database does not have to let
+  // everyone list all previews (they hold draft content, contact details included)
+  const supabase = createAdminClient()
 
   const { data } = await supabase
     .from('homestay_previews')
