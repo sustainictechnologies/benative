@@ -14,7 +14,7 @@ export interface PolicySection {
   closing?:    string[]
 }
 
-export const PRIVACY_UPDATED = '17 October 2026'
+export const PRIVACY_UPDATED = '19 October 2026'
 
 export const PRIVACY_INTRO = `This page explains what information BeNative collects when you use our website, why we collect it and what choices you have. We have tried to keep it short and plain.`
 
@@ -38,7 +38,7 @@ export const PRIVACY_SECTIONS: PolicySection[] = [
       `When you use the Contact Us form: your name, email address and message.`,
       `When you ask to list your homestay: the host's name, phone number and email address, the address and location of the home, the type of stay, the number of rooms, your description and the link to your photos.`,
       `When you recommend a homestay: your name, phone number and email address, and the homestay's name, address, host name and host contact that you give us.`,
-      `When you browse: the pages you visit, the page you came from and the type of browser you use. We use this to count visits. It is not linked to your name.`,
+      `When you browse: the pages you visit, the page you came from and the type of browser you use. We use this to count visits. If you are signed in, the pages you visit are linked to your account, so we can see which homestays our members are interested in.`,
     ],
   },
   {
