@@ -29,6 +29,13 @@ export default function PreviewClient({ blocksData, pageMeta }: Props) {
     content_data: b.content_data,
   })) as HomestayBlock[]
 
+  // As on the published page: with a photo gallery, the hero shows its text without its cover photo
+  const hasGallery = blocks.some(b => {
+    const d = b.content_data as any
+    return b.block_type === 'gallery' && d?.hidden !== true &&
+      ((d?.items ?? []).some((item: any) => item?.url) || (d?.images ?? []).some(Boolean))
+  })
+
   const contactData = (blocksData.find(b => b.type === 'contact')?.content_data ?? {}) as Record<string, string>
   const homestay = {
     host_name:        contactData.host_name      ?? '',
@@ -73,6 +80,7 @@ export default function PreviewClient({ blocksData, pageMeta }: Props) {
             homestay={homestay}
             isLoggedIn={true}
             slug="preview"
+            hideHeroCover={hasGallery}
           />
         ))}
       </div>
