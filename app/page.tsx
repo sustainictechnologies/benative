@@ -1,5 +1,4 @@
 import HeroCarousel        from '@/components/home/HeroCarousel'
-import HomeSearch          from '@/components/home/HomeSearch'
 import IntroductionSection from '@/components/home/IntroductionSection'
 import CategorySection     from '@/components/home/CategorySection'
 import HowItWorks          from '@/components/home/HowItWorks'
@@ -27,19 +26,16 @@ export default async function HomePage() {
       {/* 01 — Full-screen carousel */}
       <HeroCarousel imageMap={imageMap} />
 
-      {/* 02 — Search: name, place or experience */}
-      <HomeSearch />
-
-      {/* 03 — Explore by Categories */}
+      {/* 02 — Explore by Categories */}
       <CategorySection imageMap={imageMap} />
 
-      {/* 04 — Introduction / BeNative proposition */}
+      {/* 03 — Introduction / BeNative proposition */}
       <IntroductionSection />
 
-      {/* 05 — Final full-screen image */}
+      {/* 04 — Final full-screen image */}
       <FinalCTA imageMap={imageMap} />
 
-      {/* 06 — How it Works */}
+      {/* 05 — How it Works */}
       <HowItWorks />
     </div>
   )

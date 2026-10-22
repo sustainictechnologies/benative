@@ -13,14 +13,7 @@ async function getImageMap(): Promise<Record<string, string>> {
   return Object.fromEntries(data.filter(r => r.image_url).map(r => [r.slot, r.image_url as string]))
 }
 
-export default async function DiscoverPage({ searchParams }: { searchParams: { intent?: string; cat?: string; q?: string } }) {
+export default async function DiscoverPage({ searchParams }: { searchParams: { intent?: string; cat?: string } }) {
   const imageMap = await getImageMap()
-  return (
-    <DiscoverClient
-      initialIntentSlug={searchParams.intent}
-      initialCatKey={searchParams.cat}
-      initialSearch={searchParams.q}
-      imageMap={imageMap}
-    />
-  )
+  return <DiscoverClient initialIntentSlug={searchParams.intent} initialCatKey={searchParams.cat} imageMap={imageMap} />
 }

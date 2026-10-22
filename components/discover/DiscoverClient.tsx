@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import type L from 'leaflet'
 import {
-  SlidersHorizontal, ChevronDown, ChevronUp, MapPin, Home, Compass, Sparkles, X, Search,
+  SlidersHorizontal, ChevronDown, ChevronUp, MapPin, Home, Compass, Sparkles, X,
   Waves, Droplets, Mountain, TreePine, Wheat, Wind,
   Users, Tractor, Landmark, Leaf,
   Snail, CalendarDays, Clock, Baby, Car, User, Laptop,
@@ -16,9 +16,6 @@ import { EMPTY_PRACTICAL_FILTERS, type PracticalFilters } from './types'
 import type { HomestayWithCategories } from '@/types/blocks.types'
 import { createClient } from '@/lib/supabase/client'
 import { SUB_CATEGORY_GROUPS, type SubCategory } from '@/lib/subCategories'
-import { searchHomestays, groupSuggestions, MIN_SEARCH_LENGTH } from '@/lib/search'
-import { findPlace, insidePlace, distanceKm, type Place } from '@/lib/places'
-import type { MapFocus } from './DiscoverMap'
 
 interface MapBounds { south: number; north: number; west: number; east: number }
 
@@ -130,22 +127,11 @@ const DiscoverMap = dynamic(() => import('./DiscoverMap'), {
 interface Props {
   initialIntentSlug?: string
   initialCatKey?: string
-  initialSearch?: string   // ?q= from the homepage search box
   imageMap?: Record<string, string>
 }
 
-export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, initialSearch, imageMap = {} }: Props) {
+export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, imageMap = {} }: Props) {
   const supabase = useMemo(() => createClient(), [])
-
-  // ── Search: name, place or experience ────────────────────────────
-  const [searchText, setSearchText] = useState(initialSearch ?? '')
-  const [searchIds,  setSearchIds]  = useState<Set<string> | null>(null)   // the matching stays; null when not searching
-  const [searchBusy, setSearchBusy] = useState(false)
-  // When the words are a place (a town, district, state…): the place, the words it was found for,
-  // and the stays whose own village or district matched the words
-  const [placeFor,   setPlaceFor]   = useState<{ term: string; place: Place; namedIds: Set<string> } | null>(null)
-  const searchTerm = searchText.trim()
-  const searching  = searchTerm.length >= MIN_SEARCH_LENGTH
 
   // ── Category drill-down state ────────────────────────────────────
   const [selectedCatKey, setSelectedCatKey] = useState<string | null>(initialCatKey ?? null)
@@ -240,59 +226,16 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
       })
   }, [])
 
-  // ── Effect: search a moment after typing stops; the words also go into the page address ──
-  useEffect(() => {
-    const keepInAddress = (q: string | null) => {
-      const url = new URL(window.location.href)
-      if (q) url.searchParams.set('q', q); else url.searchParams.delete('q')
-      window.history.replaceState(window.history.state, '', url)
-    }
-
-    if (!searching) {
-      setSearchIds(null)
-      setPlaceFor(null)
-      setSearchBusy(false)
-      keepInAddress(null)
-      return
-    }
-    let cancelled = false
-    setSearchBusy(true)
-    const timer = setTimeout(async () => {
-      const placeLookup = findPlace(searchTerm)   // runs alongside the homestay search
-      const hits = await searchHomestays(supabase, searchTerm)
-      if (cancelled) return
-      setSearchIds(new Set(hits.map(h => h.id)))
-      setSearchBusy(false)
-      keepInAddress(searchTerm)
-
-      // A homestay's name or a kind of stay ("farm stays") is searched as words. Otherwise, when
-      // OpenStreetMap knows the words as a place, the map shows that area and the stays inside it.
-      const asWords = hits.some(h => h.title_score >= 0.6) || groupSuggestions(searchTerm, hits).kinds.length > 0
-      let place = asWords ? null : await placeLookup
-      if (cancelled) return
-
-      // If our stays name this place but none lies inside the area found, OpenStreetMap found a
-      // different place with the same name (a Kasal elsewhere in India): search as words instead
-      const named = hits.filter(h => h.place_score >= 0.6)
-      if (place && named.length > 0 && !named.some(h => insidePlace(place!, h.latitude, h.longitude))) place = null
-
-      setPlaceFor(place ? { term: searchTerm, place, namedIds: new Set(named.map(h => h.id)) } : null)
-    }, 300)
-    return () => { cancelled = true; clearTimeout(timer) }
-  }, [searchTerm, searching, supabase])
-
   // ── Effect: fetch homestays whenever filters / bounds change ─────
   useEffect(() => {
     let cancelled = false
     setIsLoading(true)
 
     const timer = setTimeout(async () => {
-      // While searching, look across all of India rather than only the area the map shows
-      const area  = searching ? INDIA : mapBounds
-      const south = area?.south ?? INDIA.south
-      const north = area?.north ?? INDIA.north
-      const west  = area?.west  ?? INDIA.west
-      const east  = area?.east  ?? INDIA.east
+      const south = mapBounds?.south ?? INDIA.south
+      const north = mapBounds?.north ?? INDIA.north
+      const west  = mapBounds?.west  ?? INDIA.west
+      const east  = mapBounds?.east  ?? INDIA.east
 
       // Sub-categories come from homestays.sub_categories (see supabase/discover_sub_categories.sql)
       const { data, error } = await supabase.rpc('discover_homestays', {
@@ -335,67 +278,18 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
     }, 300)
 
     return () => { cancelled = true; clearTimeout(timer) }
-    // While searching, moving the map does not fetch again
-  }, [selectedSubCat, practicalFilters, searching ? null : mapBounds, searching])
+  }, [selectedSubCat, practicalFilters, mapBounds])
 
   // ── Derived values ───────────────────────────────────────────────
-  // A place search: the stays inside the area (and any whose own address names the place),
-  // or the three nearest when there are none
-  const activePlace = placeFor && placeFor.term === searchTerm ? placeFor.place : null
-  const placeView = useMemo(() => {
-    if (!activePlace || !placeFor) return null
-    const inside  = homestays.filter(h =>
-      insidePlace(activePlace, h.latitude, h.longitude) || placeFor.namedIds.has(h.id))
-    const nearest = inside.length > 0 ? [] : homestays
-      .map(stay => ({ stay, km: distanceKm(activePlace.lat, activePlace.lng, stay.latitude, stay.longitude) }))
-      .sort((a, b) => a.km - b.km)
-      .slice(0, 3)
-    return { inside, nearest }
-  }, [activePlace, placeFor, homestays])
-
-  // The stays shown in the list and on the map
-  const shown = useMemo(() => {
-    if (placeView) return placeView.inside.length > 0 ? placeView.inside : placeView.nearest.map(n => n.stay)
-    return searchIds ? homestays.filter(h => searchIds.has(h.id)) : homestays
-  }, [placeView, searchIds, homestays])
-  const busy = isLoading || searchBusy
-
-  // Where the map looks: the searched place (and the nearest stays, if none are inside),
-  // or the stays a word search found. Nothing while not searching.
-  const mapFocus = useMemo<MapFocus | null>(() => {
-    if (activePlace) {
-      const [south, north, west, east] = activePlace.bbox
-      const near = placeView?.nearest ?? []
-      const lats = [south, north, ...near.map(n => n.stay.latitude)]
-      const lngs = [west, east, ...near.map(n => n.stay.longitude)]
-      return {
-        key:     `place:${activePlace.label}:${near.length}`,
-        bounds:  [[Math.min(...lats), Math.min(...lngs)], [Math.max(...lats), Math.max(...lngs)]],
-        outline: activePlace.outline,
-        circle:  activePlace.outline ? undefined : { center: [activePlace.lat, activePlace.lng], radiusKm: activePlace.radiusKm },
-      }
-    }
-    if (searching && searchIds && shown.length > 0) {
-      const lats = shown.map(h => h.latitude)
-      const lngs = shown.map(h => h.longitude)
-      return {
-        key:    `stays:${shown.map(h => h.id).sort().join(',')}`,
-        bounds: [[Math.min(...lats), Math.min(...lngs)], [Math.max(...lats), Math.max(...lngs)]],
-      }
-    }
-    return null
-  }, [activePlace, placeView, searching, searchIds, shown])
-
   const locationLabel = useMemo(() => {
-    // A place search names its area above the list instead
-    if (shown.length === 0 || activePlace) return undefined
+    if (homestays.length === 0) return undefined
     const counts: Record<string, number> = {}
-    shown.forEach(h => {
+    homestays.forEach(h => {
       if (h.location_district) counts[h.location_district] = (counts[h.location_district] ?? 0) + 1
     })
     const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
     return top ? `${top[0]} district` : undefined
-  }, [shown, activePlace])
+  }, [homestays])
 
   const totalActiveFilters =
     (selectedSubCat ? 1 : 0) +
@@ -528,43 +422,14 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
         </div>
       )}
 
-      {/* ── Search box ── */}
-      <div className="bg-white px-4 sm:px-6 pt-4 pb-3 border-b border-stone-100">
-        <div className="max-w-7xl mx-auto">
-          <label className="flex items-center gap-2.5 w-full sm:max-w-xl rounded-full border border-stone-200 bg-white px-4 py-2.5 focus-within:border-brand-600 focus-within:ring-4 focus-within:ring-brand-50 transition-shadow">
-            <Search size={16} className="text-stone-400 shrink-0" aria-hidden />
-            <input
-              type="text"
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-              placeholder="A place, a homestay or an experience…"
-              aria-label="Search homestays"
-              autoComplete="off"
-              enterKeyHint="search"
-              className="flex-1 min-w-0 bg-transparent outline-none text-sm text-stone-800 placeholder:text-stone-400"
-            />
-            {searchText && (
-              <button
-                type="button"
-                onClick={() => setSearchText('')}
-                aria-label="Clear search"
-                className="text-stone-400 hover:text-stone-600 shrink-0"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </label>
-        </div>
-      </div>
-
       {/* ── Mobile filter bar ── */}
       <div className="md:hidden shrink-0 bg-white relative z-[500]">
         <div className="flex items-center gap-4 px-4 py-2.5 border-b border-stone-100">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-stone-900 leading-none">
-              {busy ? 'Searching…' : `${shown.length} ${shown.length === 1 ? 'stay' : 'stays'} found`}
+              {isLoading ? 'Searching…' : `${homestays.length} ${homestays.length === 1 ? 'stay' : 'stays'} found`}
             </p>
-            {!busy && locationLabel && (
+            {!isLoading && locationLabel && (
               <p className="text-xs text-stone-400 mt-0.5 leading-none truncate">
                 Showing stays in {locationLabel}
               </p>
@@ -653,7 +518,7 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
           filters={practicalFilters}
           availableLanguages={availableLanguages}
           onChange={setPracticalFilters}
-          filteredCount={shown.length}
+          filteredCount={homestays.length}
           locationLabel={locationLabel}
           totalActiveFilters={totalActiveFilters}
           onReset={resetAll}
@@ -664,39 +529,12 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
       <div ref={splitRef} className="max-w-7xl mx-auto w-full flex flex-col md:flex-row">
 
         <div className="w-full md:w-2/3 flex flex-col md:border-r border-stone-100 order-2 md:order-1">
-          {/* A place search: which area the list and the outlined map show */}
-          {activePlace && placeView && !busy && (
-            <div className="mx-4 md:mx-5 mt-4 flex items-start gap-2.5 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900">
-              <MapPin size={16} className="text-brand-700 mt-0.5 shrink-0" aria-hidden />
-              {placeView.inside.length > 0 ? (
-                <p>
-                  <span className="font-semibold">
-                    {placeView.inside.length} {placeView.inside.length === 1 ? 'stay' : 'stays'}
-                  </span>{' '}
-                  in {activePlace.label}
-                </p>
-              ) : (
-                <p>
-                  No stays in {activePlace.label} yet. The nearest:{' '}
-                  {placeView.nearest.map((n, i) => (
-                    <span key={n.stay.id}>
-                      {i > 0 && ', '}
-                      <span className="font-semibold">{n.stay.title}</span> (about {Math.round(n.km)} km)
-                    </span>
-                  ))}
-                </p>
-              )}
-            </div>
-          )}
           <PlaceGrid
-            homestays={shown}
+            homestays={homestays}
             highlightedId={highlightedId}
             onHover={setHighlightedId}
-            isLoading={busy}
-            {...(searching ? {
-              emptyTitle: `No stays match “${searchTerm}” yet.`,
-              emptyHint:  'Try another word, or clear the search to see all stays.',
-            } : selectedSubCat && totalActiveFilters === 1 && {
+            isLoading={isLoading}
+            {...(selectedSubCat && totalActiveFilters === 1 && {
               emptyTitle: `No stays in ${selectedSubCat.label} yet.`,
               emptyHint:  'Homestays are still being added to this collection. Try another sub-category.',
             })}
@@ -706,11 +544,10 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
         <div className="w-full h-[300px] p-3 md:w-1/3 md:h-[520px] md:shrink-0 order-1 md:order-2">
           <div className="h-full rounded-xl overflow-hidden">
             <DiscoverMap
-              homestays={shown}
+              homestays={homestays}
               highlightedId={highlightedId}
               onMarkerClick={setHighlightedId}
               onBoundsChange={handleBoundsChange}
-              focus={mapFocus}
             />
           </div>
         </div>
