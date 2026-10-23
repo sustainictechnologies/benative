@@ -8,7 +8,7 @@ import {
   Waves, Droplets, Mountain, TreePine, Wheat, Wind,
   Users, Tractor, Landmark, Leaf,
   Snail, CalendarDays, Clock, Baby, Car, User, Laptop,
-  Utensils, Sunrise, BookOpen, WifiOff, HeartHandshake, Armchair,
+  Utensils, Sunrise, BookOpen, WifiOff, Footprints, Armchair,
 } from 'lucide-react'
 import PracticalFiltersDrawer from './PracticalFiltersDrawer'
 import PlaceGrid from './PlaceGrid'
@@ -86,7 +86,7 @@ const SUB_VISUALS: Record<string, Visual> = {
   wake_up_in_nature:     { icon: Sunrise,        img: photo('1707111762867-a88c90b7d9fa'), alt: 'Sunrise over the hills' },
   learn_something_new:   { icon: BookOpen,       img: photo('1613833684971-9411a2b00970'), alt: 'Hands shaping a clay pot' },
   go_offline:            { icon: WifiOff,        img: photo('1663745430674-180c6858f46c'), alt: 'Green cliffs and a deep valley' },
-  meet_the_people:       { icon: HeartHandshake, img: photo('1601689892697-b64daa00ff6d'), alt: 'Villagers gathered outside a home' },
+  trekking:              { icon: Footprints,     img: photo('1627894485200-b92fb4353967'), alt: 'Trekker resting on a green mountain meadow' },
   do_absolutely_nothing: { icon: Armchair,       img: photo('1643474004450-78bac5b408e0'), alt: 'Cat resting under a charpai' },
 }
 
@@ -146,6 +146,16 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
   const [placeFor,   setPlaceFor]   = useState<{ term: string; place: Place; namedIds: Set<string> } | null>(null)
   const searchTerm = searchText.trim()
   const searching  = searchTerm.length >= MIN_SEARCH_LENGTH
+
+  // Phones get a shorter hint in the search box, so it fits beside the round Search button
+  const [narrowScreen, setNarrowScreen] = useState(false)
+  useEffect(() => {
+    const phone = window.matchMedia('(max-width: 639px)')
+    const update = () => setNarrowScreen(phone.matches)
+    update()
+    phone.addEventListener('change', update)
+    return () => phone.removeEventListener('change', update)
+  }, [])
 
   // ── Category drill-down state ────────────────────────────────────
   const [selectedCatKey, setSelectedCatKey] = useState<string | null>(initialCatKey ?? null)
@@ -406,6 +416,52 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
   return (
     <div className="flex flex-col bg-white">
 
+      {/* ── Search box, above the categories ── */}
+      <div className="bg-[#f8f7f2] px-4 sm:px-6 pt-6">
+        <div className="max-w-7xl mx-auto">
+          <form
+            role="search"
+            onSubmit={e => {
+              // The list already follows the typing; Search closes the phone keyboard and shows the results
+              e.preventDefault()
+              ;(document.activeElement as HTMLElement | null)?.blur()
+              splitRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }}
+            className="flex items-center gap-3 rounded-full border border-stone-300 bg-white pl-5 pr-1.5 py-1.5 focus-within:border-brand-600 focus-within:ring-4 focus-within:ring-brand-50 transition-shadow"
+          >
+            <Search size={20} className="text-stone-500 shrink-0" aria-hidden />
+            <input
+              type="text"
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              placeholder={narrowScreen ? 'Place, stay or experience…' : 'A place, a homestay or an experience…'}
+              aria-label="Search homestays"
+              autoComplete="off"
+              enterKeyHint="search"
+              className="flex-1 min-w-0 bg-transparent outline-none text-[15px] sm:text-base text-stone-800 placeholder:text-stone-400 py-2"
+            />
+            {searchText && (
+              <button
+                type="button"
+                onClick={() => setSearchText('')}
+                aria-label="Clear search"
+                className="text-stone-400 hover:text-stone-600 shrink-0"
+              >
+                <X size={18} />
+              </button>
+            )}
+            <button
+              type="submit"
+              aria-label="Search"
+              className="inline-flex items-center gap-2 shrink-0 bg-brand-800 hover:bg-brand-900 text-white font-semibold rounded-full p-3 sm:px-6 transition-colors"
+            >
+              <Search size={18} aria-hidden />
+              <span className="hidden sm:inline">Search</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
       {/* ── Category drill-down ── */}
       {!selectedCat ? (
         /* No category selected — show cards grid */
@@ -527,35 +583,6 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
           </div>
         </div>
       )}
-
-      {/* ── Search box ── */}
-      <div className="bg-white px-4 sm:px-6 pt-4 pb-3 border-b border-stone-100">
-        <div className="max-w-7xl mx-auto">
-          <label className="flex items-center gap-2.5 w-full sm:max-w-xl rounded-full border border-stone-200 bg-white px-4 py-2.5 focus-within:border-brand-600 focus-within:ring-4 focus-within:ring-brand-50 transition-shadow">
-            <Search size={16} className="text-stone-400 shrink-0" aria-hidden />
-            <input
-              type="text"
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-              placeholder="A place, a homestay or an experience…"
-              aria-label="Search homestays"
-              autoComplete="off"
-              enterKeyHint="search"
-              className="flex-1 min-w-0 bg-transparent outline-none text-sm text-stone-800 placeholder:text-stone-400"
-            />
-            {searchText && (
-              <button
-                type="button"
-                onClick={() => setSearchText('')}
-                aria-label="Clear search"
-                className="text-stone-400 hover:text-stone-600 shrink-0"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </label>
-        </div>
-      </div>
 
       {/* ── Mobile filter bar ── */}
       <div className="md:hidden shrink-0 bg-white relative z-[500]">
