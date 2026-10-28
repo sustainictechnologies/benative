@@ -1,11 +1,14 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/adminAuth'
 import Topbar from '../_components/Topbar'
 import HomestaysClient from './_components/HomestaysClient'
 
 export const revalidate = 0
 
 export default async function HomestaysPage() {
-  const supabase = createClient()
+  // Read on the server with the private key: drafts and host account links are admin-only
+  assertAdmin()
+  const supabase = createAdminClient()
 
   const [{ data: raw }, { data: assignments }] = await Promise.all([
     supabase

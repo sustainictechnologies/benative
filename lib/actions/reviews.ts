@@ -73,14 +73,17 @@ export async function submitHostReply(
     .single()
   if (!review) return { error: 'Review not found.' }
 
-  const { data: homestay } = await supabase
+  // Checked and saved on the server: host account links are admin-only, and only the
+  // homestay's own host, confirmed here, may write the reply
+  const admin = createAdminClient()
+  const { data: homestay } = await admin
     .from('homestays')
     .select('host_user_id')
     .eq('id', review.homestay_id)
     .single()
   if (!homestay || homestay.host_user_id !== user.id) return { error: 'You are not the host of this homestay.' }
 
-  const { error } = await supabase
+  const { error } = await admin
     .from('reviews')
     .update({ host_reply: sanitized, host_reply_at: new Date().toISOString() })
     .eq('id', reviewId)
@@ -108,14 +111,16 @@ export async function deleteHostReply(
     .single()
   if (!review) return { error: 'Review not found.' }
 
-  const { data: homestay } = await supabase
+  // Checked and saved on the server, as in submitHostReply
+  const admin = createAdminClient()
+  const { data: homestay } = await admin
     .from('homestays')
     .select('host_user_id')
     .eq('id', review.homestay_id)
     .single()
   if (!homestay || homestay.host_user_id !== user.id) return { error: 'You are not the host.' }
 
-  const { error } = await supabase
+  const { error } = await admin
     .from('reviews')
     .update({ host_reply: null, host_reply_at: null })
     .eq('id', reviewId)

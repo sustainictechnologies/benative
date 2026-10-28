@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { loadHomestayForBuilder } from '@/lib/actions/loadHomestay'
 import { saveDraft } from '@/lib/actions/saveDraft'
 import {
   DndContext,
@@ -80,12 +80,8 @@ export default function BuilderClient() {
     if (!editSlug || loadedRef.current) return
     loadedRef.current = true
 
-    const supabase = createClient()
-    supabase
-      .from('homestays')
-      .select(`*, homestay_blocks ( id, block_type, sort_order, content_data )`)
-      .eq('slug', editSlug)
-      .single()
+    // Loaded on the server: the contact details, address and draft are admin-only
+    loadHomestayForBuilder(editSlug)
       .then(({ data: h }) => {
         if (!h) return
 

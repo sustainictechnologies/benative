@@ -1,6 +1,5 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { assertAdmin } from '@/lib/adminAuth'
 import type { CanvasBlock } from '@/app/admin/builder/_components/BuilderTypes'
@@ -24,7 +23,8 @@ export interface PublishPayload {
 
 export async function publishHomestay(payload: PublishPayload) {
   assertAdmin()
-  const supabase = createClient()
+  // Saved on the server with the private key: the homestay's private fields are admin-only
+  const supabase = createAdminClient()
 
   const parts    = payload.address.split(',').map(s => s.trim())
   const village  = parts[0] ?? payload.address
