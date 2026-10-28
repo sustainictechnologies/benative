@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import type { CanvasBlock } from '../BuilderTypes'
-import { ShieldCheck, MapPin, Ban, ScrollText, Globe2, X, Plus, LayoutGrid, Info, Type, Image as ImageIcon, List, Navigation, Fish, Utensils, Sun, Heart, Leaf, Home, Sprout, Coffee, Wheat, Disc2, Salad, BedDouble, Users, Beef, Drumstick, Egg, ChefHat, Flame, Apple, Soup, Pizza, Sandwich, Carrot, Cherry, Cookie } from 'lucide-react'
+import { FaInstagram, FaFacebookF, FaYoutube } from 'react-icons/fa'
+import { ShieldCheck, MapPin, Ban, ScrollText, Globe, Globe2, X, Plus, LayoutGrid, Info, Type, Image as ImageIcon, List, Navigation, Fish, Utensils, Sun, Heart, Leaf, Home, Sprout, Coffee, Wheat, Disc2, Salad, BedDouble, Users, Beef, Drumstick, Egg, ChefHat, Flame, Apple, Soup, Pizza, Sandwich, Carrot, Cherry, Cookie } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import EditableImage from '../EditableImage'
 import EditableText from '../EditableText'
@@ -127,13 +128,15 @@ function ContactPreview({ id }: { id: string }) {
     const address = getText(id, 'contact-address', '')
     const window_ = getText(id, 'contact-calling-window', '')
 
+    const filled = (key: string) => !!getText(id, `contact-${key}`, '') && getText(id, `contact-${key}-show`, 'true') !== 'false'
+    // As on the live page: all four logos, in the brand colour when filled in, gray when empty
     const socials = [
-      getText(id, 'contact-website',   '') && getText(id, 'contact-website-show',   'true') !== 'false' && { label: '🌐' },
-      getText(id, 'contact-instagram', '') && getText(id, 'contact-instagram-show', 'true') !== 'false' && { label: '📸' },
-      getText(id, 'contact-facebook',  '') && getText(id, 'contact-facebook-show',  'true') !== 'false' && { label: '👤' },
-      getText(id, 'contact-youtube',   '') && getText(id, 'contact-youtube-show',   'true') !== 'false' && { label: '▶️' },
-      getText(id, 'contact-maps-link', '') && getText(id, 'contact-maps-link-show', 'true') !== 'false' && { label: '🗺️' },
-    ].filter(Boolean) as { label: string }[]
+      { has: filled('website'),   Icon: Globe,       color: '#1e6b1e' },
+      { has: filled('instagram'), Icon: FaInstagram, color: '#E1306C' },
+      { has: filled('facebook'),  Icon: FaFacebookF, color: '#1877F2' },
+      { has: filled('youtube'),   Icon: FaYoutube,   color: '#FF0000' },
+    ]
+    const hasMap = filled('maps-link')
 
     return (
       <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-4">
@@ -151,13 +154,18 @@ function ContactPreview({ id }: { id: string }) {
               {window_ && <p className="text-xs text-stone-500">🕐 Best time: {window_}</p>}
             </div>
           )}
-          {socials.length > 0 && (
-            <div className="flex gap-2 pt-1 border-t border-green-100">
-              {socials.map((s, i) => (
-                <span key={i} className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-sm">{s.label}</span>
-              ))}
-            </div>
-          )}
+          <div className="flex gap-2 pt-1 border-t border-green-100">
+            {socials.map(({ has, Icon, color }, i) => (
+              <span
+                key={i}
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${has ? 'bg-green-100' : 'bg-white/60 text-stone-300'}`}
+                style={has ? { color } : undefined}
+              >
+                <Icon size={15} />
+              </span>
+            ))}
+            {hasMap && <span className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-sm">🗺️</span>}
+          </div>
         </div>
         <p className="text-[10px] text-stone-400 text-center">Shown after login + code of conduct on live site</p>
       </div>
