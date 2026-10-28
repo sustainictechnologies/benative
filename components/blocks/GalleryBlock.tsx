@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 
@@ -43,6 +43,56 @@ export default function GalleryBlock({ data }: Props) {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [selected, next, prev])
+
+  // Swipe in the photo viewer (phones): left/right for the next/previous photo, down to close.
+  // The photo follows the finger; a short swipe springs back.
+  const touch = useRef<{ x: number; y: number; axis: 'x' | 'y' | null } | null>(null)
+  const [drag, setDrag]         = useState({ x: 0, y: 0 })
+  const [dragging, setDragging] = useState(false)   // no animation while the finger is down
+
+  const viewerUrl = (url: string) => supabaseImgUrl(url, { width: 1600, quality: 85, resize: 'contain' })
+
+  // The photos either side load in the background, so a swipe shows them straight away
+  useEffect(() => {
+    if (selected === null || photos.length < 2) return
+    for (const i of [selected + 1, selected - 1 + photos.length]) new Image().src = viewerUrl(photos[i % photos.length].url)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, photos.length])
+
+  const resetDrag = () => { touch.current = null; setDragging(false); setDrag({ x: 0, y: 0 }) }
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return resetDrag()   // two fingers: leave pinch-zoom to the browser
+    touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, axis: null }
+    setDragging(true)
+  }
+  const onTouchMove = (e: React.TouchEvent) => {
+    const t = touch.current
+    if (!t) return
+    if (e.touches.length !== 1) return resetDrag()
+    const dx = e.touches[0].clientX - t.x
+    const dy = e.touches[0].clientY - t.y
+    if (!t.axis) {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return
+      t.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'
+    }
+    // Sideways with a single photo: only a little give, nothing to go to
+    setDrag(t.axis === 'x' ? { x: photos.length > 1 ? dx : dx / 4, y: 0 } : { x: 0, y: Math.max(0, dy) })
+  }
+  const onTouchEnd = () => {
+    const axis = touch.current?.axis
+    if (axis === 'x' && photos.length > 1 && Math.abs(drag.x) > 60) {
+      const dir = drag.x < 0 ? 1 : -1
+      if (dir > 0) next(); else prev()
+      // The new photo starts a little to the side it comes from, then slides into place
+      touch.current = null
+      setDrag({ x: dir * window.innerWidth * 0.3, y: 0 })
+      requestAnimationFrame(() => requestAnimationFrame(() => { setDragging(false); setDrag({ x: 0, y: 0 }) }))
+      return
+    }
+    if (axis === 'y' && drag.y > 100) close()
+    resetDrag()
+  }
 
   if (photos.length === 0) return null
 
@@ -136,8 +186,14 @@ export default function GalleryBlock({ data }: Props) {
       {/* Lightbox — above the site header (z-[1000]), so the photo sits in the middle of the whole screen */}
       {selected !== null && (
         <div
-          className="fixed inset-0 z-[1100] bg-black/90 flex items-center justify-center"
+          className="fixed inset-0 z-[1100] bg-black/90 flex items-center justify-center touch-pinch-zoom"
+          // While pulling the photo down, the dark background fades
+          style={drag.y ? { backgroundColor: `rgb(0 0 0 / ${0.9 - Math.min(drag.y / 500, 0.5)})` } : undefined}
           onClick={close}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          onTouchCancel={resetDrag}
         >
           {/* Close */}
           <button
@@ -156,7 +212,7 @@ export default function GalleryBlock({ data }: Props) {
           {photos.length > 1 && (
             <button
               onClick={e => { e.stopPropagation(); prev() }}
-              className="absolute left-4 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              className="absolute left-4 z-10 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
             >
               <ChevronLeft size={24} className="text-white" />
             </button>
@@ -165,17 +221,19 @@ export default function GalleryBlock({ data }: Props) {
           {/* Image */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={supabaseImgUrl(photos[selected].url, { width: 1600, quality: 85, resize: 'contain' })}
+            src={viewerUrl(photos[selected].url)}
             alt={`Gallery photo ${selected + 1}`}
             onClick={e => e.stopPropagation()}
-            className="max-h-[85vh] max-w-[90vw] object-contain rounded-xl shadow-2xl"
+            draggable={false}
+            style={{ transform: `translate(${drag.x}px, ${drag.y}px)`, transition: dragging ? 'none' : 'transform 200ms ease-out' }}
+            className="max-h-[85vh] max-w-[90vw] object-contain rounded-xl shadow-2xl select-none"
           />
 
           {/* Next */}
           {photos.length > 1 && (
             <button
               onClick={e => { e.stopPropagation(); next() }}
-              className="absolute right-4 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              className="absolute right-4 z-10 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
             >
               <ChevronRight size={24} className="text-white" />
             </button>
