@@ -7,9 +7,11 @@ export async function adminLogin(formData: FormData) {
   const username = formData.get('username') as string
   const password = formData.get('password') as string
 
-  const validUser = process.env.ADMIN_USERNAME ?? 'admin'
-  const validPass = process.env.ADMIN_PASSWORD ?? 'changeme'
-  const secret    = process.env.ADMIN_SECRET   ?? 'admin_secret_token'
+  // No built-in defaults: if a setting is missing, nobody can log in (rather than a known password working)
+  const validUser = process.env.ADMIN_USERNAME
+  const validPass = process.env.ADMIN_PASSWORD
+  const secret    = process.env.ADMIN_SECRET
+  if (!validUser || !validPass || !secret) return { error: "Admin login isn't set up on this site." }
 
   if (username === validUser && password === validPass) {
     // Session cookie — no maxAge/expires means it dies when the browser closes

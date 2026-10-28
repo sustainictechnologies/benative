@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { Home, LogOut, Star, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import HostReviewCard from './_components/HostReviewCard'
@@ -14,7 +15,8 @@ export default async function HostDashboardPage() {
 
   if (!user) redirect('/login')
 
-  const { data: homestay } = await supabase
+  // Found on the server, after checking who is signed in: host account links are admin-only
+  const { data: homestay } = await createAdminClient()
     .from('homestays')
     .select('id, title, slug, village_name, location_district')
     .eq('host_user_id', user.id)

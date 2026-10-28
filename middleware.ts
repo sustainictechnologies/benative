@@ -11,8 +11,8 @@ export async function middleware(request: NextRequest) {
   // sign-in, so they skip the session check below.
   if (pathname.startsWith('/admin') && !pathname.startsWith('/admin-login')) {
     const adminAuth   = request.cookies.get('admin_auth')?.value
-    const adminSecret = process.env.ADMIN_SECRET ?? 'admin_secret_token'
-    if (adminAuth !== adminSecret) {
+    const adminSecret = process.env.ADMIN_SECRET   // no default: without it the admin pages stay locked
+    if (!adminSecret || adminAuth !== adminSecret) {
       const loginUrl = request.nextUrl.clone()
       loginUrl.pathname = '/admin-login'
       return NextResponse.redirect(loginUrl)
