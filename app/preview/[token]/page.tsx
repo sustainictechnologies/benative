@@ -28,7 +28,7 @@ export default async function PreviewPage({ params }: Props) {
         <div className="text-center space-y-3">
           <div className="text-5xl">⏰</div>
           <h1 className="text-xl font-bold text-stone-900">Preview Link Expired</h1>
-          <p className="text-sm text-stone-500">This preview link was valid for 24 hours. Ask the host to generate a new one.</p>
+          <p className="text-sm text-stone-500">This preview link was valid for 4 days. Ask the host to generate a new one.</p>
         </div>
       </div>
     )

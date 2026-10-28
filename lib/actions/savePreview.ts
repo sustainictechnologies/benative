@@ -18,7 +18,7 @@ export async function savePreview(
 ): Promise<{ token: string } | { error: string }> {
   assertAdmin()
   const supabase  = createAdminClient()
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+  const expiresAt = new Date(Date.now() + 96 * 60 * 60 * 1000).toISOString()   // 4 days
 
   const blocksData = blocks.map(block => ({
     type:         block.type,
