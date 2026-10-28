@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation'
 import PreviewClient from './PreviewClient'
 
 export const dynamic = 'force-dynamic'
+// Read the preview fresh on every visit: without this, Next keeps the first database answer
+// (the link stays the same when the preview is made again, so it would show old photos)
+export const revalidate = 0
 
 interface Props {
   params: { token: string }

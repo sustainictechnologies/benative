@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import HomepageImagesClient from './_components/HomepageImagesClient'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0   // read the images fresh on every visit (else Next keeps the first answer)
 
 export default async function HomepageAdminPage() {
   const supabase = createAdminClient()
