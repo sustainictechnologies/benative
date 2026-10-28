@@ -40,11 +40,13 @@ export default function ContactBlock({ data, hostName, phone, callingWindow, isL
   if (shown(data.address, data.address_show))           contactItems.push({ Icon: MapPin,        label: data.address })
   if (shown(data.calling_window, data.calling_window_show)) contactItems.push({ Icon: Clock,    label: `Best time: ${data.calling_window}` })
 
-  const socialLinks: { href: string; Icon: React.ElementType; label: string; color: string }[] = []
-  if (shown(data.website,   data.website_show))   socialLinks.push({ href: data.website,   Icon: Globe,        label: 'Website',   color: '#1e6b1e' })
-  if (shown(data.instagram, data.instagram_show)) socialLinks.push({ href: data.instagram, Icon: FaInstagram,  label: 'Instagram', color: '#E1306C' })
-  if (shown(data.facebook,  data.facebook_show))  socialLinks.push({ href: data.facebook,  Icon: FaFacebookF,  label: 'Facebook',  color: '#1877F2' })
-  if (shown(data.youtube,   data.youtube_show))   socialLinks.push({ href: data.youtube,   Icon: FaYoutube,    label: 'YouTube',   color: '#FF0000' })
+  // All four always show: in the brand colour (a link) when the host has one, gray (not a link) when not
+  const socialLinks: { href: string | null; Icon: React.ElementType; label: string; missing: string; color: string }[] = [
+    { href: shown(data.website,   data.website_show)   ? data.website   : null, Icon: Globe,       label: 'Website',   missing: 'No website',         color: '#1e6b1e' },
+    { href: shown(data.instagram, data.instagram_show) ? data.instagram : null, Icon: FaInstagram, label: 'Instagram', missing: 'No Instagram page',  color: '#E1306C' },
+    { href: shown(data.facebook,  data.facebook_show)  ? data.facebook  : null, Icon: FaFacebookF, label: 'Facebook',  missing: 'No Facebook page',   color: '#1877F2' },
+    { href: shown(data.youtube,   data.youtube_show)   ? data.youtube   : null, Icon: FaYoutube,   label: 'YouTube',   missing: 'No YouTube channel', color: '#FF0000' },
+  ]
 
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-6 space-y-4">
@@ -123,23 +125,30 @@ export default function ContactBlock({ data, hostName, phone, callingWindow, isL
             </a>
           )}
 
-          {socialLinks.length > 0 && (
-            <div className="flex items-center gap-3 border-t border-stone-100 pt-4">
-              {socialLinks.map(({ href, Icon, label, color }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={label}
-                  className="w-9 h-9 rounded-full bg-stone-100 hover:opacity-80 flex items-center justify-center transition-opacity"
-                  style={{ color }}
-                >
-                  <Icon size={18} />
-                </a>
-              ))}
-            </div>
-          )}
+          <div className="flex items-center gap-3 border-t border-stone-100 pt-4">
+            {socialLinks.map(({ href, Icon, label, missing, color }) => href ? (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={label}
+                className="w-9 h-9 rounded-full bg-stone-100 hover:opacity-80 flex items-center justify-center transition-opacity"
+                style={{ color }}
+              >
+                <Icon size={18} />
+              </a>
+            ) : (
+              <span
+                key={label}
+                title={missing}
+                aria-label={missing}
+                className="w-9 h-9 rounded-full bg-stone-50 text-stone-300 flex items-center justify-center cursor-default"
+              >
+                <Icon size={18} />
+              </span>
+            ))}
+          </div>
         </div>
       )}
     </div>
