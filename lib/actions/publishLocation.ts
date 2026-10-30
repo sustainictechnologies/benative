@@ -26,6 +26,24 @@ export async function publishHomestay(payload: PublishPayload) {
   assertAdmin()
   const supabase = createClient()
 
+  // The page address comes from the name, so publishing under another homestay's name would
+  // replace that homestay. Only the homestay being edited may publish to its own address.
+  if (payload.slug !== payload.draftSlug) {
+    const { data: taken, error: takenErr } = await createAdminClient()
+      .from('homestays')
+      .select('title')
+      .eq('slug', payload.slug)
+      .maybeSingle()
+
+    if (takenErr) return { success: false as const, error: takenErr.message }
+    if (taken) {
+      return {
+        success: false as const,
+        error: `A homestay named "${taken.title}" already exists, so publishing would replace it. Change the name, or open that homestay to edit it.`,
+      }
+    }
+  }
+
   const parts    = payload.address.split(',').map(s => s.trim())
   const village  = parts[0] ?? payload.address
   const district = parts[1] ?? village
