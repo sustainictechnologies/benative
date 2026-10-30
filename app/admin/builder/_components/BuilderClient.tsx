@@ -27,6 +27,7 @@ import Canvas from './Canvas'
 import RightPanel from './RightPanel'
 import PublishModal from './PublishModal'
 import PreviewShareModal from './PreviewShareModal'
+import SaveAsNewModal from './SaveAsNewModal'
 
 /* ─── Helpers ────────────────────────────────────────────── */
 function makeId() {
@@ -61,12 +62,16 @@ export default function BuilderClient() {
   const [saveError, setSaveError]           = useState<string | null>(null)
   const [showPublish, setShowPublish]           = useState(false)
   const [showPreviewShare, setShowPreviewShare] = useState(false)
+  const [showSaveAsNew, setShowSaveAsNew]       = useState(false)
   const [selectedElement, setSelectedElement]   = useState<SelectedElement | null>(null)
 
   const searchParams  = useSearchParams()
   const router        = useRouter()
   const editSlug      = searchParams.get('slug')
   const loadedRef     = useRef(false)
+  const liveTitleRef  = useRef<string | null>(null)   // name of the live homestay open here; null for a draft or new page
+  const keptNameRef   = useRef<string | null>(null)   // a changed name already confirmed as "keep on this homestay"
+  const publishedSlugRef = useRef<string | null>(null)
 
 
   /* ── Undo history ────────────────────────────────────────── */
@@ -88,6 +93,8 @@ export default function BuilderClient() {
       .single()
       .then(({ data: h }) => {
         if (!h) return
+
+        liveTitleRef.current = (h.homestay_blocks ?? []).length > 0 ? (h.title ?? '') : null
 
         // Prefer draft state over published blocks when a draft exists
         const dd = h.draft_data as any
@@ -345,12 +352,12 @@ export default function BuilderClient() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  const handleSave = useCallback(async () => {
+  const save = useCallback(async (slug: string | undefined) => {
     setSaving(true)
     setSaveError(null)
     try {
       const result = await saveDraft({
-        slug:           editSlug ?? undefined,
+        slug,
         pageName,
         pageHighlights,
         pageLanguages,
@@ -359,7 +366,8 @@ export default function BuilderClient() {
       })
       if (result.success) {
         setSavedAt(new Date())
-        if (!editSlug && result.slug) {
+        if (!slug && result.slug) {
+          liveTitleRef.current = null
           router.replace(`/admin/builder?slug=${result.slug}`)
         }
       } else {
@@ -370,7 +378,31 @@ export default function BuilderClient() {
     } finally {
       setSaving(false)
     }
-  }, [editSlug, pageName, pageHighlights, pageLanguages, pageAddress, blocks, router])
+  }, [pageName, pageHighlights, pageLanguages, pageAddress, blocks, router])
+
+  const handleSave = useCallback(() => {
+    const name = pageName.trim().toLowerCase()
+    const live = liveTitleRef.current
+    if (live !== null && name !== live.trim().toLowerCase() && name !== keptNameRef.current) {
+      setShowSaveAsNew(true)
+      return
+    }
+    save(editSlug ?? undefined)
+  }, [editSlug, pageName, save])
+
+  const handlePublished = useCallback((slug: string) => {
+    publishedSlugRef.current = slug
+    liveTitleRef.current     = pageName
+  }, [pageName])
+
+  // A draft's old address no longer exists after publishing, so the builder moves to the published one.
+  // Changing the address reloads the page, so this waits until the success box is closed.
+  const closePublish = useCallback(() => {
+    setShowPublish(false)
+    const slug = publishedSlugRef.current
+    publishedSlugRef.current = null
+    if (slug && slug !== editSlug) router.replace(`/admin/builder?slug=${slug}`)
+  }, [editSlug, router])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -668,9 +700,23 @@ export default function BuilderClient() {
           pageLanguages={pageLanguages}
         />
 
+        <SaveAsNewModal
+          open={showSaveAsNew}
+          liveTitle={liveTitleRef.current ?? ''}
+          pageName={pageName}
+          onClose={() => setShowSaveAsNew(false)}
+          onSaveAsNew={() => { setShowSaveAsNew(false); save(undefined) }}
+          onKeep={() => {
+            keptNameRef.current = pageName.trim().toLowerCase()
+            setShowSaveAsNew(false)
+            save(editSlug ?? undefined)
+          }}
+        />
+
         <PublishModal
           open={showPublish}
-          onClose={() => setShowPublish(false)}
+          onClose={closePublish}
+          onPublished={handlePublished}
           builderData={{
             title:     pageName,
             draftSlug: editSlug ?? undefined,
