@@ -78,11 +78,22 @@ export async function publishHomestay(payload: PublishPayload) {
     if (blockErr) return { success: false as const, error: blockErr.message }
   }
 
-  // Clear draft_data on the published record, and delete orphan draft record if slugs differ
+  // Clear draft_data on the published record, and delete orphan draft record if slugs differ.
+  // Only an empty draft record is deleted: a record with sections or a location is a live homestay.
   const admin = createAdminClient()
   await admin.from('homestays').update({ draft_data: null }).eq('id', homestayId)
   if (payload.draftSlug && payload.draftSlug !== payload.slug) {
-    await admin.from('homestays').delete().eq('slug', payload.draftSlug)
+    const { data: source } = await admin
+      .from('homestays')
+      .select('id, latitude, homestay_blocks ( id )')
+      .eq('slug', payload.draftSlug)
+      .maybeSingle()
+
+    if (source) {
+      const isDraftOnly = source.homestay_blocks.length === 0 && source.latitude === 0
+      if (isDraftOnly) await admin.from('homestays').delete().eq('id', source.id)
+      else             await admin.from('homestays').update({ draft_data: null }).eq('id', source.id)   // its draft is what was just published
+    }
   }
 
   return { success: true as const }

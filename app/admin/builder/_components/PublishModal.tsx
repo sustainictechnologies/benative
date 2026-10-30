@@ -34,6 +34,7 @@ interface BuilderData {
 interface Props {
   open:        boolean
   onClose:     () => void
+  onPublished: (slug: string) => void
   builderData: BuilderData
 }
 
@@ -56,7 +57,7 @@ function toSlug(name: string): string {
     .replace(/^-|-$/g, '')
 }
 
-export default function PublishModal({ open, onClose, builderData }: Props) {
+export default function PublishModal({ open, onClose, onPublished, builderData }: Props) {
   const [mode, setMode]     = useState<Mode>('map')
   const [lat, setLat]       = useState<number | null>(null)
   const [lng, setLng]       = useState<number | null>(null)
@@ -126,8 +127,8 @@ export default function PublishModal({ open, onClose, builderData }: Props) {
 
     const result = await publishHomestay(payload)
     if (!result.success) { setErrMsg(result.error ?? 'Publish failed'); setStatus('error') }
-    else                  { setStatus('done') }
-  }, [lat, lng, slug, builderData])
+    else                  { setStatus('done'); onPublished(payload.slug) }
+  }, [lat, lng, slug, builderData, onPublished])
 
   const reset = () => { setLat(null); setLng(null); setStatus('idle'); setErrMsg(''); setMode('map'); setLatInput(''); setLngInput(''); setCoordErr('') }
 
