@@ -5,12 +5,23 @@ import { Share2, Link2, Check } from 'lucide-react'
 import { FaWhatsapp, FaFacebookF } from 'react-icons/fa'
 
 interface Props {
-  title: string
-  place: string
-  slug:  string
+  title:   string
+  place:   string
+  slug:    string
+  isHost?: boolean   // a host shares their own homestay with their own message
 }
 
-export default function ShareButton({ title, place, slug }: Props) {
+const hostMessage = (link: string) => `🌿 Happy to share that my homestay is now featured on BeNative!
+
+I've shared a little about my home, the surroundings and the experiences you can enjoy here.
+
+Have a look and do share it with anyone who might be interested in visiting!
+
+🔗 ${link}
+
+Looking forward to welcoming you! 😊`
+
+export default function ShareButton({ title, place, slug, isHost = false }: Props) {
   const [open, setOpen]     = useState(false)
   const [copied, setCopied] = useState(false)
   const wrapper = useRef<HTMLDivElement>(null)
@@ -30,12 +41,16 @@ export default function ShareButton({ title, place, slug }: Props) {
 
   const link    = () => `${window.location.origin}/homestays/${slug}`
   const message = `Have a look at ${title.trim()} in ${place} on BeNative`
+  const fullMessage = () => (isHost ? hostMessage(link()) : `${message}: ${link()}`)
 
   // Phones open their own share list; computers (and phones without one) get the small menu
   const share = async () => {
     if (window.matchMedia('(pointer: coarse)').matches && navigator.share) {
       try {
-        await navigator.share({ title: title.trim(), text: message, url: link() })
+        // The host's message has the link inside it, so it goes as one text
+        await navigator.share(isHost
+          ? { title: title.trim(), text: fullMessage() }
+          : { title: title.trim(), text: message, url: link() })
       } catch (e) {
         if ((e as Error).name !== 'AbortError') setOpen(true)   // AbortError: closed without sharing
       }
@@ -44,11 +59,12 @@ export default function ShareButton({ title, place, slug }: Props) {
     setOpen(o => !o)
   }
 
-  const copyLink = async () => {
+  const copy = async () => {
+    const text = isHost ? fullMessage() : link()
     try {
-      await navigator.clipboard.writeText(link())
+      await navigator.clipboard.writeText(text)
     } catch {
-      window.prompt('Copy this link', link())   // the browser refused the clipboard
+      window.prompt('Copy this', text)   // the browser refused the clipboard
       return
     }
     setCopied(true)
@@ -73,7 +89,7 @@ export default function ShareButton({ title, place, slug }: Props) {
         <div role="menu" className="absolute right-0 top-full mt-2 z-20 w-44 bg-white border border-stone-200 rounded-xl shadow-lg py-1 overflow-hidden">
           <a
             role="menuitem"
-            href={`https://wa.me/?text=${encodeURIComponent(`${message}: ${link()}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(fullMessage())}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
@@ -91,9 +107,9 @@ export default function ShareButton({ title, place, slug }: Props) {
           >
             <FaFacebookF size={15} style={{ color: '#1877F2' }} /> Facebook
           </a>
-          <button type="button" role="menuitem" onClick={copyLink} className={item}>
+          <button type="button" role="menuitem" onClick={copy} className={item}>
             {copied ? <Check size={16} className="text-brand-600" /> : <Link2 size={16} className="text-stone-400" />}
-            {copied ? 'Link copied' : 'Copy link'}
+            {copied ? (isHost ? 'Message copied' : 'Link copied') : (isHost ? 'Copy message' : 'Copy link')}
           </button>
         </div>
       )}
