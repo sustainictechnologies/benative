@@ -4,8 +4,10 @@ import { notFound } from 'next/navigation'
 import BlockRenderer from '@/components/blocks/BlockRenderer'
 import ReviewSection from '@/components/reviews/ReviewSection'
 import SignupGate from '@/components/SignupGate'
+import ShareButton from '@/components/ShareButton'
 import type { HomestayBlock } from '@/types/blocks.types'
 import { SUB_CATEGORY_GROUPS } from '@/lib/subCategories'
+import { sharePreviewImgUrl } from '@/lib/supabase/imageUrl'
 import { MapPin, Globe2, Clock } from 'lucide-react'
 
 export const revalidate = 60
@@ -27,7 +29,7 @@ const getHomestay = cache(async (slug: string) => {
     .select(`
       id, title, slug, village_name, location_district, is_verified,
       host_name, calling_window, languages_spoken, youtube_video_id,
-      created_at, updated_at, sub_categories,
+      created_at, updated_at, sub_categories, cover_image_url,
       homestay_tags ( tags ( id, name, slug ) ),
       homestay_blocks ( id, block_type, sort_order, content_data )
     `)
@@ -37,12 +39,28 @@ const getHomestay = cache(async (slug: string) => {
   return data as any
 })
 
+// The photo on a shared link's preview card: the cover, or the first gallery photo without one
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function previewPhoto(data: any): string | null {
+  const gallery = (data.homestay_blocks ?? []).find((b: any) => b.block_type === 'gallery')?.content_data
+  return data.cover_image_url ?? gallery?.items?.find((item: any) => item?.url)?.url ?? gallery?.images?.find(Boolean) ?? null
+}
+
 export async function generateMetadata({ params }: Props) {
   const data = await getHomestay(params.slug)
   if (!data) return {}
+  const description = `Authentic homestay in ${data.village_name}, ${data.location_district}. Direct host contact via BeNative.`
+  const photo = previewPhoto(data)
   return {
     title: `${data.title} · BeNative`,
-    description: `Authentic homestay in ${data.village_name}, ${data.location_district}. Direct host contact via BeNative.`,
+    description,
+    openGraph: {
+      title: data.title,
+      description,
+      siteName: 'BeNative',
+      type: 'website',
+      images: photo ? [{ url: sharePreviewImgUrl(photo), alt: data.title }] : undefined,
+    },
   }
 }
 
@@ -119,7 +137,14 @@ export default async function HomestayPage({ params }: Props) {
       {/* Header */}
       <div className="mb-5">
         {/* The tags have their own block, below the gallery unless placed elsewhere in the builder */}
-        <h1 className="text-3xl font-bold text-stone-900 mb-2">{homestay.title}</h1>
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <h1 className="text-3xl font-bold text-stone-900 min-w-0">{homestay.title}</h1>
+          <ShareButton
+            title={homestay.title}
+            place={`${homestay.village_name}, ${homestay.location_district}`}
+            slug={params.slug}
+          />
+        </div>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-stone-500">
           <span className="flex items-center gap-1.5">
