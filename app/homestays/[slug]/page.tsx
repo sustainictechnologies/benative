@@ -96,6 +96,11 @@ export default async function HomestayPage({ params }: Props) {
   const blocks: HomestayBlock[] = (homestay.homestay_blocks ?? [])
     .sort((a: any, b: any) => a.sort_order - b.sort_order)
 
+  // The host is whoever signs in with the email saved in the homestay's contact block, once the sign-in
+  // has confirmed that email. This only changes the Share message: it gives no other access.
+  const hostEmail = ((blocks.find((b) => b.block_type === 'contact')?.content_data as any)?.email ?? '').trim().toLowerCase()
+  const isHost = !!hostEmail && !!user?.email_confirmed_at && user.email?.toLowerCase() === hostEmail
+
   const meta = {
     host_name: homestay.host_name,
     contact_phone: contactPhone,
@@ -143,6 +148,7 @@ export default async function HomestayPage({ params }: Props) {
             title={homestay.title}
             place={`${homestay.village_name}, ${homestay.location_district}`}
             slug={params.slug}
+            isHost={isHost}
           />
         </div>
 
