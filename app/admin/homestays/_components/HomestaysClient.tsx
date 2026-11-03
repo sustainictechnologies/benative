@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 import { saveCategories, saveSubCategories, toggleShowOnHomepage, linkHostAccount, unlinkHostAccount } from '../actions'
 import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 import { SUB_CATEGORY_GROUPS } from '@/lib/subCategories'
+import { FACILITIES, FACILITY_GROUPS } from '@/lib/facilities'
 
 interface Homestay {
   id:                string
@@ -72,23 +73,8 @@ const LANDSCAPE_DATA = [
   { slug: 'env_sacred_grove',    name: 'Sacred Groves & Hidden Orchards' },
   { slug: 'env_wetland',         name: 'Lakeside & Wetland Fringes'      },
 ]
-const PRACTICAL_DATA = [
-  { slug: 'spec_gated_parking',        name: 'Gated Parking'           },
-  { slug: 'spec_basic_toolkit',        name: 'Basic Toolkit Available' },
-  { slug: 'spec_pet_friendly',         name: 'Pet-Friendly Compound'   },
-  { slug: 'spec_wildlife_secure',      name: 'Wildlife-Proof Safety'   },
-  { slug: 'spec_stable_network',       name: 'Stable Network'          },
-  { slug: 'spec_shared_kitchen',       name: 'Shared Kitchen'          },
-  { slug: 'spec_power_backup',         name: 'Power Backup'            },
-  { slug: 'spec_laundry_access',       name: 'Laundry Access'          },
-  { slug: 'spec_native_guide',         name: 'Native Guide Available'  },
-  { slug: 'spec_plastic_free',         name: 'Plastic-Free Stay'       },
-  { slug: 'spec_western_toilet',       name: 'Western-Style Toilet'    },
-  { slug: 'spec_hot_water',            name: 'Hot Water / Geyser'      },
-  { slug: 'spec_no_stairs_access',     name: 'No-Stairs Access'        },
-  { slug: 'spec_quiet_work_setup',     name: 'Quiet Work Setup'        },
-  { slug: 'spec_solo_female_friendly', name: 'Solo-Female Friendly'    },
-]
+// Facilities & stay preferences: the same list and groups as Discover's Filters
+const PRACTICAL_DATA = FACILITIES.map(f => ({ slug: f.slug, name: f.label }))
 
 const INTENT_SLUGS_SET   = new Set(INTENT_DATA.map(i => i.slug))
 const LANDSCAPE_SLUGS_SET = new Set(LANDSCAPE_DATA.map(l => l.slug))
@@ -362,24 +348,31 @@ function TaxonomyPanel({
           </div>
         </div>
 
-        {/* Layer 3: Practical Requirements (multi-select) */}
+        {/* Layer 3: Facilities & Stay Preferences (multi-select): tick only what the host has confirmed */}
         <div>
           <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">
-            Layer 3 · Practical Requirements
+            Layer 3 · Facilities &amp; Stay Preferences
           </p>
-          <div className="space-y-1.5">
-            {PRACTICAL_DATA.map(p => (
-              <label key={p.slug} className="flex items-center gap-2 cursor-pointer group/p">
-                <input
-                  type="checkbox"
-                  checked={practicalSlugs.includes(p.slug)}
-                  onChange={() => togglePractical(p.slug)}
-                  className="w-3.5 h-3.5 rounded border-stone-300 accent-brand-600 cursor-pointer"
-                />
-                <span className="text-xs text-stone-600 group-hover/p:text-stone-900 transition-colors">
-                  {p.name}
-                </span>
-              </label>
+          <div className="space-y-3">
+            {FACILITY_GROUPS.map(group => (
+              <div key={group.key}>
+                <p className="text-[11px] font-semibold text-stone-600 mb-1.5">{group.label}</p>
+                <div className="space-y-1.5">
+                  {group.facilities.map(f => (
+                    <label key={f.slug} className="flex items-center gap-2 cursor-pointer group/p">
+                      <input
+                        type="checkbox"
+                        checked={practicalSlugs.includes(f.slug)}
+                        onChange={() => togglePractical(f.slug)}
+                        className="w-3.5 h-3.5 rounded border-stone-300 accent-brand-600 cursor-pointer"
+                      />
+                      <span className="text-xs text-stone-600 group-hover/p:text-stone-900 transition-colors">
+                        {f.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>

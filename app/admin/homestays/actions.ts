@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { assertAdmin } from '@/lib/adminAuth'
 import { revalidatePath } from 'next/cache'
 import { SUB_CATEGORY_KEYS } from '@/lib/subCategories'
+import { FACILITIES } from '@/lib/facilities'
 
 export async function linkHostAccount(
   homestayId: string,
@@ -69,12 +70,8 @@ const VALID_SLUGS = new Set([
   // Layer 2: Environment / Landscape
   'env_forest_border', 'env_riverside', 'env_coastal', 'env_mountain_valley',
   'env_agricultural', 'env_rocky_plateau', 'env_sacred_grove', 'env_wetland',
-  // Layer 3: Practical Requirements
-  'spec_gated_parking', 'spec_basic_toolkit', 'spec_pet_friendly',
-  'spec_wildlife_secure', 'spec_stable_network', 'spec_shared_kitchen',
-  'spec_power_backup', 'spec_laundry_access', 'spec_native_guide',
-  'spec_plastic_free', 'spec_western_toilet', 'spec_hot_water',
-  'spec_no_stairs_access', 'spec_quiet_work_setup', 'spec_solo_female_friendly',
+  // Layer 3: Facilities & Stay Preferences
+  ...FACILITIES.map(f => f.slug),
 ])
 
 export async function saveCategories(homestayId: string, selectedSlugs: string[]) {

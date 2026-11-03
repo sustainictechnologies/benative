@@ -11,6 +11,7 @@ import {
   Utensils, Sunrise, BookOpen, WifiOff, Footprints, Armchair,
 } from 'lucide-react'
 import PracticalFiltersDrawer from './PracticalFiltersDrawer'
+import FiltersPanel from './FiltersPanel'
 import PlaceGrid from './PlaceGrid'
 import { EMPTY_PRACTICAL_FILTERS, type PracticalFilters } from './types'
 import type { HomestayWithCategories } from '@/types/blocks.types'
@@ -97,24 +98,6 @@ const CATEGORIES: MainCat[] = SUB_CATEGORY_GROUPS.map(group => ({
   subCats: group.subCategories.map(sub => ({ ...sub, ...(SUB_VISUALS[sub.key] ?? DEFAULT_VISUAL) })),
 }))
 
-const PRACTICAL_ITEMS = [
-  { slug: 'spec_stable_network',       name: 'Stable Network'        },
-  { slug: 'spec_gated_parking',        name: 'Gated Parking'         },
-  { slug: 'spec_basic_toolkit',        name: 'Basic Toolkit'         },
-  { slug: 'spec_pet_friendly',         name: 'Pet-Friendly'          },
-  { slug: 'spec_wildlife_secure',      name: 'Wildlife-Proof Safety' },
-  { slug: 'spec_shared_kitchen',       name: 'Shared Kitchen'        },
-  { slug: 'spec_power_backup',         name: 'Power Backup'          },
-  { slug: 'spec_laundry_access',       name: 'Laundry Access'        },
-  { slug: 'spec_native_guide',         name: 'Native Guide'          },
-  { slug: 'spec_plastic_free',         name: 'Plastic-Free Stay'     },
-  { slug: 'spec_western_toilet',       name: 'Western Toilet'        },
-  { slug: 'spec_hot_water',            name: 'Hot Water / Geyser'    },
-  { slug: 'spec_no_stairs_access',     name: 'No-Stairs Access'      },
-  { slug: 'spec_quiet_work_setup',     name: 'Quiet Work Setup'      },
-  { slug: 'spec_solo_female_friendly', name: 'Solo-Female Friendly'  },
-]
-
 const DiscoverMap = dynamic(() => import('./DiscoverMap'), {
   ssr: false,
   loading: () => (
@@ -170,24 +153,6 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, im
       return next
     })
   }, [])
-
-  function togglePractical(slug: string) {
-    setPracticalFilters(prev => ({
-      ...prev,
-      practicalSlugs: prev.practicalSlugs.includes(slug)
-        ? prev.practicalSlugs.filter(s => s !== slug)
-        : [...prev.practicalSlugs, slug],
-    }))
-  }
-
-  function toggleLanguage(lang: string) {
-    setPracticalFilters(prev => ({
-      ...prev,
-      languages: prev.languages.includes(lang)
-        ? prev.languages.filter(l => l !== lang)
-        : [...prev.languages, lang],
-    }))
-  }
 
   function handleCatClick(cat: MainCat) {
     if (selectedCatKey === cat.key) {
@@ -252,6 +217,12 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, im
 
       let results: any[] = data ?? []
       results = results.filter(h => h.latitude !== 0 || h.longitude !== 0)
+      // Every ticked facility must be there (the database function returns stays with any of them)
+      if (practicalFilters.practicalSlugs.length > 0) {
+        results = results.filter(h =>
+          practicalFilters.practicalSlugs.every(s => (h.tag_slugs ?? []).includes(s))
+        )
+      }
       if (practicalFilters.verifiedOnly) results = results.filter(h => h.is_verified)
       if (practicalFilters.languages.length > 0) {
         results = results.filter(h =>
@@ -435,6 +406,11 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, im
               </p>
             )}
           </div>
+          {totalActiveFilters > 0 && (
+            <button type="button" onClick={resetAll} className="text-xs text-brand-600 font-medium shrink-0">
+              Reset filters
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setMobileFiltersOpen(o => !o)}
@@ -445,7 +421,7 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, im
             }`}
           >
             {!mobileFiltersOpen && <SlidersHorizontal size={13} />}
-            {mobileFiltersOpen ? 'Done' : 'Filters'}
+            {mobileFiltersOpen ? 'Close' : 'Filters'}
             {totalActiveFilters > 0 && !mobileFiltersOpen && (
               <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-white text-brand-700 text-[10px] font-bold">
                 {totalActiveFilters}
@@ -456,58 +432,12 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, im
         </div>
 
         {mobileFiltersOpen && (
-          <div className="px-4 py-3 border-b border-stone-100 space-y-4 bg-white">
-            <div>
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">Requirements</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                {PRACTICAL_ITEMS.map(item => (
-                  <label key={item.slug} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={practicalFilters.practicalSlugs.includes(item.slug)}
-                      onChange={() => togglePractical(item.slug)}
-                      className="w-3.5 h-3.5 accent-brand-700"
-                    />
-                    <span className="text-xs text-stone-600">{item.name}</span>
-                  </label>
-                ))}
-              </div>
-              <label className="flex items-center gap-2 cursor-pointer mt-2">
-                <input
-                  type="checkbox"
-                  checked={practicalFilters.verifiedOnly}
-                  onChange={e => setPracticalFilters(p => ({ ...p, verifiedOnly: e.target.checked }))}
-                  className="w-3.5 h-3.5 accent-brand-700"
-                />
-                <span className="text-xs text-stone-600">Verified hosts only</span>
-              </label>
-              {availableLanguages.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-xs text-stone-400 mb-1.5">Languages spoken</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {availableLanguages.map(lang => (
-                      <button
-                        key={lang}
-                        type="button"
-                        onClick={() => toggleLanguage(lang)}
-                        className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                          practicalFilters.languages.includes(lang)
-                            ? 'bg-brand-700 border-brand-700 text-white'
-                            : 'bg-white border-stone-200 text-stone-600'
-                        }`}
-                      >
-                        {lang}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {totalActiveFilters > 0 && (
-                <button type="button" onClick={resetAll} className="mt-3 text-xs text-brand-600 font-medium">
-                  Reset all filters
-                </button>
-              )}
-            </div>
+          <div className="px-4 py-3 border-b border-stone-100 bg-white">
+            <FiltersPanel
+              filters={practicalFilters}
+              availableLanguages={availableLanguages}
+              onApply={next => { setPracticalFilters(next); setMobileFiltersOpen(false) }}
+            />
           </div>
         )}
       </div>
