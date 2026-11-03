@@ -57,34 +57,15 @@ interface Props {
 }
 
 /* ── Taxonomy data ───────────────────────────────────────────── */
-const INTENT_DATA = [
-  { slug: 'nature_habitat',    name: 'Nature & Habitats'   },
-  { slug: 'rural_immersion',   name: 'Rural Immersion'     },
-  { slug: 'long_stay_retreat', name: 'Long-Stay Retreats'  },
-  { slug: 'transit_pitstop',   name: 'On-the-Move Transit' },
-]
-const LANDSCAPE_DATA = [
-  { slug: 'env_forest_border',   name: 'Forest Borders & Buffers'        },
-  { slug: 'env_riverside',       name: 'Riverside & Backwaters'          },
-  { slug: 'env_coastal',         name: 'Untouched Coastal Villages'      },
-  { slug: 'env_mountain_valley', name: 'Mountain Passes & High Valleys'  },
-  { slug: 'env_agricultural',    name: 'Active Farm Belts & Plantations' },
-  { slug: 'env_rocky_plateau',   name: 'Plateaus & Rocky Terrains'       },
-  { slug: 'env_sacred_grove',    name: 'Sacred Groves & Hidden Orchards' },
-  { slug: 'env_wetland',         name: 'Lakeside & Wetland Fringes'      },
-]
-// Facilities & stay preferences: the same list and groups as Discover's Filters
+// Facilities & stay preferences: the same list and groups as Discover's Filters.
+// (The earlier Travel Intent and Landscape tags are no longer shown or used; homestays keep them.)
 const PRACTICAL_DATA = FACILITIES.map(f => ({ slug: f.slug, name: f.label }))
 
-const INTENT_SLUGS_SET   = new Set(INTENT_DATA.map(i => i.slug))
-const LANDSCAPE_SLUGS_SET = new Set(LANDSCAPE_DATA.map(l => l.slug))
 const PRACTICAL_SLUGS_SET = new Set(PRACTICAL_DATA.map(p => p.slug))
 
-const ALL_SLUG_NAMES = Object.fromEntries([
-  ...INTENT_DATA,
-  ...LANDSCAPE_DATA,
-  ...PRACTICAL_DATA,
-].map(c => [c.slug, c.name]))
+const ALL_SLUG_NAMES = Object.fromEntries(PRACTICAL_DATA.map(c => [c.slug, c.name]))
+
+const facilityCount = (slugs: string[]) => slugs.filter(s => PRACTICAL_SLUGS_SET.has(s)).length
 
 const slugToName = (slug: string) =>
   ALL_SLUG_NAMES[slug] ?? slug.replace(/-/g, ' ')
@@ -192,25 +173,14 @@ function TaxonomyPanel({
   onSaved:              () => void
 }) {
   const [subCategories, setSubCategories] = useState<string[]>(initialSubCategories)
-  const [intentSlug,    setIntentSlug]    = useState<string | null>(
-    initialSlugs.find(s => INTENT_SLUGS_SET.has(s)) ?? null
-  )
-  const [landscapeSlugs, setLandscapeSlugs] = useState<string[]>(
-    initialSlugs.filter(s => LANDSCAPE_SLUGS_SET.has(s))
-  )
   const [practicalSlugs, setPracticalSlugs] = useState<string[]>(
     initialSlugs.filter(s => PRACTICAL_SLUGS_SET.has(s))
   )
+  // The homestay's earlier Travel Intent / Landscape tags: no longer shown, but saved back unchanged
+  const keptOldSlugs = initialSlugs.filter(s => !PRACTICAL_SLUGS_SET.has(s))
   const [saving, setSaving] = useState(false)
   const [saved,  setSaved]  = useState(false)
   const [error,  setError]  = useState<string | null>(null)
-
-  function toggleLandscape(slug: string) {
-    setLandscapeSlugs(prev =>
-      prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]
-    )
-    setSaved(false)
-  }
 
   function togglePractical(slug: string) {
     setPracticalSlugs(prev =>
@@ -229,11 +199,7 @@ function TaxonomyPanel({
   async function handleSave() {
     setSaving(true)
     setError(null)
-    const selected = [
-      ...(intentSlug ? [intentSlug] : []),
-      ...landscapeSlugs,
-      ...practicalSlugs,
-    ]
+    const selected = [...keptOldSlugs, ...practicalSlugs]
     // The old tags and the new sub-categories are stored separately; save both
     const result    = await saveCategories(homestayId, selected)
     const subResult = result.error ? null : await saveSubCategories(homestayId, subCategories)
@@ -247,8 +213,7 @@ function TaxonomyPanel({
     }
   }
 
-  const totalSelected =
-    (intentSlug ? 1 : 0) + landscapeSlugs.length + practicalSlugs.length
+  const totalSelected = subCategories.length + practicalSlugs.length
 
   return (
     <div className="col-span-full px-5 py-4 bg-stone-50 border-t border-stone-100">
@@ -288,93 +253,33 @@ function TaxonomyPanel({
         </div>
       </div>
 
-      <p className="text-[10px] text-stone-400 mb-3">
-        Layers 1 and 2 are the earlier categories, still used by the live site. Layer 3 feeds the Filters button.
-      </p>
-
-      <div className="grid sm:grid-cols-3 gap-6 mb-4">
-        {/* Layer 1: Travel Intent (single select) */}
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">
-            Layer 1 · Travel Intent
-          </p>
-          <div className="space-y-1.5">
-            {INTENT_DATA.map(intent => (
-              <label key={intent.slug} className="flex items-center gap-2 cursor-pointer group/r">
-                <input
-                  type="radio"
-                  name={`intent-${homestayId}`}
-                  value={intent.slug}
-                  checked={intentSlug === intent.slug}
-                  onChange={() => { setIntentSlug(intent.slug); setSaved(false) }}
-                  className="w-3.5 h-3.5 border-stone-300 accent-brand-600 cursor-pointer"
-                />
-                <span className="text-xs text-stone-600 group-hover/r:text-stone-900 transition-colors">
-                  {intent.name}
-                </span>
-              </label>
-            ))}
-            {intentSlug && (
-              <button
-                type="button"
-                onClick={() => { setIntentSlug(null); setSaved(false) }}
-                className="text-[10px] text-stone-400 hover:text-rose-500 transition-colors mt-0.5"
-              >
-                Clear intent
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Layer 2: Landscape (multi-select) */}
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">
-            Layer 2 · Landscape
-          </p>
-          <div className="space-y-1.5">
-            {LANDSCAPE_DATA.map(l => (
-              <label key={l.slug} className="flex items-center gap-2 cursor-pointer group/c">
-                <input
-                  type="checkbox"
-                  checked={landscapeSlugs.includes(l.slug)}
-                  onChange={() => toggleLandscape(l.slug)}
-                  className="w-3.5 h-3.5 rounded border-stone-300 accent-brand-600 cursor-pointer"
-                />
-                <span className="text-xs text-stone-600 group-hover/c:text-stone-900 transition-colors">
-                  {l.name}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Layer 3: Facilities & Stay Preferences (multi-select): tick only what the host has confirmed */}
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">
-            Layer 3 · Facilities &amp; Stay Preferences
-          </p>
-          <div className="space-y-3">
-            {FACILITY_GROUPS.map(group => (
-              <div key={group.key}>
-                <p className="text-[11px] font-semibold text-stone-600 mb-1.5">{group.label}</p>
-                <div className="space-y-1.5">
-                  {group.facilities.map(f => (
-                    <label key={f.slug} className="flex items-center gap-2 cursor-pointer group/p">
-                      <input
-                        type="checkbox"
-                        checked={practicalSlugs.includes(f.slug)}
-                        onChange={() => togglePractical(f.slug)}
-                        className="w-3.5 h-3.5 rounded border-stone-300 accent-brand-600 cursor-pointer"
-                      />
-                      <span className="text-xs text-stone-600 group-hover/p:text-stone-900 transition-colors">
-                        {f.label}
-                      </span>
-                    </label>
-                  ))}
-                </div>
+      {/* Facilities & Stay Preferences (multi-select): tick only what the host has confirmed.
+          These feed Discover's Filters button and the homestay page. */}
+      <div className="mb-4">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-3">
+          Facilities &amp; Stay Preferences · {practicalSlugs.length} selected
+        </p>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {FACILITY_GROUPS.map(group => (
+            <div key={group.key}>
+              <p className="text-xs font-semibold text-stone-700 mb-2">{group.label}</p>
+              <div className="space-y-1.5">
+                {group.facilities.map(f => (
+                  <label key={f.slug} className="flex items-center gap-2 cursor-pointer group/p">
+                    <input
+                      type="checkbox"
+                      checked={practicalSlugs.includes(f.slug)}
+                      onChange={() => togglePractical(f.slug)}
+                      className="w-3.5 h-3.5 rounded border-stone-300 accent-brand-600 cursor-pointer"
+                    />
+                    <span className="text-xs text-stone-600 group-hover/p:text-stone-900 transition-colors">
+                      {f.label}
+                    </span>
+                  </label>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -507,21 +412,24 @@ export default function HomestaysClient({ homestays }: Props) {
                       <p className="text-sm font-semibold text-stone-900 truncate">{h.title}</p>
                       <p className="text-xs text-stone-400 truncate">by {h.host_name}</p>
                       <p className="text-[10px] text-stone-300 mt-0.5">Updated {timeAgo(h.updated_at)}</p>
-                      {/* Category tags */}
-                      {h.category_slugs.length > 0 ? (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {h.category_slugs.slice(0, 3).map(slug => (
-                            <span key={slug} className="text-[9px] bg-brand-50 text-brand-700 px-1.5 py-0.5 rounded-full font-medium border border-brand-100">
-                              {slugToName(slug)}
-                            </span>
-                          ))}
-                          {h.category_slugs.length > 3 && (
-                            <span className="text-[9px] text-stone-400">+{h.category_slugs.length - 3} more</span>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-[9px] text-stone-300 mt-0.5">No categories</p>
-                      )}
+                      {/* Facility tags (the earlier Travel Intent / Landscape tags are not shown) */}
+                      {(() => {
+                        const facilitySlugs = h.category_slugs.filter(slug => PRACTICAL_SLUGS_SET.has(slug))
+                        return facilitySlugs.length > 0 ? (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {facilitySlugs.slice(0, 3).map(slug => (
+                              <span key={slug} className="text-[9px] bg-brand-50 text-brand-700 px-1.5 py-0.5 rounded-full font-medium border border-brand-100">
+                                {slugToName(slug)}
+                              </span>
+                            ))}
+                            {facilitySlugs.length > 3 && (
+                              <span className="text-[9px] text-stone-400">+{facilitySlugs.length - 3} more</span>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-[9px] text-stone-300 mt-0.5">No facilities</p>
+                        )
+                      })()}
                     </div>
                   </div>
 
@@ -596,11 +504,11 @@ export default function HomestaysClient({ homestays }: Props) {
                         {/* Categories */}
                         <button
                           onClick={() => { setExpandedId(expandedId === h.id ? null : h.id); setLinkHostId(null) }}
-                          title={h.category_slugs.length > 0 ? `Edit ${h.category_slugs.length} tags` : 'Assign Taxonomy'}
+                          title={facilityCount(h.category_slugs) > 0 ? `Edit ${facilityCount(h.category_slugs)} facilities` : 'Assign Taxonomy'}
                           className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
                             expandedId === h.id
                               ? 'bg-brand-100 text-brand-600'
-                              : h.category_slugs.length > 0
+                              : facilityCount(h.category_slugs) > 0
                               ? 'bg-brand-50 text-brand-500 hover:bg-brand-100 hover:text-brand-700'
                               : 'text-stone-400 hover:text-brand-600 hover:bg-brand-50'
                           }`}
