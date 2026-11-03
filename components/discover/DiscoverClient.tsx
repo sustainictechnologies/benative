@@ -8,7 +8,7 @@ import {
   Waves, Droplets, Mountain, TreePine, Wheat, Wind,
   Users, Tractor, Landmark, Leaf,
   Snail, CalendarDays, Clock, Baby, Car, User, Laptop,
-  Utensils, Sunrise, BookOpen, WifiOff, HeartHandshake, Armchair,
+  Utensils, Sunrise, BookOpen, WifiOff, Footprints, Armchair,
 } from 'lucide-react'
 import PracticalFiltersDrawer from './PracticalFiltersDrawer'
 import PlaceGrid from './PlaceGrid'
@@ -83,7 +83,7 @@ const SUB_VISUALS: Record<string, Visual> = {
   wake_up_in_nature:     { icon: Sunrise,        img: photo('1707111762867-a88c90b7d9fa'), alt: 'Sunrise over the hills' },
   learn_something_new:   { icon: BookOpen,       img: photo('1613833684971-9411a2b00970'), alt: 'Hands shaping a clay pot' },
   go_offline:            { icon: WifiOff,        img: photo('1663745430674-180c6858f46c'), alt: 'Green cliffs and a deep valley' },
-  meet_the_people:       { icon: HeartHandshake, img: photo('1601689892697-b64daa00ff6d'), alt: 'Villagers gathered outside a home' },
+  trekking:              { icon: Footprints,     img: photo('1627894485200-b92fb4353967'), alt: 'Trekker resting on a green mountain meadow' },
   do_absolutely_nothing: { icon: Armchair,       img: photo('1643474004450-78bac5b408e0'), alt: 'Cat resting under a charpai' },
 }
 

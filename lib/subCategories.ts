@@ -25,7 +25,7 @@ export const SUB_CATEGORY_GROUPS: SubCategoryGroup[] = [
       { key: 'wake_up_in_nature',     label: 'Wake Up in Nature' },
       { key: 'learn_something_new',   label: 'Learn Something New' },
       { key: 'go_offline',            label: 'Go Offline' },
-      { key: 'meet_the_people',       label: 'Meet the People' },
+      { key: 'trekking',              label: 'Trekking' },
       { key: 'do_absolutely_nothing', label: 'Do Absolutely Nothing' },
     ],
   },
