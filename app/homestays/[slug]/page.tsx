@@ -7,7 +7,7 @@ import ShareButton from '@/components/ShareButton'
 import type { HomestayBlock } from '@/types/blocks.types'
 import { SUB_CATEGORY_GROUPS } from '@/lib/subCategories'
 import { sharePreviewImgUrl } from '@/lib/supabase/imageUrl'
-import { MapPin, Globe2, Clock } from 'lucide-react'
+import { MapPin, Globe2, CalendarDays, RefreshCw, Eye } from 'lucide-react'
 
 export const revalidate = 60
 
@@ -69,7 +69,12 @@ export default async function HomestayPage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   const isLoggedIn = !!user
 
-  const homestay = await getHomestay(params.slug)
+  // The views count is fetched alongside the homestay. Robots are not counted (supabase/homestay_view_count.sql);
+  // until that file has been run, the count is left out.
+  const [homestay, { data: views }] = await Promise.all([
+    getHomestay(params.slug),
+    supabase.rpc('homestay_view_count', { p_slug: params.slug }),
+  ])
 
   if (!homestay || homestay.latitude === 0) notFound()
 
@@ -161,15 +166,21 @@ export default async function HomestayPage({ params }: Props) {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 text-xs text-stone-400 mt-2">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-stone-500 mt-2">
           <span className="flex items-center gap-1.5">
-            <Clock size={12} />
-            Listed {new Date(homestay.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            <CalendarDays size={14} />
+            Since: {new Date(homestay.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
           </span>
           {homestay.updated_at && homestay.updated_at !== homestay.created_at && (
             <span className="flex items-center gap-1.5">
-              <Clock size={12} />
-              Updated {new Date(homestay.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+              <RefreshCw size={14} />
+              Last Updated: {new Date(homestay.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </span>
+          )}
+          {typeof views === 'number' && (
+            <span className="flex items-center gap-1.5">
+              <Eye size={14} />
+              {views.toLocaleString('en-IN')} {views === 1 ? 'view' : 'views'}
             </span>
           )}
         </div>
