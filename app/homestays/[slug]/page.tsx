@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import BlockRenderer from '@/components/blocks/BlockRenderer'
 import ReviewSection from '@/components/reviews/ReviewSection'
-import SignupGate from '@/components/SignupGate'
 import ShareButton from '@/components/ShareButton'
 import type { HomestayBlock } from '@/types/blocks.types'
 import { SUB_CATEGORY_GROUPS } from '@/lib/subCategories'
@@ -127,18 +126,15 @@ export default async function HomestayPage({ params }: Props) {
       : [tagsBlock, ...orderedBlocks]
   }
 
-  // A visitor without an account gets the page blurred, cut short and out of reach, under a sign-in pop-up.
-  // React 18 only sets `inert` when it is given as an empty string, which its types do not allow, hence `object`.
-  const lockedProps: object = isLoggedIn ? {} : { 'aria-hidden': true, inert: '' }
+  // Visitors without an account see the whole page; only the host's contact details need one.
+  // The database does not give them the contact block, so its sign-in box takes its place (last, where it is on every page).
+  if (!isLoggedIn && !orderedBlocks.some((b) => b.block_type === 'contact')) {
+    const signInBlock: HomestayBlock = { id: 'contact-sign-in', homestay_id: homestay.id, sort_order: 0, block_type: 'contact', content_data: { host_name: homestay.host_name } }
+    orderedBlocks = [...orderedBlocks, signInBlock]
+  }
 
   return (
-    <>
-    <article
-      className={`max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-2 ${
-        isLoggedIn ? '' : 'blur-[6px] pointer-events-none select-none max-h-[160vh] overflow-hidden'
-      }`}
-      {...lockedProps}
-    >
+    <article className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-2">
       {/* Header */}
       <div className="mb-5">
         {/* The tags have their own block, below the gallery unless placed elsewhere in the builder */}
@@ -198,8 +194,5 @@ export default async function HomestayPage({ params }: Props) {
         <ReviewSection homestayId={homestay.id} slug={params.slug} />
       </div>
     </article>
-
-    {!isLoggedIn && <SignupGate slug={params.slug} />}
-    </>
   )
 }
