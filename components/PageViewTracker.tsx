@@ -8,6 +8,9 @@ export default function PageViewTracker() {
   const pathname = usePathname()
 
   useEffect(() => {
+    // Only visits on benative.in are recorded: the site running locally, the review site and
+    // other Vercel test addresses are testing, not visitors
+    if (!/(^|\.)benative\.in$/.test(window.location.hostname)) return
     const supabase = createClient()
     // A signed-in visitor's visit carries their account, so Admin → Analytics can show who opened which page
     supabase.auth.getSession().then(({ data: { session } }) =>
