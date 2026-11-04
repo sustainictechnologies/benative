@@ -1,6 +1,5 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { assertAdmin } from '@/lib/adminAuth'
 import { revalidatePath } from 'next/cache'
@@ -76,7 +75,7 @@ const VALID_SLUGS = new Set([
 
 export async function saveCategories(homestayId: string, selectedSlugs: string[]) {
   assertAdmin()
-  const supabase = createClient()
+  const supabase = createAdminClient()
 
   // Only keep known slugs
   const cleanSlugs = selectedSlugs.filter(s => VALID_SLUGS.has(s))
