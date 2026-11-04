@@ -102,7 +102,7 @@ export default function HomeSearch() {
 
           <div className="flex-1 min-w-0 space-y-3.5">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-brand-800">Find your next stay</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-brand-800">Find a Place to Belong</h2>
               <p className="text-sm text-stone-500 mt-0.5">Search your homestay by name, place or experience</p>
             </div>
 
