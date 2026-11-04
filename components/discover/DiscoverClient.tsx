@@ -17,7 +17,8 @@ import { EMPTY_PRACTICAL_FILTERS, type PracticalFilters } from './types'
 import type { HomestayWithCategories } from '@/types/blocks.types'
 import { createClient } from '@/lib/supabase/client'
 import { SUB_CATEGORY_GROUPS, type SubCategory } from '@/lib/subCategories'
-import { searchHomestays, groupSuggestions, MIN_SEARCH_LENGTH } from '@/lib/search'
+import { searchHomestays, groupSuggestions, MIN_SEARCH_LENGTH, type SearchHit } from '@/lib/search'
+import SearchSuggestions from '@/components/SearchSuggestions'
 import { findPlace, insidePlace, distanceKm, type Place } from '@/lib/places'
 import type { MapFocus } from './DiscoverMap'
 
@@ -122,8 +123,11 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
 
   // ── Search: name, place or experience ────────────────────────────
   const [searchText, setSearchText] = useState(initialSearch ?? '')
-  const [searchIds,  setSearchIds]  = useState<Set<string> | null>(null)   // the matching stays; null when not searching
+  const [searchHits, setSearchHits] = useState<SearchHit[] | null>(null)   // the matching stays; null when not searching
   const [searchBusy, setSearchBusy] = useState(false)
+  const [suggestOpen, setSuggestOpen] = useState(false)   // the suggestions under the search box
+  const searchBoxRef = useRef<HTMLDivElement>(null)
+  const searchIds = useMemo(() => (searchHits ? new Set(searchHits.map(h => h.id)) : null), [searchHits])
   // When the words are a place (a town, district, state…): the place, the words it was found for,
   // and the stays whose own village or district matched the words
   const [placeFor,   setPlaceFor]   = useState<{ term: string; place: Place; namedIds: Set<string> } | null>(null)
@@ -193,6 +197,21 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
     setTimeout(() => splitRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
   }
 
+  // Search, or a chosen suggestion: closes the suggestions and the phone keyboard and shows the results
+  // (the list already follows the typing)
+  function showResults() {
+    setSuggestOpen(false)
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    splitRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  // A click outside the search box closes the suggestions
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => { if (!searchBoxRef.current?.contains(e.target as Node)) setSuggestOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [])
+
   function resetAll() {
     setSelectedCatKey(null)
     setSelectedSubCat(null)
@@ -224,7 +243,7 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
     }
 
     if (!searching) {
-      setSearchIds(null)
+      setSearchHits(null)
       setPlaceFor(null)
       setSearchBusy(false)
       keepInAddress(null)
@@ -236,7 +255,7 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
       const placeLookup = findPlace(searchTerm)   // runs alongside the homestay search
       const hits = await searchHomestays(supabase, searchTerm)
       if (cancelled) return
-      setSearchIds(new Set(hits.map(h => h.id)))
+      setSearchHits(hits)
       setSearchBusy(false)
       keepInAddress(searchTerm)
 
@@ -387,24 +406,21 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
   return (
     <div className="flex flex-col bg-white">
 
-      {/* ── Search box, above the categories ── */}
+      {/* ── Search box, above the categories (its suggestions open over the filter bars below) ── */}
       <div className="bg-[#f8f7f2] px-4 sm:px-6 pt-6">
-        <div className="max-w-7xl mx-auto">
+        <div ref={searchBoxRef} className="max-w-7xl mx-auto relative z-[600]">
           <form
             role="search"
-            onSubmit={e => {
-              // The list already follows the typing; Search closes the phone keyboard and shows the results
-              e.preventDefault()
-              ;(document.activeElement as HTMLElement | null)?.blur()
-              splitRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }}
+            onSubmit={e => { e.preventDefault(); showResults() }}
             className="flex items-center gap-3 rounded-full border border-stone-300 bg-white pl-5 pr-1.5 py-1.5 focus-within:border-brand-600 focus-within:ring-4 focus-within:ring-brand-50 transition-shadow"
           >
             <Search size={20} className="text-stone-500 shrink-0" aria-hidden />
             <input
               type="text"
               value={searchText}
-              onChange={e => setSearchText(e.target.value)}
+              onChange={e => { setSearchText(e.target.value); setSuggestOpen(true) }}
+              onFocus={() => setSuggestOpen(true)}
+              onKeyDown={e => { if (e.key === 'Escape') setSuggestOpen(false) }}
               placeholder={narrowScreen ? 'Place, stay or experience…' : 'A place, a homestay or an experience…'}
               aria-label="Search homestays"
               autoComplete="off"
@@ -430,6 +446,15 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
               <span className="hidden sm:inline">Search</span>
             </button>
           </form>
+
+          {suggestOpen && searching && (
+            <SearchSuggestions
+              term={searchTerm}
+              hits={searchBusy ? null : searchHits}
+              onClose={() => setSuggestOpen(false)}
+              onSearch={q => { setSearchText(q); showResults() }}
+            />
+          )}
         </div>
       </div>
 
