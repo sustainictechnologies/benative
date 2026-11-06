@@ -118,7 +118,8 @@ export default function BuilderClient() {
         setPageName(h.title ?? '')
         setPageLanguages(h.languages_spoken ?? [])
         setPageAddress(h.address ?? `${h.village_name ?? ''}, ${h.location_district ?? ''}`)
-        setPageLocation(savedLocation)
+        // A homestay moved back to Drafts keeps its old location in its draft
+        setPageLocation(dd?.pageLocation ?? savedLocation)
 
         const raw = (h.homestay_blocks ?? [])
           .sort((a: any, b: any) => a.sort_order - b.sort_order)

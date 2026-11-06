@@ -7,8 +7,7 @@ import {
   Pencil, Trash2, ShieldCheck, MapPin, Search,
   ExternalLink, Layers, AlertTriangle, X, Check, Tag, Globe, UserCheck,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import { saveCategories, saveSubCategories, toggleShowOnHomepage, linkHostAccount, unlinkHostAccount } from '../actions'
+import { saveCategories, saveSubCategories, toggleShowOnHomepage, linkHostAccount, unlinkHostAccount, removeHomestay } from '../actions'
 import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 import { SUB_CATEGORY_GROUPS } from '@/lib/subCategories'
 import { FACILITIES, FACILITY_GROUPS } from '@/lib/facilities'
@@ -328,13 +327,13 @@ export default function HomestaysClient({ homestays }: Props) {
     h.location_district.toLowerCase().includes(search.toLowerCase())
   )
 
+  // A live homestay goes back to Drafts; a draft is deleted for good (see removeHomestay)
   const handleDelete = async (id: string) => {
     setDeleting(id)
     setDeleteErr('')
-    const supabase = createClient()
-    const { error } = await supabase.from('homestays').delete().eq('id', id)
-    if (error) { setDeleteErr(error.message); setDeleting(null) }
-    else        { setConfirmId(null); setDeleting(null); router.refresh() }
+    const { error } = await removeHomestay(id)
+    if (error) { setDeleteErr(error); setDeleting(null) }
+    else       { setConfirmId(null); setDeleting(null); router.refresh() }
   }
 
   return (
@@ -458,7 +457,7 @@ export default function HomestaysClient({ homestays }: Props) {
                       h.has_location ? 'bg-emerald-50 text-emerald-700' : 'bg-stone-100 text-stone-500'
                     }`}>
                       <MapPin size={9} />
-                      {h.has_location ? 'On map' : 'No location'}
+                      {h.has_location ? 'On map' : 'Not on map'}
                     </span>
                   </div>
 
@@ -472,8 +471,13 @@ export default function HomestaysClient({ homestays }: Props) {
                   {/* Actions */}
                   <div className="flex items-center gap-1 shrink-0">
                     {confirmId === h.id ? (
-                      <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-xl px-3 py-1.5">
-                        <span className="text-xs text-rose-700 font-medium">Delete?</span>
+                      <div
+                        className="flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-xl px-3 py-1.5"
+                        title={h.has_location
+                          ? 'Taken off the site and moved to Drafts. Its page, photos, reviews and location are kept, so you can publish it again.'
+                          : 'This draft and its page are deleted for good.'}
+                      >
+                        <span className="text-xs text-rose-700 font-medium">{h.has_location ? 'Move to Drafts?' : 'Delete for good?'}</span>
                         <button
                           onClick={() => handleDelete(h.id)}
                           disabled={deleting === h.id}
@@ -553,7 +557,7 @@ export default function HomestaysClient({ homestays }: Props) {
                         {/* Delete */}
                         <button
                           onClick={() => setConfirmId(h.id)}
-                          title="Delete"
+                          title={h.has_location ? 'Take off the site (back to Drafts)' : 'Delete draft'}
                           className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
                         >
                           <Trash2 size={14} />
