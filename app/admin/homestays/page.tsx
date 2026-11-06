@@ -45,7 +45,8 @@ export default async function HomestaysPage() {
     village_name:      h.village_name,
     location_district: h.location_district,
     is_verified:       h.is_verified,
-    has_location:      h.latitude != null && h.longitude != null,
+    // Live = on the map: a draft has no location (0, 0)
+    has_location:      h.latitude != null && h.longitude != null && h.latitude !== 0,
     created_at:        h.created_at,
     updated_at:        h.updated_at ?? h.created_at,
     cover_image_url:   h.cover_image_url ?? null,

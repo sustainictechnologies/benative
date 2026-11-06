@@ -28,7 +28,7 @@ const getHomestay = cache(async (slug: string) => {
     .select(`
       id, title, slug, village_name, location_district, is_verified,
       host_name, calling_window, languages_spoken, youtube_video_id,
-      created_at, updated_at, sub_categories, cover_image_url,
+      created_at, updated_at, sub_categories, cover_image_url, latitude,
       homestay_tags ( tags ( id, name, slug ) ),
       homestay_blocks ( id, block_type, sort_order, content_data )
     `)
