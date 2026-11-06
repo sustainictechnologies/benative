@@ -24,6 +24,7 @@ interface Props {
   slug:        string
   live:        boolean
   gate:        LaunchGate
+  demo?:       boolean   // the demo (/launch/demo/[slug]): plays everything, publishes nothing
 }
 
 /* ---------- night to sunrise (as in the prototype) ---------- */
@@ -63,7 +64,7 @@ const enterDelay = (d: string) => ({ '--d': d } as CSSProperties)
 
 type Outcome = { ok: true; slug: string } | { ok: false; message: string }
 
-export default function LaunchClient({ token, name, hostInitial, slug, live, gate }: Props) {
+export default function LaunchClient({ token, name, hostInitial, slug, live, gate, demo = false }: Props) {
   const [screen, setScreen]           = useState<'ready' | 'live'>(live ? 'live' : 'ready')
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [publishing, setPublishing]   = useState(false)
@@ -229,7 +230,10 @@ export default function LaunchClient({ token, name, hostInitial, slug, live, gat
     }
     run.current.raf = requestAnimationFrame(step)
 
-    launchHomestay(token)
+    const publish: Promise<LaunchResult> = demo
+      ? new Promise(resolve => setTimeout(() => resolve({ success: true, slug }), 1500))
+      : launchHomestay(token)
+    publish
       .then((r): Outcome => (r.success ? { ok: true, slug: r.slug } : { ok: false, message: MESSAGES[r.reason] }))
       .catch((): Outcome => ({ ok: false, message: MESSAGES.publish }))
       .then(outcome => {

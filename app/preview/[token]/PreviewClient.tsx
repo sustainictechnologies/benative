@@ -7,9 +7,9 @@ import { Eye, MapPin, Languages, Rocket, Home, ArrowRight, Check } from 'lucide-
 import BlockRenderer from '@/components/blocks/BlockRenderer'
 import type { HomestayBlock } from '@/types/blocks.types'
 
-// The launch that comes with a new homestay's preview: ready (its launch page), already used
-// (the live page), or none (an earlier preview, or a live homestay's changes)
-export type PreviewLaunchInfo = { token: string } | { liveSlug: string | null } | null
+// The launch that comes with a new homestay's preview: ready (the address of its launch page), already
+// used (the live page), or none (an earlier preview, or a live homestay's changes)
+export type PreviewLaunchInfo = { href: string } | { liveSlug: string | null } | null
 
 interface BlockData {
   type: string
@@ -26,12 +26,14 @@ interface Props {
   blocksData: BlockData[]
   pageMeta?:  PageMeta | null
   launch?:    PreviewLaunchInfo
+  signedOut?: boolean   // the demo: the contact section shows its sign-in box instead of the host's details
+  slug?:      string
 }
 
-export default function PreviewClient({ blocksData, pageMeta, launch = null }: Props) {
+export default function PreviewClient({ blocksData, pageMeta, launch = null, signedOut = false, slug = 'preview' }: Props) {
   const router              = useRouter()
   const [checked, setChecked] = useState(false)
-  const canLaunch = !!launch && 'token' in launch
+  const canLaunch = !!launch && 'href' in launch
   const isLive    = !!launch && 'liveSlug' in launch
 
   const blocks = blocksData.map((b, i) => ({
@@ -98,15 +100,15 @@ export default function PreviewClient({ blocksData, pageMeta, launch = null }: P
             key={block.id}
             block={block}
             homestay={homestay}
-            isLoggedIn={true}
-            slug="preview"
+            isLoggedIn={!signedOut}
+            slug={slug}
             hideHeroCover={hasGallery}
           />
         ))}
       </div>
 
       {/* The host's go-ahead: after reading the whole page, tick and launch */}
-      {launch && 'token' in launch && (
+      {launch && 'href' in launch && (
         <section id="launch" className="scroll-mt-32 px-4 sm:px-6 pt-4 pb-16">
           <div className="max-w-xl mx-auto bg-white border border-stone-200 rounded-3xl shadow-sm px-6 py-7 text-center">
             <div className="w-12 h-12 mx-auto rounded-full bg-brand-50 text-brand-700 flex items-center justify-center">
@@ -128,7 +130,7 @@ export default function PreviewClient({ blocksData, pageMeta, launch = null }: P
             <button
               type="button"
               disabled={!checked}
-              onClick={() => router.push(`/launch/${launch.token}`)}
+              onClick={() => router.push(launch.href)}
               className="mt-4 w-full min-h-[56px] flex items-center justify-center gap-2.5 rounded-2xl bg-brand-700 hover:bg-brand-800 disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed text-white font-semibold text-base transition-colors shadow-sm"
             >
               <Home size={18} /> Launch My Homestay <ArrowRight size={18} />
