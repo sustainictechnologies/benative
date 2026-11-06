@@ -7,7 +7,7 @@ import ShareButton from '@/components/ShareButton'
 import type { HomestayBlock } from '@/types/blocks.types'
 import { SUB_CATEGORY_GROUPS } from '@/lib/subCategories'
 import { sharePreviewImgUrl } from '@/lib/supabase/imageUrl'
-import { MapPin, Globe2, Clock } from 'lucide-react'
+import { MapPin, Globe2, Clock, Eye } from 'lucide-react'
 
 export const revalidate = 60
 
@@ -69,7 +69,12 @@ export default async function HomestayPage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   const isLoggedIn = !!user
 
-  const homestay = await getHomestay(params.slug)
+  // The views count is fetched alongside the homestay. Robots are not counted (supabase/homestay_view_count.sql);
+  // until that file has been run, the count is left out.
+  const [homestay, { data: views }] = await Promise.all([
+    getHomestay(params.slug),
+    supabase.rpc('homestay_view_count', { p_slug: params.slug }),
+  ])
 
   if (!homestay || homestay.latitude === 0) notFound()
 
@@ -170,6 +175,12 @@ export default async function HomestayPage({ params }: Props) {
             <span className="flex items-center gap-1.5">
               <Clock size={12} />
               Updated {new Date(homestay.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </span>
+          )}
+          {typeof views === 'number' && (
+            <span className="flex items-center gap-1.5">
+              <Eye size={12} />
+              {views.toLocaleString('en-IN')} {views === 1 ? 'view' : 'views'}
             </span>
           )}
         </div>
