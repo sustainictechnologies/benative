@@ -119,6 +119,21 @@
 @keyframes bnl-fade{from{opacity:0}}
 @keyframes bnl-rise{from{opacity:0;transform:translateY(16px) scale(.98)}}
 
+/* the demo's sign-in pop-up (real hosts sign in on the login page) */
+.bn-launch .signin{position:relative;max-width:400px;padding-top:30px}
+.bn-launch .signin .close{position:absolute;top:12px;right:12px;width:44px;height:44px;display:grid;place-items:center;border:none;border-radius:12px;background:none;color:var(--modal-muted);cursor:pointer}
+.bn-launch .signin .close:hover{background:var(--hover)}
+.bn-launch .signin .google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:50px;margin-top:20px;border:1.5px solid var(--line);border-radius:14px;background:#FFFFFF;color:var(--ink);font:600 15px var(--f-body);cursor:pointer;transition:background-color .2s ease,border-color .2s ease}
+.bn-launch .signin .google:hover{background:var(--hover);border-color:var(--sage)}
+.bn-launch .signin .or{display:flex;align-items:center;gap:12px;margin:16px 0 4px;color:#8A8D84;font-size:13px}
+.bn-launch .signin .or::before,.bn-launch .signin .or::after{content:"";flex:1;height:1px;background:var(--line)}
+.bn-launch .signin label{display:block;margin-top:10px;text-align:left;font-size:12.5px;font-weight:600;color:var(--modal-muted)}
+.bn-launch .signin input{display:block;width:100%;margin-top:6px;min-height:46px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:#FAF8F3;font:500 15px var(--f-body);color:var(--ink)}
+.bn-launch .signin input:focus{outline:2px solid var(--focus);outline-offset:1px}
+.bn-launch .signin .btn{width:100%;min-height:52px;margin-top:18px}
+.bn-launch .signin button:disabled{opacity:.7;cursor:progress}
+.bn-launch .signin .close:focus-visible,.bn-launch .signin .google:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+
 .bn-launch .toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:50;transform:translate(-50%,14px);opacity:0;max-width:calc(100% - 32px);padding:12px 18px;border-radius:12px;background:var(--forest-deep);color:#FFFFFF;font-size:14px;transition:opacity .25s,transform .25s;pointer-events:none}
 .bn-launch .toast.on{opacity:1;transform:translate(-50%,0)}
 

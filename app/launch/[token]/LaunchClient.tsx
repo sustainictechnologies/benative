@@ -74,6 +74,11 @@ export default function LaunchClient({ token, name, hostInitial, slug, live, gat
   const [origin, setOrigin]           = useState('https://www.benative.in')
   const [copied, setCopied]           = useState(false)
   const [toast, setToast]             = useState<string | null>(null)
+  // The demo's pretend sign-in (real hosts sign in on the login page)
+  const [signInOpen, setSignInOpen]     = useState(false)
+  const [signingIn, setSigningIn]       = useState(false)
+  const [demoSignedIn, setDemoSignedIn] = useState(false)
+  const activeGate = demo && demoSignedIn ? null : gate
 
   const rootRef      = useRef<HTMLDivElement>(null)
   const appRef       = useRef<HTMLDivElement>(null)
@@ -84,6 +89,7 @@ export default function LaunchClient({ token, name, hostInitial, slug, live, gat
   const liveTitleRef = useRef<HTMLHeadingElement>(null)
   const notYetRef    = useRef<HTMLButtonElement>(null)
   const yesRef       = useRef<HTMLButtonElement>(null)
+  const signInRef    = useRef<HTMLDivElement>(null)
   const linkInputRef = useRef<HTMLInputElement>(null)
   const els          = useRef<Record<string, SVGElement>>({})
   const lastFocus    = useRef<HTMLElement | null>(null)
@@ -200,6 +206,53 @@ export default function LaunchClient({ token, name, hostInitial, slug, live, gat
     document.addEventListener('keydown', onKey)
     return () => { document.removeEventListener('keydown', onKey); app?.removeAttribute('inert') }
   }, [confirmOpen])
+
+  /* ---------- the demo's pretend sign-in ---------- */
+  function openSignIn() {
+    lastFocus.current = document.activeElement as HTMLElement | null
+    setSignInOpen(true)
+  }
+  function closeSignIn() {
+    restoreFocus.current = true
+    setSignInOpen(false)
+  }
+  // Either way in, a moment of "signing in", then the Launch button
+  function demoSignIn() {
+    if (signingIn) return
+    setSigningIn(true)
+    setTimeout(() => {
+      if (!mounted.current) return
+      setSigningIn(false)
+      setSignInOpen(false)
+      setDemoSignedIn(true)
+      if (gate?.kind === 'signin') showToast(`Signed in as ${gate.hostEmail}`)
+    }, 900)
+  }
+  useEffect(() => { if (demoSignedIn) launchBtnRef.current?.focus({ preventScroll: true }) }, [demoSignedIn])
+
+  // While the sign-in is open: the page behind it is out of reach, focus stays in it, Esc closes it
+  useEffect(() => {
+    if (!signInOpen) {
+      // Back on the button that opened it, once the page behind is reachable again
+      if (restoreFocus.current) { restoreFocus.current = false; lastFocus.current?.focus({ preventScroll: true }) }
+      return
+    }
+    const app = appRef.current
+    app?.setAttribute('inert', '')
+    const buttons = () => Array.from(signInRef.current?.querySelectorAll<HTMLElement>('button, input') ?? [])
+    signInRef.current?.querySelector<HTMLElement>('.google')?.focus()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); closeSignIn() }
+      if (e.key === 'Tab') {
+        const list = buttons(), first = list[0], last = list[list.length - 1]
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus() }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus() }
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('keydown', onKey); app?.removeAttribute('inert') }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signInOpen])
 
   /* ---------- launching: the sunrise and the publishing run together ---------- */
   function startLaunch() {
@@ -342,22 +395,28 @@ export default function LaunchClient({ token, name, hostInitial, slug, live, gat
           {/* actions below the illustration */}
           <div className="swap actions">
             <div className={`pane${screen === 'ready' ? ' on' : ''}`} data-screen="ready" aria-hidden={screen !== 'ready'}>
-              {gate?.kind === 'signin' ? (
+              {activeGate?.kind === 'signin' ? (
                 <>
-                  <a className="btn big enter" style={enterDelay('.5s')} href={loginHref}>
-                    {homeIcon}<span>Sign in to Launch</span>{arrowIcon}
-                  </a>
+                  {demo ? (
+                    <button type="button" className="btn big enter" style={enterDelay('.5s')} onClick={openSignIn}>
+                      {homeIcon}<span>Sign in to Launch</span>{arrowIcon}
+                    </button>
+                  ) : (
+                    <a className="btn big enter" style={enterDelay('.5s')} href={loginHref}>
+                      {homeIcon}<span>Sign in to Launch</span>{arrowIcon}
+                    </a>
+                  )}
                   <p className="hint enter" style={enterDelay('.6s')}>
-                    Sign in with <strong>{gate.hostEmail}</strong>, the email saved for your homestay.
+                    Sign in with <strong>{activeGate.hostEmail}</strong>, the email saved for your homestay.
                   </p>
                 </>
-              ) : gate?.kind === 'email' ? (
+              ) : activeGate?.kind === 'email' ? (
                 <>
                   <button type="button" className="btn big enter" style={enterDelay('.5s')} onClick={switchAccount}>
                     {homeIcon}<span>Use a Different Account</span>{arrowIcon}
                   </button>
                   <p className="hint enter" style={enterDelay('.6s')}>
-                    This launch link is for <strong>{gate.hostEmail}</strong>. You&apos;re signed in as {gate.signedInAs}.
+                    This launch link is for <strong>{activeGate.hostEmail}</strong>. You&apos;re signed in as {activeGate.signedInAs}.
                   </p>
                 </>
               ) : (
@@ -429,6 +488,37 @@ export default function LaunchClient({ token, name, hostInitial, slug, live, gat
               <button ref={notYetRef} type="button" className="btn ghost" onClick={() => closeConfirm(true)}>Not Yet</button>
               <button ref={yesRef} type="button" className="btn" onClick={startLaunch}>Yes, Launch My Homestay</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* The demo's pretend sign-in, laid out like the login page */}
+      {signInOpen && gate?.kind === 'signin' && (
+        <div className="scrim" onClick={e => { if (e.target === e.currentTarget) closeSignIn() }}>
+          <div ref={signInRef} className="modal signin" role="dialog" aria-modal="true" aria-labelledby="signInTitle" aria-describedby="signInText">
+            <button type="button" className="close" aria-label="Close" onClick={closeSignIn}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+            <div className="seal" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></svg>
+            </div>
+            <h2 id="signInTitle">Sign in to launch your homestay</h2>
+            <p id="signInText">Use <strong>{gate.hostEmail}</strong>, the email saved for your homestay.</p>
+            <button type="button" className="google" onClick={demoSignIn} disabled={signingIn}>
+              <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+              </svg>
+              Continue with Google
+            </button>
+            <div className="or">or</div>
+            <label>Email<input type="text" readOnly value={gate.hostEmail} /></label>
+            <label>Password<input type="password" readOnly value="password" /></label>
+            <button type="button" className="btn" onClick={demoSignIn} disabled={signingIn}>
+              {signingIn ? 'Signing in…' : 'Login'}
+            </button>
           </div>
         </div>
       )}
