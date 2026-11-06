@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { X, MapPin, Navigation, Check, Loader2, User, Phone, Mail, Home, Globe, Pencil } from 'lucide-react'
 import { publishHomestay, type PublishPayload } from '@/lib/actions/publishLocation'
 import { createClient } from '@/lib/supabase/client'
+import { toSlug } from '@/lib/homestaySlug'
 import type { CanvasBlock } from './BuilderTypes'
 
 const LocationPickerMap = dynamic(() => import('./LocationPickerMap'), {
@@ -28,6 +29,7 @@ interface BuilderData {
   email:     string
   address:   string
   languages: string[]
+  location:  { lat: number; lng: number } | null   // set while building (📍 next to the address)
   blocks:    CanvasBlock[]
 }
 
@@ -47,16 +49,6 @@ const FIELD_ROWS = [
   { icon: MapPin, key: 'address' as const,   label: 'Address'       },
 ]
 
-function toSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-}
-
 export default function PublishModal({ open, onClose, onPublished, builderData }: Props) {
   const [mode, setMode]     = useState<Mode>('map')
   const [lat, setLat]       = useState<number | null>(null)
@@ -69,9 +61,14 @@ export default function PublishModal({ open, onClose, onPublished, builderData }
 
   const slug = useMemo(() => toSlug(builderData.title), [builderData.title])
 
-  // Load existing location from Supabase when modal opens
+  // Start from the location set while building, or else the one already saved for this address
   useEffect(() => {
     if (!open || !slug) return
+    if (builderData.location) {
+      setLat(builderData.location.lat)
+      setLng(builderData.location.lng)
+      return
+    }
     const supabase = createClient()
     supabase
       .from('homestays')
@@ -84,7 +81,7 @@ export default function PublishModal({ open, onClose, onPublished, builderData }
           setLng(data.longitude)
         }
       })
-  }, [open, slug])
+  }, [open, slug, builderData.location])
 
   const useGPS = useCallback(() => {
     if (!navigator.geolocation) { setErrMsg('Geolocation not supported'); return }

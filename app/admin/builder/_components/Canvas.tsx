@@ -27,6 +27,8 @@ interface Props {
   onLanguagesChange: (v: string[]) => void
   pageAddress: string
   onAddressChange: (v: string) => void
+  pageLocation: { lat: number; lng: number } | null
+  onEditLocation: () => void
 }
 
 function EmptyState({ isOver }: { isOver: boolean }) {
@@ -89,6 +91,7 @@ export default function Canvas({
   pageName, onNameChange,
   pageHighlights, pageLanguages, onHighlightsChange, onLanguagesChange,
   pageAddress, onAddressChange,
+  pageLocation, onEditLocation,
 }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: 'canvas-drop' })
 
@@ -176,6 +179,20 @@ export default function Canvas({
                     placeholder="e.g. Khed, Ratnagiri, Maharashtra"
                     className="text-xs text-stone-600 bg-stone-50 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-brand-400 w-full max-w-xs"
                   />
+                )}
+                {/* The place on the map: needed before the host can launch from the preview */}
+                {!previewMode && (
+                  <button
+                    onClick={onEditLocation}
+                    title="The homestay's place on the map"
+                    className={`shrink-0 flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-lg border transition-colors ${
+                      pageLocation
+                        ? 'border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100'
+                        : 'border-dashed border-amber-300 text-amber-700 hover:bg-amber-50'
+                    }`}
+                  >
+                    📍 {pageLocation ? `${pageLocation.lat.toFixed(4)}, ${pageLocation.lng.toFixed(4)}` : 'Set map location'}
+                  </button>
                 )}
               </div>
 

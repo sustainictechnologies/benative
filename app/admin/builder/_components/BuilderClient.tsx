@@ -28,6 +28,7 @@ import RightPanel from './RightPanel'
 import PublishModal from './PublishModal'
 import PreviewShareModal from './PreviewShareModal'
 import SaveAsNewModal from './SaveAsNewModal'
+import MapLocationModal, { type MapLocation } from './MapLocationModal'
 
 /* ─── Helpers ────────────────────────────────────────────── */
 function makeId() {
@@ -57,6 +58,8 @@ export default function BuilderClient() {
   const [pageHighlights, setPageHighlights] = useState(['Bird Watching', 'Long Stays Welcome'])
   const [pageLanguages, setPageLanguages]   = useState(['Marathi', 'Hindi', 'English'])
   const [pageAddress, setPageAddress]       = useState('Khed, Ratnagiri, Maharashtra')
+  const [pageLocation, setPageLocation]     = useState<MapLocation | null>(null)   // the place on the map
+  const [showLocation, setShowLocation]     = useState(false)
   const [savedAt, setSavedAt]               = useState<Date | null>(null)
   const [saving, setSaving]                 = useState(false)
   const [saveError, setSaveError]           = useState<string | null>(null)
@@ -92,6 +95,9 @@ export default function BuilderClient() {
 
         liveTitleRef.current = (h.homestay_blocks ?? []).length > 0 ? (h.title ?? '') : null
 
+        // A draft keeps its map location in the draft; a live homestay has it on its record
+        const savedLocation = h.latitude ? { lat: h.latitude, lng: h.longitude } : null
+
         // Prefer draft state over published blocks when a draft exists
         const dd = h.draft_data as any
         if (dd?.blocks?.length > 0) {
@@ -101,6 +107,7 @@ export default function BuilderClient() {
           setPageHighlights(dd.pageHighlights ?? [])
           setPageLanguages(dd.pageLanguages ?? h.languages_spoken ?? [])
           setPageAddress(dd.pageAddress ?? `${h.village_name ?? ''}, ${h.location_district ?? ''}`)
+          setPageLocation(dd.pageLocation ?? savedLocation)
           historyRef.current      = []
           lastSnapshotRef.current = draftBlocks
           skipSnapshotRef.current = true
@@ -111,6 +118,7 @@ export default function BuilderClient() {
         setPageName(h.title ?? '')
         setPageLanguages(h.languages_spoken ?? [])
         setPageAddress(h.address ?? `${h.village_name ?? ''}, ${h.location_district ?? ''}`)
+        setPageLocation(savedLocation)
 
         const raw = (h.homestay_blocks ?? [])
           .sort((a: any, b: any) => a.sort_order - b.sort_order)
@@ -358,6 +366,7 @@ export default function BuilderClient() {
         pageHighlights,
         pageLanguages,
         pageAddress,
+        pageLocation,
         blocks,
       })
       if (result.success) {
@@ -374,7 +383,7 @@ export default function BuilderClient() {
     } finally {
       setSaving(false)
     }
-  }, [pageName, pageHighlights, pageLanguages, pageAddress, blocks, router])
+  }, [pageName, pageHighlights, pageLanguages, pageAddress, pageLocation, blocks, router])
 
   const handleSave = useCallback(() => {
     const name = pageName.trim().toLowerCase()
@@ -680,6 +689,8 @@ export default function BuilderClient() {
               onLanguagesChange={setPageLanguages}
               pageAddress={pageAddress}
               onAddressChange={setPageAddress}
+              pageLocation={pageLocation}
+              onEditLocation={() => setShowLocation(true)}
             />
 
             {!previewMode && <RightPanel />}
@@ -694,6 +705,14 @@ export default function BuilderClient() {
           pageName={pageName}
           pageAddress={pageAddress}
           pageLanguages={pageLanguages}
+          pageLocation={pageLocation}
+        />
+
+        <MapLocationModal
+          open={showLocation}
+          location={pageLocation}
+          onClose={() => setShowLocation(false)}
+          onSave={location => { setPageLocation(location); setShowLocation(false) }}
         />
 
         <SaveAsNewModal
@@ -722,6 +741,7 @@ export default function BuilderClient() {
             email:     blocks.find(b => b.type === 'contact')?.props.texts?.['contact-email']    ?? '',
             address:   pageAddress,
             languages: pageLanguages,
+            location:  pageLocation,
             blocks,
           }}
         />
