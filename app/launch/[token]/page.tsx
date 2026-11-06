@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { PublishPayload } from '@/lib/publishHomestay'
+import { maskEmail } from '@/lib/maskEmail'
 import LaunchClient, { type LaunchGate } from './LaunchClient'
 
 export const dynamic = 'force-dynamic'
@@ -16,12 +17,6 @@ export const metadata: Metadata = {
 
 interface Props {
   params: { token: string }
-}
-
-// "sameer@gmail.com" → "sa•••@gmail.com": enough for the host to recognise their email
-function maskEmail(email: string) {
-  const [name, domain] = email.split('@')
-  return `${name.slice(0, 2)}•••@${domain ?? ''}`
 }
 
 export default async function LaunchPage({ params }: Props) {
