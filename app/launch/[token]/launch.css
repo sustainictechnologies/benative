@@ -1,0 +1,186 @@
+/* The Launch Your Homestay page (/launch/[token]), from the launch-your-homestay.html prototype.
+   Every rule is inside .bn-launch and every animation name starts with bnl-, so nothing here reaches
+   the rest of the site. The page colours follow the sky: LaunchClient's theme() moves the variables
+   below from night to morning on the .bn-launch element. */
+
+.bn-launch{
+  --surface:#FFFFFF;
+  --line:#E6E0D4;
+  --ink:#1E211C;
+  --forest:#1F4D1F;
+  --forest-deep:#163A16;
+  --sage:#A9B89C;
+  --sage-soft:#E5ECDE;
+  --earth:#8A6E52;
+  --hover:#EFEAE0;
+  --focus:#4F7A55;
+  --f-logo:var(--font-lora),Georgia,serif;
+  --f-body:var(--font-inter),"Segoe UI",system-ui,sans-serif;
+  /* night values; the launch animation moves them to morning */
+  --bg:#1F2A45; --muted:#B7BFCC; --logo:#EEE7D2; --heading:#EEF0E4;
+  --tag-bg:#2B3858; --tag-fg:#DCE6D2; --tag-dot:#9CC08A; --chip-bg:#26324F; --chip-line:#3A4767; --track:#3A4767;
+  --cream:#F7F4EE; --modal-muted:#5A5D55;
+  /* covers the site's header and footer: the page has its own header, like the builder */
+  position:fixed;inset:0;z-index:1100;overflow-y:auto;overscroll-behavior:contain;
+  background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+}
+.bn-launch *,.bn-launch *::before,.bn-launch *::after{box-sizing:border-box}
+.bn-launch [hidden]{display:none!important}
+.bn-launch .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.bn-launch .app{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* header */
+.bn-launch .top{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;max-width:1120px;margin:0 auto;padding-block:14px}
+.bn-launch .logo{display:flex;align-items:center;gap:10px;color:var(--logo);text-decoration:none}
+.bn-launch .logo b{display:block;font-family:var(--f-logo);font-weight:700;font-size:23px;line-height:1;letter-spacing:-.01em}
+.bn-launch .logo small{display:block;margin-top:4px;font-size:7.5px;font-weight:600;letter-spacing:.3em;color:var(--logo)}
+.bn-launch .host-chip{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted);padding:6px 12px 6px 6px;border:1px solid var(--chip-line);border-radius:999px;background:var(--chip-bg)}
+.bn-launch .host-chip i{width:26px;height:26px;border-radius:50%;background:var(--sage-soft);display:grid;place-items:center;color:var(--forest);font-style:normal;font-weight:700;font-size:12px}
+@media (max-width:420px){.bn-launch .host-chip span{display:none}.bn-launch .host-chip{padding:4px}}
+
+/* main column */
+.bn-launch .main{flex:1;display:flex;flex-direction:column;align-items:center;width:100%;max-width:780px;margin:0 auto;padding-block:clamp(4px,1.5vh,16px) 40px}
+.bn-launch .swap{display:grid;width:100%}
+.bn-launch .swap>.pane{grid-area:1/1;display:flex;flex-direction:column;align-items:center;text-align:center;opacity:0;transform:translateY(10px);transition:opacity .55s ease,transform .65s cubic-bezier(.2,.8,.2,1);pointer-events:none;visibility:hidden}
+.bn-launch .swap>.pane.on{opacity:1;transform:none;pointer-events:auto;visibility:visible}
+.bn-launch .tag{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:var(--tag-bg);color:var(--tag-fg);font-size:13px;font-weight:600}
+.bn-launch .tag .dot{width:7px;height:7px;border-radius:50%;background:var(--tag-dot)}
+.bn-launch .tag .dot.live{box-shadow:0 0 0 0 rgba(31,77,31,.45);animation:bnl-livedot 2s ease-out infinite}
+@keyframes bnl-livedot{to{box-shadow:0 0 0 8px rgba(31,77,31,0)}}
+.bn-launch h1{margin:18px 0 0;font-family:var(--f-body);font-weight:700;font-size:clamp(29px,6vw,44px);line-height:1.1;letter-spacing:-.032em;color:var(--heading);text-wrap:balance;max-width:19ch}
+.bn-launch h1:focus{outline:none}
+.bn-launch .lede{margin:12px 0 0;max-width:50ch;font-size:clamp(15.5px,2.4vw,17.5px);line-height:1.6;color:var(--muted);text-wrap:pretty}
+@media (max-width:480px){.bn-launch h1{margin-top:14px}.bn-launch .lede{margin-top:10px}}
+
+.bn-launch .stage{width:min(100%,740px,max(320px,calc((100vh - 400px) * 1.613)));margin-top:6px}
+@supports (height:100dvh){.bn-launch .stage{width:min(100%,740px,max(320px,calc((100dvh - 400px) * 1.613)))}}
+@media (max-width:520px){.bn-launch .stage{width:calc(100% + 24px);margin-inline:-12px}}
+.bn-launch #scene{display:block;width:100%;height:auto;aspect-ratio:500/310;overflow:hidden;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 12%,#000 88%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 14%,#000 84%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent 0,#000 12%,#000 88%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 14%,#000 84%,transparent 100%);mask-composite:intersect}
+.bn-launch #scene .tw{animation:bnl-tw 3.2s ease-in-out infinite alternate}
+.bn-launch #scene .tw.b{animation-duration:4.4s;animation-delay:-1.5s}
+@keyframes bnl-tw{from{opacity:.35}to{opacity:1}}
+.bn-launch #scene .flap{transform-box:fill-box;transform-origin:center;animation:bnl-flap .55s ease-in-out infinite alternate}
+@keyframes bnl-flap{from{transform:scaleY(1)}to{transform:scaleY(.4)}}
+
+/* publishing state of the launch button */
+.bn-launch .btn .ico-spin{display:none}
+.bn-launch .btn.is-publishing{cursor:progress;background:var(--forest-deep);transform:none}
+.bn-launch .btn.is-publishing:hover{transform:none}
+.bn-launch .btn.is-publishing .ico-home,.bn-launch .btn.is-publishing .arrow{display:none}
+.bn-launch .btn.is-publishing .ico-spin{display:inline-block;animation:bnl-spin 1s linear infinite}
+.bn-launch .progress{width:min(100%,320px);height:3px;margin-top:14px;border-radius:2px;background:var(--track);overflow:hidden;opacity:0;transition:opacity .4s ease}
+.bn-launch .is-publishing + .progress{opacity:1}
+.bn-launch .progress span{display:block;height:100%;width:0;background:var(--forest);border-radius:2px}
+.bn-launch .is-publishing ~ .hint .pen{display:none}
+@keyframes bnl-spin{to{transform:rotate(360deg)}}
+
+/* buttons */
+.bn-launch .actions{margin-top:6px}
+.bn-launch .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:0 30px;border:none;border-radius:14px;background:var(--forest);color:#FFFFFF;font:600 16.5px/1 var(--f-body);letter-spacing:.005em;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 1px 0 rgba(0,0,0,.06),0 8px 20px -12px rgba(31,77,31,.5);transition:background-color .25s ease,transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s ease}
+.bn-launch .btn:hover{background:var(--forest-deep);transform:translateY(-2px);box-shadow:0 1px 0 rgba(0,0,0,.06),0 12px 24px -12px rgba(31,77,31,.55)}
+.bn-launch .btn:active{transform:translateY(1px) scale(.985);box-shadow:inset 0 2px 4px rgba(0,0,0,.18);transition-duration:.08s}
+.bn-launch .btn .arrow{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.bn-launch .btn:hover .arrow{transform:translateX(4px)}
+.bn-launch .btn.ghost{background:var(--surface);color:var(--forest);box-shadow:inset 0 0 0 1.5px var(--line)}
+.bn-launch .btn.ghost:hover{background:var(--sage-soft);box-shadow:inset 0 0 0 1.5px var(--sage)}
+.bn-launch .btn:focus-visible,.bn-launch .copy:focus-visible,.bn-launch .hint a:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.bn-launch .btn.big{min-width:min(100%,320px);min-height:64px;padding:0 34px;border-radius:16px;font-size:17.5px;letter-spacing:-.005em}
+.bn-launch .btn.big:active{background:#123012}
+@media (max-width:480px){.bn-launch .btn.big{width:100%}}
+.bn-launch .hint{display:block;text-align:center;margin:16px 0 0;font-size:14px;color:var(--muted)}
+.bn-launch .hint svg{display:inline-block;vertical-align:-3px;margin-right:6px}
+.bn-launch .hint a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.bn-launch .hint a:hover{color:var(--heading)}
+.bn-launch .hint strong{font-weight:600;color:var(--heading)}
+/* a launch that did not go through, shown in the night scene */
+.bn-launch .launch-error{margin:14px 0 0;max-width:46ch;padding:10px 14px;border-radius:12px;background:rgba(232,120,104,.16);color:#FFD5CC;font-size:14.5px;line-height:1.45}
+
+/* live */
+.bn-launch .linkrow{display:flex;align-items:center;gap:10px;width:100%;max-width:460px;padding:6px 6px 6px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.bn-launch .linkrow svg{flex:none;color:var(--forest)}
+.bn-launch .linkrow input{flex:1;min-width:0;border:none;background:transparent;font:500 14.5px var(--f-body);color:var(--ink);padding:8px 0;text-overflow:ellipsis}
+.bn-launch .linkrow input:focus{outline:none}
+.bn-launch .copy{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border:none;border-radius:10px;background:var(--sage-soft);color:var(--forest-deep);font:600 14px var(--f-body);cursor:pointer}
+.bn-launch .copy:hover{background:#D9E4D0}
+.bn-launch .btn-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%;max-width:740px;margin-top:14px}
+.bn-launch .btn-row .btn{min-width:0;padding:0 14px;font-size:15px;white-space:nowrap;gap:8px}
+@media (max-width:620px){.bn-launch .btn-row{grid-template-columns:minmax(0,1fr)}}
+
+/* modal */
+.bn-launch .scrim{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(30,35,26,.38);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));animation:bnl-fade .25s ease}
+.bn-launch .modal{width:100%;max-width:440px;background:var(--surface);border-radius:22px;padding:28px 24px 22px;text-align:center;box-shadow:0 30px 60px -20px rgba(30,35,26,.45);animation:bnl-rise .4s cubic-bezier(.2,.8,.2,1)}
+.bn-launch .modal .seal{width:64px;height:64px;margin:0 auto 14px;border-radius:50%;background:var(--sage-soft);display:grid;place-items:center;color:var(--forest)}
+.bn-launch .modal h2{margin:0;font-weight:700;font-size:22px;line-height:1.25;letter-spacing:-.02em;color:var(--forest);text-wrap:balance}
+.bn-launch .modal p{margin:8px 0 0;color:var(--modal-muted);font-size:15.5px}
+.bn-launch .modal .name{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:8px 14px;border-radius:12px;background:var(--cream);font-size:14px;font-weight:600;color:var(--ink)}
+.bn-launch .modal-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:10px;margin-top:22px}
+.bn-launch .modal-actions .btn{min-height:52px;padding:0 14px;font-size:15.5px}
+@media (max-width:420px){.bn-launch .scrim{align-items:flex-end}.bn-launch .modal{border-radius:22px 22px 18px 18px}.bn-launch .modal-actions{grid-template-columns:minmax(0,1fr)}.bn-launch .modal-actions .btn.ghost{order:2}}
+@keyframes bnl-fade{from{opacity:0}}
+@keyframes bnl-rise{from{opacity:0;transform:translateY(16px) scale(.98)}}
+
+.bn-launch .toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:50;transform:translate(-50%,14px);opacity:0;max-width:calc(100% - 32px);padding:12px 18px;border-radius:12px;background:var(--forest-deep);color:#FFFFFF;font-size:14px;transition:opacity .25s,transform .25s;pointer-events:none}
+.bn-launch .toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- illustration ---------- */
+.bn-launch #scene .sway{transform-box:fill-box;transform-origin:50% 100%;animation:bnl-sway 6s ease-in-out infinite alternate}
+.bn-launch #scene .sway.slow{animation-duration:8s;animation-delay:-2s}
+@keyframes bnl-sway{from{transform:rotate(-1.6deg)}to{transform:rotate(1.6deg)}}
+.bn-launch #scene .appear{opacity:0;transform-box:fill-box;transform-origin:50% 100%;animation:bnl-appear 1.2s cubic-bezier(.2,.8,.2,1) forwards}
+.bn-launch #scene .hills-far{animation-delay:.05s}.bn-launch #scene .hills-mid{animation-delay:.2s}.bn-launch #scene .trees{animation-delay:.45s}.bn-launch #scene .house{animation-delay:.35s}
+@keyframes bnl-appear{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.bn-launch #scene .warm{opacity:0;animation:bnl-warm 1.6s .9s ease forwards,bnl-breathe 4.5s 2.5s ease-in-out infinite alternate}
+@keyframes bnl-warm{to{opacity:.85}}
+@keyframes bnl-breathe{from{opacity:.85}to{opacity:.55}}
+.bn-launch #scene .leaf{opacity:0;transform-box:fill-box;animation:bnl-drift var(--dur,14s) linear var(--delay,0s) infinite}
+@keyframes bnl-drift{0%{opacity:0;transform:translate(0,0) rotate(0)}10%{opacity:.9}85%{opacity:.85}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--rot))}}
+.bn-launch #scene .cloud{animation:bnl-cloud var(--dur,28s) ease-in-out var(--delay,0s) infinite alternate}
+@keyframes bnl-cloud{from{transform:translateX(0)}to{transform:translateX(var(--dx,30px))}}
+.bn-launch #scene .rays{transform-box:fill-box;transform-origin:center;animation:bnl-turn 90s linear infinite}
+@keyframes bnl-turn{to{transform:rotate(360deg)}}
+.bn-launch #scene .beam{animation:bnl-beam 7s ease-in-out infinite alternate}
+@keyframes bnl-beam{from{opacity:.16}to{opacity:.34}}
+
+/* page entrance */
+.bn-launch .enter{animation:bnl-enter .9s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:var(--d,0s)}
+@keyframes bnl-enter{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.bn-launch #scene .win{fill:#56493C;transition:fill .7s ease}
+.bn-launch #scene.lit .win{fill:#F4D78E}
+.bn-launch #scene.lit .w2{transition-delay:.25s}.bn-launch #scene.lit .w3{transition-delay:.5s}
+.bn-launch #scene .lampglow,.bn-launch #scene .spill{opacity:0;transition:opacity .9s ease}
+.bn-launch #scene.lit .lampglow{opacity:1;transition-delay:.15s}
+.bn-launch #scene.lit .spill{opacity:.75;transition-delay:.4s}
+.bn-launch #scene .lampbody{fill:#D9CDB3;transition:fill .5s}
+.bn-launch #scene.lit .lampbody{fill:#F6DE9A}
+.bn-launch #scene .pedge{stroke-dasharray:var(--len,90);stroke-dashoffset:var(--len,90);transition:stroke-dashoffset 1.2s ease}
+.bn-launch #scene.path-on .pedge{stroke-dashoffset:0}
+.bn-launch #scene .pfill{opacity:0;transition:opacity 1s .35s ease}
+.bn-launch #scene.path-on .pfill{opacity:1}
+.bn-launch #scene .stone{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(.3);transition:opacity .35s ease,transform .5s cubic-bezier(.2,1.5,.4,1)}
+.bn-launch #scene.path-on .stone{opacity:1;transform:none}
+.bn-launch #scene.path-on .s2{transition-delay:.18s}.bn-launch #scene.path-on .s3{transition-delay:.36s}.bn-launch #scene.path-on .s4{transition-delay:.54s}
+.bn-launch #scene .badge{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(0)}
+.bn-launch #scene.live .badge{animation:bnl-pop .7s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes bnl-pop{to{opacity:1;transform:scale(1)}}
+.bn-launch #scene .garland{opacity:0;transition:opacity .8s ease .2s}
+.bn-launch #scene.live .garland{opacity:1}
+.bn-launch #scene .walker{opacity:0;transition:opacity .8s ease,transform 2.4s cubic-bezier(.3,.6,.3,1);transform:translate(0,14px)}
+.bn-launch #scene.live .walker{opacity:1;transform:translate(0,0)}
+.bn-launch #scene.live .walker.b{transition-delay:.35s}
+.bn-launch #scene.live .walker .step{animation:bnl-step .5s ease-in-out 5 alternate}
+@keyframes bnl-step{from{transform:translateY(0)}to{transform:translateY(-1.2px)}}
+
+@media (prefers-reduced-motion:reduce){
+  .bn-launch #scene .sway,.bn-launch #scene .leaf,.bn-launch #scene .walker .step,.bn-launch .tag .dot.live,.bn-launch #scene .cloud,.bn-launch #scene .rays,.bn-launch #scene .beam,.bn-launch .enter,.bn-launch #scene .tw,.bn-launch #scene .flap,.bn-launch .btn.is-publishing .ico-spin{animation:none}
+  .bn-launch #scene .beam{opacity:.22}
+  .bn-launch .btn,.bn-launch .btn .arrow{transition:background-color .2s ease}
+  .bn-launch .btn:hover,.bn-launch .btn:active,.bn-launch .btn:hover .arrow{transform:none}
+  .bn-launch #scene .leaf{opacity:.7}
+  .bn-launch #scene .appear{animation:none;opacity:1}
+  .bn-launch #scene .warm{animation:none;opacity:.8}
+  .bn-launch #scene *{transition-duration:.25s!important;transition-delay:0s!important}
+  .bn-launch #scene.live .badge{animation:none;opacity:1;transform:none}
+  .bn-launch .swap>.pane{transition:opacity .25s ease;transform:none}
+  .bn-launch .modal,.bn-launch .scrim{animation:none}
+}

@@ -11,7 +11,8 @@ interface Props {
   isHost?: boolean   // a host shares their own homestay with their own message
 }
 
-const hostMessage = (link: string) => `🌿 Happy to share that my homestay is now featured on BeNative!
+// Also used on the host's launch page (app/launch/[token])
+export const hostMessage = (link: string) => `🌿 Happy to share that my homestay is now featured on BeNative!
 
 I've shared a little about my home, the surroundings and the experiences you can enjoy here.
 

@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Link2, Copy, Check, Loader2, Eye } from 'lucide-react'
+import { X, Link2, Copy, Check, Loader2, Eye, Rocket, AlertTriangle } from 'lucide-react'
 import type { CanvasBlock } from './BuilderTypes'
-import { savePreview } from '@/lib/actions/savePreview'
+import { savePreview, type PreviewLaunch } from '@/lib/actions/savePreview'
 
 interface Props {
   open:      boolean
@@ -13,11 +13,13 @@ interface Props {
   pageName?:      string
   pageAddress?:   string
   pageLanguages?: string[]
+  pageLocation?:  { lat: number; lng: number } | null
 }
 
-export default function PreviewShareModal({ open, onClose, blocks, slug, pageName, pageAddress, pageLanguages }: Props) {
+export default function PreviewShareModal({ open, onClose, blocks, slug, pageName, pageAddress, pageLanguages, pageLocation }: Props) {
   const [loading, setLoading]   = useState(false)
   const [token, setToken]       = useState<string | null>(null)
+  const [launch, setLaunch]     = useState<PreviewLaunch>(null)
   const [copied, setCopied]     = useState(false)
   const [error, setError]       = useState<string | null>(null)
 
@@ -34,11 +36,12 @@ export default function PreviewShareModal({ open, onClose, blocks, slug, pageNam
         title:     pageName     ?? '',
         address:   pageAddress  ?? '',
         languages: pageLanguages ?? [],
-      })
+      }, pageLocation ?? null)
       if ('error' in result) {
         setError(result.error)
       } else {
         setToken(result.token)
+        setLaunch(result.launch)
       }
     } catch (e) {
       setError('Something went wrong. Please try again.')
@@ -55,7 +58,7 @@ export default function PreviewShareModal({ open, onClose, blocks, slug, pageNam
   }
 
   const handleClose = () => {
-    setToken(null); setError(null); setCopied(false)
+    setToken(null); setLaunch(null); setError(null); setCopied(false)
     onClose()
   }
 
@@ -113,6 +116,25 @@ export default function PreviewShareModal({ open, onClose, blocks, slug, pageNam
                 {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
               </button>
             </div>
+
+            {/* Whether the host can launch from this preview */}
+            {launch?.ready && (
+              <div className="flex gap-2.5 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+                <Rocket size={15} className="text-emerald-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-emerald-800 leading-relaxed">
+                  <strong>The host can launch from this preview.</strong> At the bottom they tick that everything is correct,
+                  press Launch My Homestay and sign in with <strong>{launch.email}</strong>. The page goes live exactly as in this preview.
+                </p>
+              </div>
+            )}
+            {launch && !launch.ready && (
+              <div className="flex gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  <strong>No Launch button on this preview yet.</strong> {launch.reason} Then regenerate the link.
+                </p>
+              </div>
+            )}
 
             <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
               <p className="text-xs text-amber-800 leading-relaxed">

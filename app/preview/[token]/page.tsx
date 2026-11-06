@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
-import PreviewClient from './PreviewClient'
+import PreviewClient, { type PreviewLaunchInfo } from './PreviewClient'
 
 export const dynamic = 'force-dynamic'
 // Read the preview fresh on every visit: without this, Next keeps the first database answer
@@ -18,7 +18,7 @@ export default async function PreviewPage({ params }: Props) {
 
   const { data } = await supabase
     .from('homestay_previews')
-    .select('blocks_data, page_meta, expires_at')
+    .select('slug, blocks_data, page_meta, expires_at')
     .eq('token', params.token)
     .single()
 
@@ -37,10 +37,24 @@ export default async function PreviewPage({ params }: Props) {
     )
   }
 
+  // A new homestay's preview comes with its launch (made with the preview, see savePreview):
+  // the host ticks that everything is correct and launches from here
+  let launch: PreviewLaunchInfo = null
+  if (data.slug) {
+    const { data: link } = await supabase
+      .from('homestay_launches')
+      .select('token, expires_at, launched_at, live_slug')
+      .eq('draft_slug', data.slug)
+      .maybeSingle()
+    if (link?.launched_at)                                launch = { liveSlug: link.live_slug }
+    else if (link && new Date(link.expires_at) > new Date()) launch = { token: link.token }
+  }
+
   return (
     <PreviewClient
       blocksData={data.blocks_data}
       pageMeta={data.page_meta}
+      launch={launch}
     />
   )
 }

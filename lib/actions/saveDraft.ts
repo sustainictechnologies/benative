@@ -10,6 +10,7 @@ export interface DraftPayload {
   pageHighlights: string[]
   pageLanguages:  string[]
   pageAddress:    string
+  pageLocation?:  { lat: number; lng: number } | null   // the map location, set while building
   blocks:         CanvasBlock[]
 }
 
@@ -37,6 +38,7 @@ export async function saveDraft(
     pageHighlights: payload.pageHighlights,
     pageLanguages:  payload.pageLanguages,
     pageAddress:    payload.pageAddress,
+    pageLocation:   payload.pageLocation ?? null,
   }
 
   if (payload.slug) {
