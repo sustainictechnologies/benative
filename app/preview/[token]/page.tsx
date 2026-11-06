@@ -47,7 +47,7 @@ export default async function PreviewPage({ params }: Props) {
       .eq('draft_slug', data.slug)
       .maybeSingle()
     if (link?.launched_at)                                launch = { liveSlug: link.live_slug }
-    else if (link && new Date(link.expires_at) > new Date()) launch = { token: link.token }
+    else if (link && new Date(link.expires_at) > new Date()) launch = { href: `/launch/${link.token}` }
   }
 
   return (
