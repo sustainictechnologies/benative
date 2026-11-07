@@ -149,6 +149,7 @@ export default async function HomestayPage({ params }: Props) {
             title={homestay.title}
             place={`${homestay.village_name}, ${homestay.location_district}`}
             slug={params.slug}
+            photo={previewPhoto(homestay)}
             isHost={isHost}
           />
         </div>
