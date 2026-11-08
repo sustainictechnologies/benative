@@ -67,7 +67,8 @@ export default function ShareButton({ title, place, slug, photo = null, isHost =
   const makePicture = () => {
     if (!storyPic.current) {
       const entry = {} as { file?: File | null; making: Promise<File | null> }
-      entry.making = makeStoryImage({ photo, title, place, slug })
+      const address = link().replace(/^https?:\/\/(www\.)?/, '')   // benative.in/homestays/…
+      entry.making = makeStoryImage({ photo, title, place, slug, address })
         .catch(() => null)
         .then((file) => (entry.file = file))
       storyPic.current = entry

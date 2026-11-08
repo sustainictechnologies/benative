@@ -1,5 +1,5 @@
 // The tall picture (1080 × 1920) a homestay page shares to an Instagram Story: the homestay's photo,
-// its name and place, and BeNative at the bottom. It is drawn in the browser, so names in any script
+// its name and place, and BeNative with the page's address at the bottom. It is drawn in the browser, so names in any script
 // (Devanagari too) use the phone's own fonts. Instagram covers about 250 pixels at the top and bottom
 // of a Story with its own buttons, so the text stays clear of those.
 
@@ -10,9 +10,9 @@ const PHOTO_H = 1350                                  // 4:5, the shape of Insta
 const GREEN = '#2d4520'                               // the BeNative logo's colour
 const SERIF = "Georgia, 'Times New Roman', serif"     // as the BeNative name in the site's header
 
-interface Story { photo: string | null; title: string; place: string; slug: string }
+interface Story { photo: string | null; title: string; place: string; slug: string; address: string }
 
-export async function makeStoryImage({ photo, title, place, slug }: Story): Promise<File> {
+export async function makeStoryImage({ photo, title, place, slug, address }: Story): Promise<File> {
   const canvas = document.createElement('canvas')
   canvas.width = W
   canvas.height = H
@@ -49,9 +49,12 @@ export async function makeStoryImage({ photo, title, place, slug }: Story): Prom
   ctx.fillStyle = '#ffffff'
   ctx.font = `bold 46px ${SERIF}`
   ctx.fillText('BeNative', SIDE + 96, 1598)
+  // The page's address, in smaller letters when it is long so it stays whole. It can't be tapped in a Story:
+  // only Instagram's Link sticker can, and the page link is copied for that.
   ctx.fillStyle = 'rgba(255,255,255,0.75)'
-  ctx.font = `30px ${sans}`
-  ctx.fillText('benative.in', SIDE + 96, 1638)
+  let size = 30
+  do { ctx.font = `${size}px ${sans}` } while (ctx.measureText(address).width > W - 2 * SIDE - 96 && --size > 18)
+  ctx.fillText(fit(ctx, address, W - 2 * SIDE - 96), SIDE + 96, 1638)
   ctx.fillStyle = 'rgba(255,255,255,0.2)'
   ctx.fillRect(SIDE, 1506, W - 2 * SIDE, 2)
 
