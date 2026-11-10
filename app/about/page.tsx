@@ -1,8 +1,9 @@
-import type { Metadata } from 'next'
-export const metadata: Metadata = {
+import { pageMetadata } from '@/lib/site'
+export const metadata = pageMetadata({
   title: 'Why BeNative Exists · BeNative',
   description: 'BeNative exists to make local knowledge accessible — connecting travelers with communities, naturalists, and hosts who understand these landscapes deeply.',
-}
+  path: '/about',
+})
 
 export default function AboutPage() {
   return (

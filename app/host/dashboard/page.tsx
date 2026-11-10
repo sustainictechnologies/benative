@@ -4,10 +4,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { Home, LogOut, Star, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import HostReviewCard from './_components/HostReviewCard'
+import { NO_INDEX } from '@/lib/site'
 
 export const revalidate = 0
 
-export const metadata = { title: 'Host Dashboard · BeNative' }
+export const metadata = { title: 'Host Dashboard · BeNative', robots: NO_INDEX }
 
 export default async function HostDashboardPage() {
   const supabase = createClient()

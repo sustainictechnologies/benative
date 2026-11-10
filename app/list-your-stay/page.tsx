@@ -1,11 +1,12 @@
-import type { Metadata } from 'next'
+import { pageMetadata } from '@/lib/site'
 import HostRegistrationForm from './HostRegistrationForm'
 import { Home, ShieldCheck, Phone, Leaf } from 'lucide-react'
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: 'List Your Homestay · BeNative',
   description: 'Register your homestay on BeNative. Connect with conscious travelers across India. Zero commission, direct contact.',
-}
+  path: '/list-your-stay',
+})
 
 const perks = [
   { icon: Leaf,        title: 'Zero Commission',   body: 'BeNative never takes a cut. 100% of what guests pay goes directly to you.' },

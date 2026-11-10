@@ -1,10 +1,11 @@
-import type { Metadata } from 'next'
+import { pageMetadata } from '@/lib/site'
 import { PRIVACY_INTRO, PRIVACY_SECTIONS, PRIVACY_UPDATED } from '@/lib/privacyPolicy'
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: 'Privacy Policy · BeNative',
   description: 'What information BeNative collects, why we collect it and the choices you have.',
-}
+  path: '/privacy',
+})
 
 export default function PrivacyPage() {
   return (

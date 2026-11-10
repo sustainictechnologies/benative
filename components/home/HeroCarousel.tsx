@@ -50,7 +50,7 @@ export default function HeroCarousel({ imageMap = {} }: { imageMap?: Record<stri
         {/* Headline */}
         <div className="absolute inset-0 flex flex-col items-start justify-end text-left px-8 sm:px-12 pb-14 sm:pb-16">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-snug max-w-xs sm:max-w-sm lg:max-w-md">
-            Find places that still belong to themselves.
+            Discover Genuine Homestays Across India
           </h1>
         </div>
 

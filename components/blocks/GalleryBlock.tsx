@@ -13,6 +13,7 @@ interface Props {
     items?:  GalleryItem[]
     images?: (string | null)[]
   }
+  title?: string   // the homestay's name: makes the photo descriptions say whose photos they are
 }
 
 // Whatever shape (ratio) was picked in the builder:
@@ -21,7 +22,9 @@ interface Props {
 const SMALL_ON_PHONE    = 4
 const SMALL_ON_COMPUTER = 4
 
-export default function GalleryBlock({ data }: Props) {
+export default function GalleryBlock({ data, title }: Props) {
+  // "Povli Forest Homestay photo 2 of 9", or "Gallery photo 2 of 9" without a name
+  const altPrefix = title ? `${title} photo` : 'Gallery photo'
   const photos: GalleryItem[] = data.items
     ? data.items.filter(i => i?.url)
     : (data.images ?? []).filter(Boolean).map(url => ({ url: url as string, ratio: 'square' as Ratio }))
@@ -111,7 +114,7 @@ export default function GalleryBlock({ data }: Props) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={supabaseImgUrl(photos[0].url, { width: 1600, quality: 80 })}
-          alt={`Gallery photo 1 of ${photos.length}`}
+          alt={`${altPrefix} 1 of ${photos.length}`}
           onClick={() => setSelected(0)}
           className="w-full aspect-video object-cover rounded-lg cursor-pointer"
         />
@@ -122,7 +125,7 @@ export default function GalleryBlock({ data }: Props) {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={supabaseImgUrl(photo.url, { width: 400, quality: 70 })}
-                  alt={`Gallery photo ${i + 2} of ${photos.length}`}
+                  alt={`${altPrefix} ${i + 2} of ${photos.length}`}
                   loading="lazy"
                   onClick={() => setSelected(i + 1)}
                   className="w-full h-full object-cover cursor-pointer"
@@ -149,7 +152,7 @@ export default function GalleryBlock({ data }: Props) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={supabaseImgUrl(photos[0].url, { width: 1600, quality: 80 })}
-            alt={`Gallery photo 1 of ${photos.length}`}
+            alt={`${altPrefix} 1 of ${photos.length}`}
             onClick={() => setSelected(0)}
             className="w-full h-full row-span-2 object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
           />
@@ -163,7 +166,7 @@ export default function GalleryBlock({ data }: Props) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={supabaseImgUrl(photo.url, { width: 600, quality: 75 })}
-                alt={`Gallery photo ${i + 2} of ${photos.length}`}
+                alt={`${altPrefix} ${i + 2} of ${photos.length}`}
                 loading="lazy"
                 onClick={() => setSelected(i + 1)}
                 className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
@@ -222,7 +225,7 @@ export default function GalleryBlock({ data }: Props) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={viewerUrl(photos[selected].url)}
-            alt={`Gallery photo ${selected + 1}`}
+            alt={`${altPrefix} ${selected + 1} of ${photos.length}`}
             onClick={e => e.stopPropagation()}
             draggable={false}
             style={{ transform: `translate(${drag.x}px, ${drag.y}px)`, transition: dragging ? 'none' : 'transform 200ms ease-out' }}

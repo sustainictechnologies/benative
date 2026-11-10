@@ -1,6 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import ExploreClient from '@/components/ExploreClient'
 import type { HomestayWithCategories } from '@/types/blocks.types'
+import { pageMetadata } from '@/lib/site'
+
+export const metadata = pageMetadata({
+  title: 'Homestays on the Map · BeNative',
+  description: 'Browse BeNative homestays across India on a map. Pan and zoom to see the family run stays in any region.',
+  path: '/map',
+})
 
 export const revalidate = 60
 
@@ -37,8 +44,12 @@ export default async function MapPage() {
   }))
 
   return (
-    <ExploreClient
-      homestays={homestays}
-    />
+    <>
+      {/* The page's heading, for search engines and screen readers: the map itself has none */}
+      <h1 className="sr-only">Homestays across India on the map</h1>
+      <ExploreClient
+        homestays={homestays}
+      />
+    </>
   )
 }

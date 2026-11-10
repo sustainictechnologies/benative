@@ -1,12 +1,13 @@
-import type { Metadata } from 'next'
+import { pageMetadata } from '@/lib/site'
 import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
 import { FAQ_GROUPS } from '@/lib/faqs'
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: 'Frequently Asked Questions · BeNative',
   description: 'Answers to common questions from travellers and hosts about BeNative, a platform for discovering homestays.',
-}
+  path: '/faq',
+})
 
 export default function FAQPage() {
   return (

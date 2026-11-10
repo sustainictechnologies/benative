@@ -8,6 +8,9 @@ import type { HomestayBlock } from '@/types/blocks.types'
 import { SUB_CATEGORY_GROUPS } from '@/lib/subCategories'
 import { sharePreviewImgUrl } from '@/lib/supabase/imageUrl'
 import { MapPin, Globe2, Clock, Eye } from 'lucide-react'
+import type { Metadata } from 'next'
+import JsonLd from '@/components/JsonLd'
+import { pageMetadata, SITE_URL } from '@/lib/site'
 
 export const revalidate = 60
 
@@ -45,22 +48,30 @@ function previewPhoto(data: any): string | null {
   return data.cover_image_url ?? gallery?.items?.find((item: any) => item?.url)?.url ?? gallery?.images?.find(Boolean) ?? null
 }
 
-export async function generateMetadata({ params }: Props) {
+// "Village, District" — once only when both are the same. The state is not among the public
+// fields of a homestay (it is only inside the private address), so it is not shown here.
+function placeName(data: { village_name?: string | null; location_district?: string | null }): string {
+  const village  = (data.village_name ?? '').trim()
+  const district = (data.location_district ?? '').trim()
+  return [village, district.toLowerCase() === village.toLowerCase() ? '' : district].filter(Boolean).join(', ')
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = await getHomestay(params.slug)
-  if (!data) return {}
-  const description = `Authentic homestay in ${data.village_name}, ${data.location_district}. Direct host contact via BeNative.`
+  // A draft (latitude 0) has no public page
+  if (!data || data.latitude === 0) return { robots: { index: false, follow: false } }
+
+  const place = placeName(data)
+  const title = place ? `${data.title}, ${place} | BeNative` : `${data.title} | BeNative`
+  const description = `${data.title} is a homestay in ${place || 'India'}. See photos, rooms, food and local experiences, and connect directly with the host through BeNative.`
   const photo = previewPhoto(data)
-  return {
-    title: `${data.title} · BeNative`,
+
+  return pageMetadata({
+    title,
     description,
-    openGraph: {
-      title: data.title,
-      description,
-      siteName: 'BeNative',
-      type: 'website',
-      images: photo ? [{ url: sharePreviewImgUrl(photo), alt: data.title }] : undefined,
-    },
-  }
+    path: `/homestays/${data.slug}`,
+    image: photo ? { url: sharePreviewImgUrl(photo), alt: place ? `${data.title}, ${place}` : data.title } : undefined,
+  })
 }
 
 export default async function HomestayPage({ params }: Props) {
@@ -110,6 +121,7 @@ export default async function HomestayPage({ params }: Props) {
     contact_phone: contactPhone,
     calling_window: homestay.calling_window,
     youtube_video_id: homestay.youtube_video_id ?? null,
+    title: homestay.title,
     tags,
   }
 
@@ -138,8 +150,20 @@ export default async function HomestayPage({ params }: Props) {
     orderedBlocks = [...orderedBlocks, signInBlock]
   }
 
+  // Where the page sits in the site, for search results: Home › Discover › this homestay
+  const breadcrumbs = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home',     item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Discover', item: `${SITE_URL}/discover` },
+      { '@type': 'ListItem', position: 3, name: homestay.title, item: `${SITE_URL}/homestays/${homestay.slug}` },
+    ],
+  }
+
   return (
     <article className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-2">
+      <JsonLd data={breadcrumbs} />
       {/* Header */}
       <div className="mb-5">
         {/* The tags have their own block, below the gallery unless placed elsewhere in the builder */}

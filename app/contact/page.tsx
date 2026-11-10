@@ -1,4 +1,11 @@
 import ContactForm from './ContactForm'
+import { pageMetadata } from '@/lib/site'
+
+export const metadata = pageMetadata({
+  title: 'Contact Us · BeNative',
+  description: 'Questions about a homestay, listing your own stay or BeNative itself? Send us a message and we will get back to you.',
+  path: '/contact',
+})
 
 export default function ContactPage() {
   return (
