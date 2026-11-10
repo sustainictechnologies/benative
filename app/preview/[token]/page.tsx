@@ -1,6 +1,14 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import PreviewClient, { type PreviewLaunchInfo } from './PreviewClient'
+import type { Metadata } from 'next'
+import { NO_INDEX } from '@/lib/site'
+
+// A host's private preview link: never in search results
+export const metadata: Metadata = {
+  title: 'Homestay Preview · BeNative',
+  robots: NO_INDEX,
+}
 
 export const dynamic = 'force-dynamic'
 // Read the preview fresh on every visit: without this, Next keeps the first database answer

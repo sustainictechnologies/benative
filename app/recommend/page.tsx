@@ -1,11 +1,12 @@
-import type { Metadata } from 'next'
+import { pageMetadata } from '@/lib/site'
 import { Heart, Gem, Users, Map, Shield, Leaf, ClipboardList, Mail, Home } from 'lucide-react'
 import RecommendForm from './RecommendForm'
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: 'Recommend a Homestay · BeNative',
   description: 'Know a hidden gem homestay? Recommend it to BeNative and help conscious travelers discover authentic rural India.',
-}
+  path: '/recommend',
+})
 
 const benefits = [
   {

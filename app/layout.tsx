@@ -7,13 +7,18 @@ import NavLinks from '@/components/NavLinks'
 import UserButton from '@/components/UserButton'
 import BeNativeLogo from '@/components/BeNativeLogo'
 import PageViewTracker from '@/components/PageViewTracker'
+import { SITE_URL, SITE_NAME } from '@/lib/site'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
+// Site-wide defaults. Each public page sets its own title, description, canonical link and
+// share card (lib/site.ts → pageMetadata); metadataBase turns their paths into full addresses.
 export const metadata: Metadata = {
-  title: 'BeNative | Community Travel Across India',
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
+  title: 'Discover Genuine Homestays in India | BeNative',
   description:
-    'Discover verified homestays from conscious local families across India — mountains, forests, villages, coastlines, and deserts. Direct host contact. Zero fees.',
+    'Discover genuine family run homestays across India. Explore village stays, nature homes, local food and authentic experiences. Connect directly with hosts through BeNative.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

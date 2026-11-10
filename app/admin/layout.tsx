@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import Sidebar from './_components/Sidebar'
 import AdminSessionGuard from './_components/AdminSessionGuard'
+import { NO_INDEX } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'BeNative Admin',
   description: 'BeNative — Admin Dashboard',
+  robots: NO_INDEX,
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

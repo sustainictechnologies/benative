@@ -1,10 +1,12 @@
+import { pageMetadata } from '@/lib/site'
 import DiscoverClient from '@/components/discover/DiscoverClient'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: 'Discover Homestays · BeNative',
   description: 'Find authentic homestays across India filtered by travel intent, landscape, and practical requirements.',
-}
+  path: '/discover',
+})
 
 async function getImageMap(): Promise<Record<string, string>> {
   const supabase = createClient()

@@ -1,9 +1,12 @@
+import { pageMetadata } from '@/lib/site'
 import Link from 'next/link'
 import { Heart } from 'lucide-react'
 
-export const metadata = {
-  title: 'Donate | BeNative',
-}
+export const metadata = pageMetadata({
+  title: 'Donate · BeNative',
+  description: 'Support BeNative and help keep the platform free for rural host families and travellers across India.',
+  path: '/donate',
+})
 
 export default function DonatePage() {
   return (

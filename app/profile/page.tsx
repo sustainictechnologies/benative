@@ -2,6 +2,13 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import ProfileForm from './_components/ProfileForm'
 import { CalendarX } from 'lucide-react'
+import type { Metadata } from 'next'
+import { NO_INDEX } from '@/lib/site'
+
+export const metadata: Metadata = {
+  title: 'My Profile · BeNative',
+  robots: NO_INDEX,
+}
 
 export default async function ProfilePage() {
   const supabase = createClient()
