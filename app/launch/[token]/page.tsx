@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -36,9 +37,27 @@ export default async function LaunchPage({ params }: Props) {
     admin.from('homestays').select('latitude').eq('slug', payload.slug).maybeSingle(),
   ])
 
-  // Live: launched from this link, or published by the admin in the meantime
-  const live    = !!launch.launched_at || (!!target && target.latitude !== 0)
+  const onSite  = !!target && target.latitude !== 0
+  // Live: on the site now (launched from this link, or published by the admin), or being launched from this link
+  // this moment (it goes live in a moment: live_slug is saved once it has)
+  const live    = onSite || (!!launch.launched_at && !launch.live_slug)
   const expired = new Date(launch.expires_at) < new Date()
+
+  // Launched from this link, then taken off the site (Delete in Admin → Homestays moves it back to Drafts)
+  if (launch.launched_at && !live) {
+    return (
+      <div className="fixed inset-0 z-[1100] bg-stone-50 flex items-center justify-center px-4">
+        <div className="text-center space-y-3">
+          <div className="text-5xl">🏡</div>
+          <h1 className="text-xl font-bold text-stone-900">Your homestay isn&apos;t on BeNative right now</h1>
+          <p className="text-sm text-stone-500">
+            It has been taken off the site for now.{' '}
+            <Link href="/contact" className="underline underline-offset-2 hover:text-stone-700">Message us</Link> to put it back.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   if (!live && expired) {
     return (
