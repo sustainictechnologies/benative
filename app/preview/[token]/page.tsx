@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import PreviewClient, { type PreviewLaunchInfo } from './PreviewClient'
+import { isLive } from '@/lib/launchLinks'
 import type { Metadata } from 'next'
 import { NO_INDEX } from '@/lib/site'
 
@@ -54,7 +55,8 @@ export default async function PreviewPage({ params }: Props) {
       .select('token, expires_at, launched_at, live_slug')
       .eq('draft_slug', data.slug)
       .maybeSingle()
-    if (link?.launched_at)                                launch = { liveSlug: link.live_slug }
+    // Launched: the "live" box only while it is on the site (Delete in Admin → Homestays takes it off again)
+    if (link?.launched_at)                                launch = link.live_slug && await isLive(link.live_slug) ? { liveSlug: link.live_slug } : null
     else if (link && new Date(link.expires_at) > new Date()) launch = { href: `/launch/${link.token}` }
   }
 
