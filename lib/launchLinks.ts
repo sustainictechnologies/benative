@@ -14,7 +14,8 @@ export async function isLive(slug: string) {
 }
 
 // Saves everything publishing needs, so the host launches exactly the page in their preview.
-// Saving again updates the same link.
+// Saving again updates the same link, also one launched before and taken off the site since
+// (Delete → Drafts): the host can then launch it again.
 export async function saveLaunchLink(payload: PublishPayload): Promise<{ token: string } | { error: string }> {
   const supabase  = createAdminClient()
   const hostEmail = payload.email.trim().toLowerCase()
@@ -27,10 +28,13 @@ export async function saveLaunchLink(payload: PublishPayload): Promise<{ token: 
 
   const { data: existing } = await supabase
     .from('homestay_launches')
-    .select('launched_at')
+    .select('launched_at, live_slug')
     .eq('draft_slug', payload.draftSlug)
     .maybeSingle()
-  if (existing?.launched_at) return { error: 'The host has already launched this homestay. Use Publish to update it.' }
+  // Launched and on the site (or being launched this moment, before live_slug is saved): changes go live with Publish
+  if (existing?.launched_at && (!existing.live_slug || await isLive(existing.live_slug))) {
+    return { error: 'The host has already launched this homestay. Use Publish to update it.' }
+  }
 
   const { data, error } = await supabase
     .from('homestay_launches')
@@ -41,6 +45,10 @@ export async function saveLaunchLink(payload: PublishPayload): Promise<{ token: 
         host_email: hostEmail,
         expires_at: new Date(Date.now() + LINK_LIFETIME_MS).toISOString(),
         updated_at: new Date().toISOString(),
+        // Ready to launch: clears an earlier launch of a homestay since taken off the site
+        launched_at: null,
+        launched_by: null,
+        live_slug:   null,
       },
       { onConflict: 'draft_slug' }
     )

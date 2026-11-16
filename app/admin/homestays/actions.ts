@@ -47,9 +47,9 @@ export async function unlinkHostAccount(
   return { success: true }
 }
 
-// Delete in Admin → Homestays. A live homestay goes back to Drafts: taken off the site (no location = not live),
-// with its page, photos, reviews and facilities kept and its location saved in the draft, so Publish or the
-// host's Launch puts it back. A draft is deleted for good.
+// Delete in Admin → Homestays. A live homestay goes back to Drafts: taken off the site (no location = not live)
+// and no longer Verified, with its page, photos, reviews and facilities kept and its location saved in the draft,
+// so Publish or the host's Launch (from a new preview) puts it back, Verified again. A draft is deleted for good.
 export async function removeHomestay(id: string): Promise<{ error?: string; result?: 'draft' | 'deleted' }> {
   assertAdmin()
   const supabase = createAdminClient()
@@ -65,7 +65,7 @@ export async function removeHomestay(id: string): Promise<{ error?: string; resu
     const draft_data = { ...(homestay.draft_data ?? {}), pageLocation: { lat: homestay.latitude, lng: homestay.longitude } }
     const { error: moveErr } = await supabase
       .from('homestays')
-      .update({ latitude: 0, longitude: 0, draft_data })
+      .update({ latitude: 0, longitude: 0, is_verified: false, draft_data })
       .eq('id', id)
     if (moveErr) return { error: moveErr.message }
     revalidatePath('/admin/homestays')
