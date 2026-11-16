@@ -1,5 +1,6 @@
 import HeroCarousel        from '@/components/home/HeroCarousel'
 import HomeSearch          from '@/components/home/HomeSearch'
+import FeaturedStays       from '@/components/home/FeaturedStays'
 import IntroductionSection from '@/components/home/IntroductionSection'
 import CategorySection     from '@/components/home/CategorySection'
 import HowItWorks          from '@/components/home/HowItWorks'
@@ -63,6 +64,9 @@ export default async function HomePage() {
 
       {/* 02 — Search: name, place or experience */}
       <HomeSearch />
+
+      {/* The stays switched on for the homepage (Admin → Homestays) */}
+      <FeaturedStays />
 
       {/* 03 — Explore by Categories */}
       <CategorySection imageMap={imageMap} />

@@ -56,6 +56,24 @@ function placeName(data: { village_name?: string | null; location_district?: str
   return [village, district.toLowerCase() === village.toLowerCase() ? '' : district].filter(Boolean).join(', ')
 }
 
+// The opening of the host's story, from its first full sentence: its first lines can be just the hosts' names
+// ("Rushabh and Omkar"). Nothing when the story is hidden or missing.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function storyOpening(data: any): string {
+  const story = (data.homestay_blocks ?? []).find((b: any) => b.block_type === 'host-story' && b.content_data?.hidden !== true)?.content_data
+  const paragraphs = String(story?.story_text ?? '').split('\n').map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean)
+  const start = paragraphs.findIndex(p => p.length >= 40)
+  return start < 0 ? '' : paragraphs.slice(start).join(' ')
+}
+
+// About as long as Google shows under a result; cut at a word, with "…"
+const DESCRIPTION_LENGTH = 155
+function shorten(text: string): string {
+  if (text.length <= DESCRIPTION_LENGTH) return text
+  const at = text.lastIndexOf(' ', DESCRIPTION_LENGTH - 1)
+  return text.slice(0, at > 80 ? at : DESCRIPTION_LENGTH - 1).replace(/[\s,;:.—–-]+$/, '') + '…'
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = await getHomestay(params.slug)
   // A draft (latitude 0) has no public page
@@ -63,7 +81,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const place = placeName(data)
   const title = place ? `${data.title}, ${place} | BeNative` : `${data.title} | BeNative`
-  const description = `${data.title} is a homestay in ${place || 'India'}. See photos, rooms, food and local experiences, and connect directly with the host through BeNative.`
+  // Google's text under the result (and the share card's): the name and place, then the host's own story
+  const opening = storyOpening(data)
+  const description = opening
+    ? shorten(`${data.title}${place ? ` in ${place}` : ''}. ${opening}`)
+    : `${data.title} is a homestay in ${place || 'India'}. See photos, rooms, food and local experiences, and connect directly with the host through BeNative.`
   const photo = previewPhoto(data)
 
   return pageMetadata({

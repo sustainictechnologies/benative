@@ -16,6 +16,7 @@ import PlaceGrid from './PlaceGrid'
 import { EMPTY_PRACTICAL_FILTERS, type PracticalFilters } from './types'
 import type { HomestayWithCategories } from '@/types/blocks.types'
 import { createClient } from '@/lib/supabase/client'
+import { INDIA, toDiscoverCard } from '@/lib/discoverStays'
 import { SUB_CATEGORY_GROUPS, type SubCategory } from '@/lib/subCategories'
 import { searchHomestays, groupSuggestions, MIN_SEARCH_LENGTH, type SearchHit } from '@/lib/search'
 import SearchSuggestions from '@/components/SearchSuggestions'
@@ -23,8 +24,6 @@ import { findPlace, insidePlace, distanceKm, type Place } from '@/lib/places'
 import type { MapFocus } from './DiscoverMap'
 
 interface MapBounds { south: number; north: number; west: number; east: number }
-
-const INDIA = { south: 8.0, north: 37.5, west: 68.0, east: 97.5 }
 
 // The names and keys come from the shared list; this file adds how each one looks
 type Visual  = { icon: React.ElementType; img: string; alt: string }
@@ -116,9 +115,11 @@ interface Props {
   initialCatKey?: string
   initialSearch?: string   // ?q= from the homepage search box
   imageMap?: Record<string, string>
+  // The stays across India, unfiltered, sent with the page: shown at once, and seen by search engines
+  initialHomestays?: HomestayWithCategories[]
 }
 
-export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, initialSearch, imageMap = {} }: Props) {
+export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, initialSearch, imageMap = {}, initialHomestays }: Props) {
   const supabase = useMemo(() => createClient(), [])
 
   // ── Search: name, place or experience ────────────────────────────
@@ -157,9 +158,12 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   // ── Data state ───────────────────────────────────────────────────
-  const [homestays,          setHomestays]          = useState<HomestayWithCategories[]>([])
+  const [homestays,          setHomestays]          = useState<HomestayWithCategories[]>(initialHomestays ?? [])
   const [availableLanguages, setAvailableLanguages] = useState<string[]>([])
-  const [isLoading,          setIsLoading]          = useState(true)
+  const [isLoading,          setIsLoading]          = useState(!initialHomestays)
+  // With the stays sent with the page, the list updates in place (no loading cards) while the map settles
+  // and moves, until the visitor first filters or searches
+  const quietFetch = useRef(!!initialHomestays)
 
   const splitRef    = useRef<HTMLDivElement>(null)
   const selectedCat = CATEGORIES.find(c => c.key === selectedCatKey) ?? null
@@ -278,7 +282,8 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
   // ── Effect: fetch homestays whenever filters / bounds change ─────
   useEffect(() => {
     let cancelled = false
-    setIsLoading(true)
+    if (selectedSubCat || practicalFilters !== EMPTY_PRACTICAL_FILTERS || searching) quietFetch.current = false
+    if (!quietFetch.current) setIsLoading(true)
 
     const timer = setTimeout(async () => {
       // While searching, look across all of India rather than only the area the map shows
@@ -316,21 +321,7 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
         )
       }
 
-      setHomestays(results.map(h => ({
-        id:                h.id,
-        title:             h.title,
-        slug:              h.slug,
-        location_district: h.location_district,
-        village_name:      h.village_name,
-        host_name:         h.host_name,
-        is_verified:       h.is_verified,
-        latitude:          h.latitude,
-        longitude:         h.longitude,
-        calling_window:    h.calling_window,
-        languages_spoken:  h.languages_spoken ?? [],
-        categories:        [],
-        cover_image_url:   h.cover_image_url ?? null,
-      })))
+      setHomestays(results.map(toDiscoverCard))
       setIsLoading(false)
     }, 300)
 
