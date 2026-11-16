@@ -4,9 +4,9 @@ import type { Metadata } from 'next'
 export const SITE_URL  = 'https://www.benative.in'
 export const SITE_NAME = 'BeNative'
 
-// The photo on a shared link's preview card when the page has none of its own.
-// A full address: share cards are read by other sites, which cannot follow a path.
-const DEFAULT_SHARE_IMAGE = `${SITE_URL}/hero.jpg`
+// The picture on a shared link's preview card when the page has no photo of its own: the BeNative card
+// (logo, name and tagline). A full address: share cards are read by other sites, which cannot follow a path.
+const DEFAULT_SHARE_IMAGE = `${SITE_URL}/share.png`
 
 interface PageSeo {
   title: string

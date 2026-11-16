@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 
-const FALLBACK_SLIDES = [
-  { src: '/hero.jpg',              alt: 'BeNative — Real homes across India' },
+// Each slot shows the photo set for it in Admin (carousel_1 … carousel_5), else its photo here.
+// The first slot has no photo here: without one in Admin it is left out.
+const FALLBACK_SLIDES: { src?: string; alt: string }[] = [
+  {                                alt: 'BeNative — Real homes across India' },
   { src: '/bird_waching.jpg',      alt: 'Nature stays' },
   { src: '/Rider_Friendly.jpeg',   alt: 'Travel stays' },
   { src: '/Solo_Female_Safe.jpeg', alt: 'Peaceful homes' },
@@ -12,11 +14,13 @@ const FALLBACK_SLIDES = [
 ]
 
 export default function HeroCarousel({ imageMap = {} }: { imageMap?: Record<string, string> }) {
-  const SLIDES = FALLBACK_SLIDES.map((s, i) => ({
-    src: imageMap[`carousel_${i + 1}`] ?? s.src,
-    alt: s.alt,
-    external: !!(imageMap[`carousel_${i + 1}`]),
-  }))
+  const SLIDES = FALLBACK_SLIDES
+    .map((s, i) => ({
+      src: imageMap[`carousel_${i + 1}`] ?? s.src,
+      alt: s.alt,
+      external: !!(imageMap[`carousel_${i + 1}`]),
+    }))
+    .filter((s): s is { src: string; alt: string; external: boolean } => !!s.src)
   const [current, setCurrent] = useState(0)
 
   useEffect(() => {
