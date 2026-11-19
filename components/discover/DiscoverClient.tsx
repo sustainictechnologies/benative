@@ -396,6 +396,8 @@ export default function DiscoverClient({ initialIntentSlug: _, initialCatKey, in
 
   return (
     <div className="flex flex-col bg-white">
+      {/* The page's main heading, for search engines and screen readers: the page itself opens with the search box */}
+      <h1 className="sr-only">Discover homestays across India</h1>
 
       {/* ── Search box, above the categories (its suggestions open over the filter bars below) ── */}
       <div className="bg-[#f8f7f2] px-4 sm:px-6 pt-6">

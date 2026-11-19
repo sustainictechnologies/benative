@@ -16,7 +16,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName: SITE_NAME,
-  title: 'Discover Genuine Homestays in India | BeNative',
+  title: 'Discover Genuine Homestays in India · BeNative',
   description:
     'Discover genuine family run homestays across India. Explore village stays, nature homes, local food and authentic experiences. Connect directly with hosts through BeNative.',
 }

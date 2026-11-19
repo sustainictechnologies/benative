@@ -31,7 +31,7 @@ const getHomestay = cache(async (slug: string) => {
     .select(`
       id, title, slug, village_name, location_district, is_verified,
       host_name, calling_window, languages_spoken, youtube_video_id,
-      created_at, updated_at, sub_categories, cover_image_url, latitude,
+      created_at, updated_at, sub_categories, cover_image_url, latitude, longitude,
       homestay_tags ( tags ( id, name, slug ) ),
       homestay_blocks ( id, block_type, sort_order, content_data )
     `)
@@ -74,18 +74,24 @@ function shorten(text: string): string {
   return text.slice(0, at > 80 ? at : DESCRIPTION_LENGTH - 1).replace(/[\s,;:.—–-]+$/, '') + '…'
 }
 
+// Google's text under the result (and the share card's): the name and place, then the host's own story
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function pageDescription(data: any): string {
+  const place = placeName(data)
+  const opening = storyOpening(data)
+  return opening
+    ? shorten(`${data.title}${place ? ` in ${place}` : ''}. ${opening}`)
+    : `${data.title} is a homestay in ${place || 'India'}. See photos, rooms, food and local experiences, and connect directly with the host through BeNative.`
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = await getHomestay(params.slug)
   // A draft (latitude 0) has no public page
   if (!data || data.latitude === 0) return { robots: { index: false, follow: false } }
 
   const place = placeName(data)
-  const title = place ? `${data.title}, ${place} | BeNative` : `${data.title} | BeNative`
-  // Google's text under the result (and the share card's): the name and place, then the host's own story
-  const opening = storyOpening(data)
-  const description = opening
-    ? shorten(`${data.title}${place ? ` in ${place}` : ''}. ${opening}`)
-    : `${data.title} is a homestay in ${place || 'India'}. See photos, rooms, food and local experiences, and connect directly with the host through BeNative.`
+  const title = place ? `${data.title}, ${place} · BeNative` : `${data.title} · BeNative`
+  const description = pageDescription(data)
   const photo = previewPhoto(data)
 
   return pageMetadata({
@@ -183,9 +189,40 @@ export default async function HomestayPage({ params }: Props) {
     ],
   }
 
+  // What the page is, for search engines: a place to stay. Only what every visitor sees on the page and the
+  // Map (no phone, email or full address). No star rating: Google allows one only from real reviews.
+  const galleryData = gallery?.content_data as any
+  const photos = (gallery
+    ? [...(galleryData?.items ?? []).map((item: any) => item?.url), ...(galleryData?.images ?? [])]
+    : [homestay.cover_image_url]
+  ).filter((url: unknown): url is string => typeof url === 'string' && url.startsWith('http')).slice(0, 10)
+  const village  = (homestay.village_name ?? '').trim()
+  const district = (homestay.location_district ?? '').trim()
+  const lodging = {
+    '@context': 'https://schema.org',
+    '@type': 'LodgingBusiness',
+    '@id': `${SITE_URL}/homestays/${homestay.slug}#stay`,
+    name: homestay.title,
+    url: `${SITE_URL}/homestays/${homestay.slug}`,
+    description: pageDescription(homestay),
+    ...(photos.length ? { image: photos } : {}),
+    address: {
+      '@type': 'PostalAddress',
+      ...(village ? { addressLocality: village } : {}),
+      ...(district && district.toLowerCase() !== village.toLowerCase() ? { addressRegion: district } : {}),
+      addressCountry: 'IN',
+    },
+    ...(homestay.longitude ? { geo: { '@type': 'GeoCoordinates', latitude: homestay.latitude, longitude: homestay.longitude } } : {}),
+    ...((homestay.languages_spoken ?? []).length ? { availableLanguage: homestay.languages_spoken } : {}),
+    ...(tags.facilities.length
+      ? { amenityFeature: tags.facilities.map((name) => ({ '@type': 'LocationFeatureSpecification', name, value: true })) }
+      : {}),
+  }
+
   return (
     <article className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-2">
       <JsonLd data={breadcrumbs} />
+      <JsonLd data={lodging} />
       {/* Header */}
       <div className="mb-5">
         {/* The tags have their own block, below the gallery unless placed elsewhere in the builder */}

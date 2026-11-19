@@ -10,7 +10,7 @@ import JsonLd              from '@/components/JsonLd'
 import { pageMetadata, SITE_URL, SITE_NAME } from '@/lib/site'
 
 export const metadata = pageMetadata({
-  title: 'Discover Genuine Homestays in India | BeNative',
+  title: 'Discover Genuine Homestays in India · BeNative',
   description:
     'Discover genuine family run homestays across India. Explore village stays, nature homes, local food and authentic experiences. Connect directly with hosts through BeNative.',
   path: '/',
