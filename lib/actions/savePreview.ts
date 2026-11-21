@@ -7,6 +7,7 @@ import { serializeBlock } from '@/lib/blockSerializer'
 import { toSlug } from '@/lib/homestaySlug'
 import { isLive, saveLaunchLink } from '@/lib/launchLinks'
 import type { PublishPayload } from '@/lib/publishHomestay'
+import type { HomestaySeo } from '@/lib/homestaySeo'
 
 export interface PreviewMeta {
   title:     string
@@ -28,6 +29,7 @@ export async function savePreview(
   slug?:     string | null,
   pageMeta?: PreviewMeta,
   location?: PreviewLocation | null,
+  seo?:      HomestaySeo,
 ): Promise<{ token: string; launch: PreviewLaunch } | { error: string }> {
   assertAdmin()
   const supabase  = createAdminClient()
@@ -75,7 +77,7 @@ export async function savePreview(
     token = data.token as string
   }
 
-  return { token, launch: await prepareLaunch(blocks, slug, pageMeta, location) }
+  return { token, launch: await prepareLaunch(blocks, slug, pageMeta, location, seo) }
 }
 
 // A new homestay's preview comes with its launch: the same page, its location and the host's details,
@@ -85,6 +87,7 @@ async function prepareLaunch(
   draftSlug: string | null | undefined,
   meta:      PreviewMeta | undefined,
   location:  PreviewLocation | null | undefined,
+  seo:       HomestaySeo | undefined,
 ): Promise<PreviewLaunch> {
   if (draftSlug && await isLive(draftSlug)) return null
 
@@ -107,6 +110,7 @@ async function prepareLaunch(
     latitude:  location.lat,
     longitude: location.lng,
     blocks,
+    ...(seo ? { seo } : {}),
   }
 
   const saved = await saveLaunchLink(launchPayload)

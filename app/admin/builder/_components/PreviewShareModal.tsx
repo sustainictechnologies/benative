@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { X, Link2, Copy, Check, Loader2, Eye, Rocket, AlertTriangle } from 'lucide-react'
 import type { CanvasBlock } from './BuilderTypes'
 import { savePreview, type PreviewLaunch } from '@/lib/actions/savePreview'
+import type { HomestaySeo } from '@/lib/homestaySeo'
 
 interface Props {
   open:      boolean
@@ -14,9 +15,10 @@ interface Props {
   pageAddress?:   string
   pageLanguages?: string[]
   pageLocation?:  { lat: number; lng: number } | null
+  seo?:           HomestaySeo   // goes live with the host's Launch
 }
 
-export default function PreviewShareModal({ open, onClose, blocks, slug, pageName, pageAddress, pageLanguages, pageLocation }: Props) {
+export default function PreviewShareModal({ open, onClose, blocks, slug, pageName, pageAddress, pageLanguages, pageLocation, seo }: Props) {
   const [loading, setLoading]   = useState(false)
   const [token, setToken]       = useState<string | null>(null)
   const [launch, setLaunch]     = useState<PreviewLaunch>(null)
@@ -36,7 +38,7 @@ export default function PreviewShareModal({ open, onClose, blocks, slug, pageNam
         title:     pageName     ?? '',
         address:   pageAddress  ?? '',
         languages: pageLanguages ?? [],
-      }, pageLocation ?? null)
+      }, pageLocation ?? null, seo)
       if ('error' in result) {
         setError(result.error)
       } else {

@@ -7,6 +7,7 @@ import ShareButton from '@/components/ShareButton'
 import type { HomestayBlock } from '@/types/blocks.types'
 import { SUB_CATEGORY_GROUPS } from '@/lib/subCategories'
 import { sharePreviewImgUrl } from '@/lib/supabase/imageUrl'
+import { autoSeoTitle, autoSeoDescription } from '@/lib/homestaySeo'
 import { MapPin, Globe2, CalendarDays, RefreshCw, Eye } from 'lucide-react'
 
 export const revalidate = 60
@@ -45,16 +46,29 @@ function previewPhoto(data: any): string | null {
   return data.cover_image_url ?? gallery?.items?.find((item: any) => item?.url)?.url ?? gallery?.images?.find(Boolean) ?? null
 }
 
+// The title and description set in the builder's SEO panel, if any. Asked for on their own: until
+// supabase/homestay_seo.sql has been run these columns do not exist, and the page keeps its automatic ones.
+async function getSeo(slug: string): Promise<{ seo_title: string | null; seo_description: string | null } | null> {
+  const { data } = await createClient()
+    .from('homestays')
+    .select('seo_title, seo_description')
+    .eq('slug', slug)
+    .maybeSingle()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data as any
+}
+
 export async function generateMetadata({ params }: Props) {
-  const data = await getHomestay(params.slug)
+  const [data, seo] = await Promise.all([getHomestay(params.slug), getSeo(params.slug)])
   if (!data) return {}
-  const description = `Authentic homestay in ${data.village_name}, ${data.location_district}. Direct host contact via BeNative.`
+  const seoTitle    = seo?.seo_title?.trim()
+  const description = seo?.seo_description?.trim() || autoSeoDescription(data.village_name, data.location_district)
   const photo = previewPhoto(data)
   return {
-    title: `${data.title} · BeNative`,
+    title: seoTitle || autoSeoTitle(data.title),
     description,
     openGraph: {
-      title: data.title,
+      title: seoTitle || data.title,
       description,
       siteName: 'BeNative',
       type: 'website',

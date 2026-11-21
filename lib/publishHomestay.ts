@@ -5,6 +5,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { CanvasBlock } from '@/app/admin/builder/_components/BuilderTypes'
 import { serializeBlock } from '@/lib/blockSerializer'
+import type { HomestaySeo } from '@/lib/homestaySeo'
 
 export interface PublishPayload {
   slug:       string
@@ -19,6 +20,7 @@ export interface PublishPayload {
   latitude:   number
   longitude:  number
   blocks:     CanvasBlock[]
+  seo?:       HomestaySeo   // the builder's SEO panel; left out, the homestay keeps the SEO settings it has
 }
 
 // The page address comes from the name, so publishing under another homestay's name would
@@ -67,6 +69,12 @@ export async function publishToSite(payload: PublishPayload) {
         longitude:         payload.longitude,
         is_verified:       true,
         cover_image_url:   coverImageUrl,
+        // Empty fields are saved as nothing: the page then uses its automatic title and description
+        ...(payload.seo ? {
+          seo_title:       payload.seo.title.trim()       || null,
+          seo_description: payload.seo.description.trim() || null,
+          focus_keyword:   payload.seo.keyword.trim()     || null,
+        } : {}),
       },
       { onConflict: 'slug' }
     )
@@ -74,6 +82,10 @@ export async function publishToSite(payload: PublishPayload) {
     .single()
 
   if (upsertErr || !upserted) {
+    // The SEO columns come with supabase/homestay_seo.sql. Nothing has been changed when this fails.
+    if (payload.seo && /seo_title|seo_description|focus_keyword/.test(upsertErr?.message ?? '')) {
+      return { success: false as const, error: 'The SEO settings need a database update first: run supabase/homestay_seo.sql in Supabase → SQL Editor, then publish again.' }
+    }
     return { success: false as const, error: upsertErr?.message ?? 'Upsert failed' }
   }
 
