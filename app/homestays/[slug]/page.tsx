@@ -11,6 +11,7 @@ import { MapPin, Globe2, Clock, Eye } from 'lucide-react'
 import type { Metadata } from 'next'
 import JsonLd from '@/components/JsonLd'
 import { pageMetadata, SITE_URL } from '@/lib/site'
+import { autoSeoTitle, autoSeoDescription, joinPlace } from '@/lib/homestaySeo'
 
 export const revalidate = 60
 
@@ -48,50 +49,39 @@ function previewPhoto(data: any): string | null {
   return data.cover_image_url ?? gallery?.items?.find((item: any) => item?.url)?.url ?? gallery?.images?.find(Boolean) ?? null
 }
 
-// "Village, District" — once only when both are the same. The state is not among the public
-// fields of a homestay (it is only inside the private address), so it is not shown here.
+// "Village, District" — once only when both are the same (lib/homestaySeo.ts)
 function placeName(data: { village_name?: string | null; location_district?: string | null }): string {
-  const village  = (data.village_name ?? '').trim()
-  const district = (data.location_district ?? '').trim()
-  return [village, district.toLowerCase() === village.toLowerCase() ? '' : district].filter(Boolean).join(', ')
+  return joinPlace(data.village_name, data.location_district)
 }
 
-// The opening of the host's story, from its first full sentence: its first lines can be just the hosts' names
-// ("Rushabh and Omkar"). Nothing when the story is hidden or missing.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function storyOpening(data: any): string {
-  const story = (data.homestay_blocks ?? []).find((b: any) => b.block_type === 'host-story' && b.content_data?.hidden !== true)?.content_data
-  const paragraphs = String(story?.story_text ?? '').split('\n').map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean)
-  const start = paragraphs.findIndex(p => p.length >= 40)
-  return start < 0 ? '' : paragraphs.slice(start).join(' ')
-}
-
-// About as long as Google shows under a result; cut at a word, with "…"
-const DESCRIPTION_LENGTH = 155
-function shorten(text: string): string {
-  if (text.length <= DESCRIPTION_LENGTH) return text
-  const at = text.lastIndexOf(' ', DESCRIPTION_LENGTH - 1)
-  return text.slice(0, at > 80 ? at : DESCRIPTION_LENGTH - 1).replace(/[\s,;:.—–-]+$/, '') + '…'
-}
-
-// Google's text under the result (and the share card's): the name and place, then the host's own story
+// Google's automatic text under the result (and the share card's): the name and place, then the host's own story.
+// The same as the builder's SEO panel shows (lib/homestaySeo.ts).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function pageDescription(data: any): string {
-  const place = placeName(data)
-  const opening = storyOpening(data)
-  return opening
-    ? shorten(`${data.title}${place ? ` in ${place}` : ''}. ${opening}`)
-    : `${data.title} is a homestay in ${place || 'India'}. See photos, rooms, food and local experiences, and connect directly with the host through BeNative.`
+  const story = (data.homestay_blocks ?? []).find((b: any) => b.block_type === 'host-story' && b.content_data?.hidden !== true)?.content_data
+  return autoSeoDescription(data.title, placeName(data), String(story?.story_text ?? ''))
+}
+
+// The title and description set in the builder's SEO panel, if any. Asked for on their own, so the page
+// still works on a database without these columns (supabase/homestay_seo.sql): it then keeps its automatic ones.
+async function getSeo(slug: string): Promise<{ seo_title: string | null; seo_description: string | null } | null> {
+  const { data } = await createClient()
+    .from('homestays')
+    .select('seo_title, seo_description')
+    .eq('slug', slug)
+    .maybeSingle()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data as any
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const data = await getHomestay(params.slug)
+  const [data, seo] = await Promise.all([getHomestay(params.slug), getSeo(params.slug)])
   // A draft (latitude 0) has no public page
   if (!data || data.latitude === 0) return { robots: { index: false, follow: false } }
 
   const place = placeName(data)
-  const title = place ? `${data.title}, ${place} · BeNative` : `${data.title} · BeNative`
-  const description = pageDescription(data)
+  const title = seo?.seo_title?.trim() || autoSeoTitle(data.title, place)
+  const description = seo?.seo_description?.trim() || pageDescription(data)
   const photo = previewPhoto(data)
 
   return pageMetadata({

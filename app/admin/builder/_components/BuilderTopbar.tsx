@@ -1,8 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Eye, EyeOff, Undo2, Redo2, Smartphone, Monitor, Save, Leaf, Check, Share2, Loader2, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff, Undo2, Redo2, Smartphone, Monitor, Save, Leaf, Check, Share2, Loader2, AlertCircle, Search } from 'lucide-react'
 import Link from 'next/link'
+import { scoreStatus } from './seoChecks'
+
+const SCORE_BADGE = { good: 'bg-emerald-500', ok: 'bg-amber-500', bad: 'bg-rose-500' } as const
 
 interface Props {
   previewMode: boolean
@@ -16,11 +19,14 @@ interface Props {
   savedAt?: Date | null
   onPublish?: () => void
   onSharePreview?: () => void
+  seoScore?: number
+  onSeo?: () => void
 }
 
 export default function BuilderTopbar({
   previewMode, viewport, blockCount,
   onTogglePreview, onViewportChange, onSave, saving, saveError, savedAt, onPublish, onSharePreview,
+  seoScore, onSeo,
 }: Props) {
   const [justSaved, setJustSaved] = useState(false)
 
@@ -93,6 +99,23 @@ export default function BuilderTopbar({
         {previewMode ? <EyeOff size={12} /> : <Eye size={12} />}
         <span className="hidden sm:inline">{previewMode ? 'Edit' : 'Preview'}</span>
       </button>
+
+      {/* SEO: Google preview and checks, with the score */}
+      {onSeo && (
+        <button
+          onClick={onSeo}
+          title="SEO: how this page shows in Google"
+          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold bg-stone-700 hover:bg-stone-600 text-stone-200 transition-colors shadow-sm shrink-0"
+        >
+          <Search size={12} />
+          <span className="hidden sm:inline">SEO</span>
+          {seoScore !== undefined && (
+            <span className={`px-1.5 py-px rounded-md text-[10px] font-bold text-white tabular-nums ${SCORE_BADGE[scoreStatus(seoScore)]}`}>
+              {seoScore}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Save error indicator */}
       {saveError && (

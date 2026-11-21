@@ -6,6 +6,7 @@ import { X, MapPin, Navigation, Check, Loader2, User, Phone, Mail, Home, Globe, 
 import { publishHomestay, type PublishPayload } from '@/lib/actions/publishLocation'
 import { createClient } from '@/lib/supabase/client'
 import { toSlug } from '@/lib/homestaySlug'
+import type { HomestaySeo } from '@/lib/homestaySeo'
 import type { CanvasBlock } from './BuilderTypes'
 
 const LocationPickerMap = dynamic(() => import('./LocationPickerMap'), {
@@ -31,6 +32,7 @@ interface BuilderData {
   languages: string[]
   location:  { lat: number; lng: number } | null   // set while building (📍 next to the address)
   blocks:    CanvasBlock[]
+  seo?:      HomestaySeo                            // the SEO panel's settings; left out, the saved ones stay
 }
 
 interface Props {
@@ -120,6 +122,7 @@ export default function PublishModal({ open, onClose, onPublished, builderData }
       blocks:    builderData.blocks,
       latitude:  lat,
       longitude: lng,
+      seo:       builderData.seo,
     }
 
     const result = await publishHomestay(payload)

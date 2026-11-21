@@ -29,6 +29,10 @@ import PublishModal from './PublishModal'
 import PreviewShareModal from './PreviewShareModal'
 import SaveAsNewModal from './SaveAsNewModal'
 import MapLocationModal, { type MapLocation } from './MapLocationModal'
+import SeoPanel from './SeoPanel'
+import { analyzeSeo, builderAutoSeo } from './seoChecks'
+import { type HomestaySeo, EMPTY_SEO, hasSeo } from '@/lib/homestaySeo'
+import { toSlug } from '@/lib/homestaySlug'
 
 /* ─── Helpers ────────────────────────────────────────────── */
 function makeId() {
@@ -67,6 +71,8 @@ export default function BuilderClient() {
   const [showPreviewShare, setShowPreviewShare] = useState(false)
   const [showSaveAsNew, setShowSaveAsNew]       = useState(false)
   const [selectedElement, setSelectedElement]   = useState<SelectedElement | null>(null)
+  const [seo, setSeo]                           = useState<HomestaySeo>(EMPTY_SEO)   // the SEO panel's title, description and keyword
+  const [showSeo, setShowSeo]                   = useState(false)
 
   const searchParams  = useSearchParams()
   const router        = useRouter()
@@ -75,7 +81,7 @@ export default function BuilderClient() {
   const liveTitleRef  = useRef<string | null>(null)   // name of the live homestay open here; null for a draft or new page
   const keptNameRef   = useRef<string | null>(null)   // a changed name already confirmed as "keep on this homestay"
   const publishedSlugRef = useRef<string | null>(null)
-
+  const seoSavedRef      = useRef(false)   // the homestay has SEO settings saved, so emptying the panel must be published too
 
   /* ── Undo history ────────────────────────────────────────── */
   const historyRef      = useRef<CanvasBlock[][]>([])
@@ -98,8 +104,13 @@ export default function BuilderClient() {
         // A draft keeps its map location in the draft; a live homestay has it on its record
         const savedLocation = h.latitude ? { lat: h.latitude, lng: h.longitude } : null
 
+        // The SEO settings on the record (none until supabase/homestay_seo.sql has been run)
+        const savedSeo: HomestaySeo = { title: h.seo_title ?? '', description: h.seo_description ?? '', keyword: h.focus_keyword ?? '' }
+        seoSavedRef.current = hasSeo(savedSeo)
+
         // Prefer draft state over published blocks when a draft exists
         const dd = h.draft_data as any
+        setSeo(dd?.seo ?? savedSeo)
         if (dd?.blocks?.length > 0) {
           const draftBlocks = dd.blocks as CanvasBlock[]
           setBlocks(draftBlocks)
@@ -369,6 +380,7 @@ export default function BuilderClient() {
         pageAddress,
         pageLocation,
         blocks,
+        seo,
       })
       if (result.success) {
         setSavedAt(new Date())
@@ -384,7 +396,7 @@ export default function BuilderClient() {
     } finally {
       setSaving(false)
     }
-  }, [pageName, pageHighlights, pageLanguages, pageAddress, pageLocation, blocks, router])
+  }, [pageName, pageHighlights, pageLanguages, pageAddress, pageLocation, blocks, seo, router])
 
   const handleSave = useCallback(() => {
     const name = pageName.trim().toLowerCase()
@@ -399,7 +411,23 @@ export default function BuilderClient() {
   const handlePublished = useCallback((slug: string) => {
     publishedSlugRef.current = slug
     liveTitleRef.current     = pageName
-  }, [pageName])
+    if (hasSeo(seo)) seoSavedRef.current = true
+  }, [pageName, seo])
+
+  // The SEO settings go with Publish (and the host's Launch) only once there are some, or to empty saved ones,
+  // so publishing works as before until supabase/homestay_seo.sql has been run
+  const seoToPublish = hasSeo(seo) || seoSavedRef.current ? seo : undefined
+
+  // The SEO panel's preview and checks: the title and description the page will use, and the score
+  const autoSeo     = useMemo(() => builderAutoSeo(pageName, pageAddress, blocks), [pageName, pageAddress, blocks])
+  const pageSlug    = toSlug(pageName)
+  const seoAnalysis = useMemo(() => analyzeSeo({
+    keyword:     seo.keyword,
+    title:       seo.title.trim()       || autoSeo.title,
+    description: seo.description.trim() || autoSeo.description,
+    slug:        pageSlug,
+    blocks,
+  }), [seo, autoSeo, pageSlug, blocks])
 
   // A draft's old address no longer exists after publishing, so the builder moves to the published one.
   // Changing the address reloads the page, so this waits until the success box is closed.
@@ -665,6 +693,8 @@ export default function BuilderClient() {
             savedAt={savedAt}
             onSharePreview={() => setShowPreviewShare(true)}
             onPublish={() => setShowPublish(true)}
+            seoScore={seoAnalysis.score}
+            onSeo={() => setShowSeo(true)}
           />
 
           <div className="flex flex-1 overflow-hidden">
@@ -707,6 +737,18 @@ export default function BuilderClient() {
           pageAddress={pageAddress}
           pageLanguages={pageLanguages}
           pageLocation={pageLocation}
+          seo={seoToPublish}
+        />
+
+        <SeoPanel
+          open={showSeo}
+          onClose={() => setShowSeo(false)}
+          seo={seo}
+          onChange={setSeo}
+          autoTitle={autoSeo.title}
+          autoDescription={autoSeo.description}
+          slug={pageSlug}
+          analysis={seoAnalysis}
         />
 
         <MapLocationModal
@@ -744,6 +786,7 @@ export default function BuilderClient() {
             languages: pageLanguages,
             location:  pageLocation,
             blocks,
+            seo:       seoToPublish,
           }}
         />
 

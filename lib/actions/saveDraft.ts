@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { assertAdmin } from '@/lib/adminAuth'
 import type { CanvasBlock } from '@/app/admin/builder/_components/BuilderTypes'
+import type { HomestaySeo } from '@/lib/homestaySeo'
 
 export interface DraftPayload {
   slug?:          string
@@ -12,6 +13,7 @@ export interface DraftPayload {
   pageAddress:    string
   pageLocation?:  { lat: number; lng: number } | null   // the map location, set while building
   blocks:         CanvasBlock[]
+  seo?:           HomestaySeo                            // the SEO panel's settings
 }
 
 function toDraftSlug(name: string): string {
@@ -39,6 +41,7 @@ export async function saveDraft(
     pageLanguages:  payload.pageLanguages,
     pageAddress:    payload.pageAddress,
     pageLocation:   payload.pageLocation ?? null,
+    seo:            payload.seo ?? null,
   }
 
   if (payload.slug) {
