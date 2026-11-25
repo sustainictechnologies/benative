@@ -119,11 +119,17 @@ export default async function HomestayPage({ params }: Props) {
   const hostEmail = ((blocks.find((b) => b.block_type === 'contact')?.content_data as any)?.email ?? '').trim().toLowerCase()
   const isHost = !!hostEmail && !!user?.email_confirmed_at && user.email?.toLowerCase() === hostEmail
 
+  // "Village, District" for the photo descriptions, once only when both are the same
+  const village  = (homestay.village_name ?? '').trim()
+  const district = (homestay.location_district ?? '').trim()
+
   const meta = {
     host_name: homestay.host_name,
     contact_phone: contactPhone,
     calling_window: homestay.calling_window,
     youtube_video_id: homestay.youtube_video_id ?? null,
+    title: homestay.title,
+    place: [village, district.toLowerCase() === village.toLowerCase() ? '' : district].filter(Boolean).join(', '),
     tags,
   }
 

@@ -216,10 +216,11 @@ export default function BuilderClient() {
               if (d.youtube_video_id)  texts['youtube-url'] = d.youtube_video_id
               break
             case 'gallery': {
-              const items = (d.items ?? []) as Array<{ url: string; ratio: string }>
+              const items = (d.items ?? []) as Array<{ url: string; ratio: string; description?: string }>
               const meta  = items.map((item, idx) => {
                 const key = `gallery-${idx}`
-                if (item.url) images[key] = item.url
+                if (item.url)         images[key] = item.url
+                if (item.description) texts[`${key}-desc`] = item.description
                 return { key, ratio: item.ratio ?? 'square' }
               })
               texts['gallery-meta'] = JSON.stringify(meta)

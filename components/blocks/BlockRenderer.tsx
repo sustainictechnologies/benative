@@ -19,6 +19,8 @@ interface HomestayMeta {
   contact_phone: string
   calling_window: string
   youtube_video_id: string | null
+  title?: string   // the homestay's name, for photo descriptions
+  place?: string   // "Village, District", for photo descriptions
   tags?: { subCategories: string[]; facilities: string[] }
 }
 
@@ -197,7 +199,7 @@ export default function BlockRenderer({ block, homestay, isLoggedIn, slug, hideH
       )
       break
     case 'gallery':
-      content = <GalleryBlock data={block.content_data as any} />
+      content = <GalleryBlock data={block.content_data as any} title={homestay.title} place={homestay.place} />
       break
     case 'rooms':
       content = <RoomsBlock data={block.content_data as any} />
