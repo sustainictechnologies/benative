@@ -23,7 +23,6 @@ export default function PlaceGrid({
 }: Props) {
   const [page, setPage] = useState(0)
   const totalPages = Math.ceil(homestays.length / PAGE_SIZE)
-  const visible = homestays.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   useEffect(() => { setPage(0) }, [homestays.length])
 
@@ -52,15 +51,18 @@ export default function PlaceGrid({
         </div>
       ) : (
         <>
+          {/* Every card is in the page, so search engines (which can't press Next) find a link to each homestay.
+              Only the current page of six shows; the others' photos load when their page is opened. */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-3.5 gap-y-5 p-4 md:gap-x-5 md:gap-y-6 md:p-5">
-            {visible.map((h) => (
-              <PlaceCard
-                key={h.id}
-                homestay={h}
-                isHighlighted={highlightedId === h.id}
-                onMouseEnter={() => onHover?.(h.id)}
-                onMouseLeave={() => onHover?.(null)}
-              />
+            {homestays.map((h, i) => (
+              <div key={h.id} className={Math.floor(i / PAGE_SIZE) === page ? 'contents' : 'hidden'}>
+                <PlaceCard
+                  homestay={h}
+                  isHighlighted={highlightedId === h.id}
+                  onMouseEnter={() => onHover?.(h.id)}
+                  onMouseLeave={() => onHover?.(null)}
+                />
+              </div>
             ))}
           </div>
 
