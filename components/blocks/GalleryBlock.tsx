@@ -6,7 +6,7 @@ import { supabaseImgUrl } from '@/lib/supabase/imageUrl'
 
 type Ratio = 'square' | 'landscape' | 'portrait'
 
-interface GalleryItem { url: string; ratio?: Ratio }
+interface GalleryItem { url: string; ratio?: Ratio; description?: string }
 
 interface Props {
   data: {
@@ -14,6 +14,7 @@ interface Props {
     images?: (string | null)[]
   }
   title?: string   // the homestay's name: makes the photo descriptions say whose photos they are
+  place?: string   // "Village, District"
 }
 
 // Whatever shape (ratio) was picked in the builder:
@@ -22,12 +23,20 @@ interface Props {
 const SMALL_ON_PHONE    = 4
 const SMALL_ON_COMPUTER = 4
 
-export default function GalleryBlock({ data, title }: Props) {
-  // "Povli Forest Homestay photo 2 of 9", or "Gallery photo 2 of 9" without a name
-  const altPrefix = title ? `${title} photo` : 'Gallery photo'
+export default function GalleryBlock({ data, title, place }: Props) {
   const photos: GalleryItem[] = data.items
     ? data.items.filter(i => i?.url)
     : (data.images ?? []).filter(Boolean).map(url => ({ url: url as string, ratio: 'square' as Ratio }))
+
+  // What each photo shows, for Google Images and screen readers: the description written in the builder and
+  // whose photo it is ("Sunset from the verandah at Povli Forest Homestay, Povli, Sindhudurg"); without one,
+  // "Povli Forest Homestay, Povli, Sindhudurg: photo 2 of 9" ("Gallery photo 2 of 9" without a name)
+  const where = [title, place].filter(Boolean).join(', ')
+  const altText = (i: number) => {
+    const description = photos[i]?.description?.trim()
+    if (description) return where ? `${description} at ${where}` : description
+    return where ? `${where}: photo ${i + 1} of ${photos.length}` : `Gallery photo ${i + 1} of ${photos.length}`
+  }
 
   const [selected, setSelected] = useState<number | null>(null)
 
@@ -114,7 +123,7 @@ export default function GalleryBlock({ data, title }: Props) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={supabaseImgUrl(photos[0].url, { width: 1600, quality: 80 })}
-          alt={`${altPrefix} 1 of ${photos.length}`}
+          alt={altText(0)}
           onClick={() => setSelected(0)}
           className="w-full aspect-video object-cover rounded-lg cursor-pointer"
         />
@@ -125,7 +134,7 @@ export default function GalleryBlock({ data, title }: Props) {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={supabaseImgUrl(photo.url, { width: 400, quality: 70 })}
-                  alt={`${altPrefix} ${i + 2} of ${photos.length}`}
+                  alt={altText(i + 1)}
                   loading="lazy"
                   onClick={() => setSelected(i + 1)}
                   className="w-full h-full object-cover cursor-pointer"
@@ -152,7 +161,7 @@ export default function GalleryBlock({ data, title }: Props) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={supabaseImgUrl(photos[0].url, { width: 1600, quality: 80 })}
-            alt={`${altPrefix} 1 of ${photos.length}`}
+            alt={altText(0)}
             onClick={() => setSelected(0)}
             className="w-full h-full row-span-2 object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
           />
@@ -166,7 +175,7 @@ export default function GalleryBlock({ data, title }: Props) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={supabaseImgUrl(photo.url, { width: 600, quality: 75 })}
-                alt={`${altPrefix} ${i + 2} of ${photos.length}`}
+                alt={altText(i + 1)}
                 loading="lazy"
                 onClick={() => setSelected(i + 1)}
                 className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
@@ -225,7 +234,7 @@ export default function GalleryBlock({ data, title }: Props) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={viewerUrl(photos[selected].url)}
-            alt={`${altPrefix} ${selected + 1} of ${photos.length}`}
+            alt={altText(selected)}
             onClick={e => e.stopPropagation()}
             draggable={false}
             style={{ transform: `translate(${drag.x}px, ${drag.y}px)`, transition: dragging ? 'none' : 'transform 200ms ease-out' }}

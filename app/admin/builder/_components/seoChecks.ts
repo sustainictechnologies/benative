@@ -72,6 +72,8 @@ interface PageText {
   headings:   string[]
   paragraphs: string[]   // in page order
   photos:     number
+  galleryPhotos:    number
+  describedPhotos:  number   // gallery photos with a description written under them
 }
 
 function parseJson<T>(raw: string | undefined, fallback: T): T {
@@ -90,7 +92,9 @@ function pageText(blocks: CanvasBlock[]): PageText {
   const headings: string[]   = []
   const paragraphs: string[] = []
   let photos = 0
-  const add = (list: string[], ...values: (string | undefined)[]) =>
+  let galleryPhotos = 0
+  let describedPhotos = 0
+  const add =(list: string[], ...values: (string | undefined)[]) =>
     values.forEach(v => { if (v?.trim()) list.push(v.trim()) })
   const joined = (...values: (string | undefined)[]) => values.filter(v => v?.trim()).join('. ')
 
@@ -145,9 +149,15 @@ function pageText(blocks: CanvasBlock[]): PageText {
           if (isPhoto(img[id])) photos++
         }
         break
-      case 'gallery':
-        photos += Object.entries(img).filter(([key, url]) => key.startsWith('gallery-') && isPhoto(url)).length
+      case 'gallery': {
+        // The photos Publish saves: those listed in the gallery's order (older galleries: every gallery photo)
+        const order = parseJson<{ key?: string }[]>(txt['gallery-meta'], []).map(m => m.key ?? '')
+        const keys  = (order.length ? order : Object.keys(img).filter(k => k.startsWith('gallery-'))).filter(k => isPhoto(img[k]))
+        photos          += keys.length
+        galleryPhotos   += keys.length
+        describedPhotos += keys.filter(k => txt[`${k}-desc`]?.trim()).length
         break
+      }
       case 'map':
         add(paragraphs, [txt['map-location'], txt['map-region'], txt['map-nearest-town']].filter(v => v?.trim()).join(', '))
         break
@@ -166,7 +176,7 @@ function pageText(blocks: CanvasBlock[]): PageText {
     }
   }
 
-  return { headings, paragraphs, photos }
+  return { headings, paragraphs, photos, galleryPhotos, describedPhotos }
 }
 
 /* ─── Matching words ─────────────────────────────────────── */
@@ -200,7 +210,7 @@ const SCORE: Record<CheckStatus, number> = { good: 1, ok: 0.5, bad: 0 }
 
 export function analyzeSeo({ keyword, title, description, slug, blocks }: SeoInput): SeoAnalysis {
   const kw = normalize(keyword)
-  const { headings, paragraphs, photos } = pageText(blocks)
+  const { headings, paragraphs, photos, galleryPhotos, describedPhotos } = pageText(blocks)
   const allText = [...headings, ...paragraphs].join('\n')
   const words   = wordCount(allText)
   const uses    = countPhrase(allText, kw)
@@ -306,11 +316,20 @@ export function analyzeSeo({ keyword, title, description, slug, blocks }: SeoInp
         : `A paragraph has ${longestParagraph} words: split it, long paragraphs are hard to read on a phone.`,
     },
     {
-      id: 'photos', label: 'Photos', weight: 8,
+      id: 'photos', label: 'Photos', weight: 5,
       status: photos >= 5 ? 'good' : photos > 0 ? 'ok' : 'bad',
       detail: `${photos} ${photos === 1 ? 'photo' : 'photos'}. ` + (photos >= 5
         ? 'Photos show in Google Images and on shared links.'
         : 'Add at least 5 to the gallery: they show in Google Images and on shared links.'),
+    },
+    {
+      id: 'photo-descriptions', label: 'Photo descriptions', weight: 3,
+      status: galleryPhotos > 0 && describedPhotos === galleryPhotos ? 'good' : describedPhotos > 0 ? 'ok' : 'bad',
+      detail: galleryPhotos === 0
+        ? 'No gallery photos yet.'
+        : `${describedPhotos} of ${galleryPhotos} gallery ${galleryPhotos === 1 ? 'photo' : 'photos'} described. ` + (describedPhotos === galleryPhotos
+          ? 'Google Images can tell what each one shows.'
+          : 'Write what each photo shows in the box under it, e.g. "Sunset from the verandah": Google Images reads it.'),
     },
   ]
 

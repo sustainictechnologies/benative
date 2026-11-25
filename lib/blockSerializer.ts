@@ -80,8 +80,12 @@ export function toContentData(block: CanvasBlock): Record<string, unknown> {
       }
       const isValidUrl = (url: string | null) =>
         url !== null && !url.startsWith('blob:') && !url.startsWith('data:') && url.startsWith('http')
+      // Each photo with its shape and, when written in the builder, what it shows
       const items = meta
-        .map(m => ({ url: img[m.key] ?? null, ratio: m.ratio || 'square' }))
+        .map(m => {
+          const description = txt[`${m.key}-desc`]?.trim()
+          return { url: img[m.key] ?? null, ratio: m.ratio || 'square', ...(description ? { description } : {}) }
+        })
         .filter(item => isValidUrl(item.url))
       return { items }
     }

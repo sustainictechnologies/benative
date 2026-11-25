@@ -837,6 +837,7 @@ function GalleryPreview({ id }: { id: string }) {
   const deleteSlot = (key: string) => {
     saveMeta(meta.filter(m => m.key !== key))
     updateImage(id, key, null)
+    updateText(id, `${key}-desc`, null)
   }
 
   const setRatio = (key: string, ratio: GalleryRatio) =>
@@ -874,56 +875,65 @@ function GalleryPreview({ id }: { id: string }) {
         {visibleMeta.map((item, i) => {
           const isLastVisible = showPlusOverlay && i === visibleMeta.length - 1
           return (
-            <div
-              key={item.key}
-              className={`relative group/slot overflow-hidden ${RATIO_CLASS[item.ratio]} ${
-                item.ratio === 'landscape' ? 'col-span-3' : 'col-span-1'
-              }`}
-            >
-              <EditableImage
-                blockId={id} imageKey={item.key}
-                defaultUrl={GALLERY_PLACEHOLDER}
-                wrapperClassName="w-full h-full"
-                className="w-full h-full object-cover"
-              />
+            <div key={item.key} className={item.ratio === 'landscape' ? 'col-span-3' : 'col-span-1'}>
+              <div className={`relative group/slot overflow-hidden ${RATIO_CLASS[item.ratio]}`}>
+                <EditableImage
+                  blockId={id} imageKey={item.key}
+                  defaultUrl={GALLERY_PLACEHOLDER}
+                  wrapperClassName="w-full h-full"
+                  className="w-full h-full object-cover"
+                />
 
-              {isLastVisible && (
-                <div
-                  onClick={() => setExpanded(true)}
-                  className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center cursor-pointer gap-1 z-20"
-                >
-                  <span className="text-white text-2xl font-bold">+{hiddenCount}</span>
-                  <span className="text-white/80 text-xs font-medium">more photos</span>
-                </div>
-              )}
-
-              {!previewMode && (
-                <>
-                  {/* Delete slot */}
-                  <button
-                    onClick={e => { e.stopPropagation(); deleteSlot(item.key) }}
-                    className="absolute top-1 right-1 z-30 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/slot:opacity-100 transition-opacity shadow"
+                {isLastVisible && (
+                  <div
+                    onClick={() => setExpanded(true)}
+                    className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center cursor-pointer gap-1 z-20"
                   >
-                    <X size={9} />
-                  </button>
-
-                  {/* Ratio selector */}
-                  <div className="absolute bottom-1 left-1/2 -translate-x-1/2 z-30 flex gap-0.5 opacity-0 group-hover/slot:opacity-100 transition-opacity">
-                    {RATIO_OPTIONS.map(r => (
-                      <button
-                        key={r.value}
-                        onClick={e => { e.stopPropagation(); setRatio(item.key, r.value) }}
-                        className={`text-[9px] px-1.5 py-0.5 rounded font-bold transition-colors ${
-                          item.ratio === r.value
-                            ? 'bg-white text-stone-900 shadow'
-                            : 'bg-black/50 text-white hover:bg-black/70'
-                        }`}
-                      >
-                        {r.label}
-                      </button>
-                    ))}
+                    <span className="text-white text-2xl font-bold">+{hiddenCount}</span>
+                    <span className="text-white/80 text-xs font-medium">more photos</span>
                   </div>
-                </>
+                )}
+
+                {!previewMode && (
+                  <>
+                    {/* Delete slot */}
+                    <button
+                      onClick={e => { e.stopPropagation(); deleteSlot(item.key) }}
+                      className="absolute top-1 right-1 z-30 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/slot:opacity-100 transition-opacity shadow"
+                    >
+                      <X size={9} />
+                    </button>
+
+                    {/* Ratio selector */}
+                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 z-30 flex gap-0.5 opacity-0 group-hover/slot:opacity-100 transition-opacity">
+                      {RATIO_OPTIONS.map(r => (
+                        <button
+                          key={r.value}
+                          onClick={e => { e.stopPropagation(); setRatio(item.key, r.value) }}
+                          className={`text-[9px] px-1.5 py-0.5 rounded font-bold transition-colors ${
+                            item.ratio === r.value
+                              ? 'bg-white text-stone-900 shadow'
+                              : 'bg-black/50 text-white hover:bg-black/70'
+                          }`}
+                        >
+                          {r.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* What the photo shows: the page's description of it for Google Images and screen readers */}
+              {!previewMode && (
+                <input
+                  value={getText(id, `${item.key}-desc`, '')}
+                  onChange={e => updateText(id, `${item.key}-desc`, e.target.value || null)}
+                  maxLength={120}
+                  placeholder="Describe this photo"
+                  title={'What the photo shows, e.g. "Sunset from the verandah". Google Images and screen readers use it.'}
+                  className="w-full text-[11px] px-2 py-1.5 bg-stone-50 border-t border-stone-100 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-inset focus:ring-brand-300"
+                />
               )}
             </div>
           )

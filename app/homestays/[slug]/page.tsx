@@ -140,6 +140,7 @@ export default async function HomestayPage({ params }: Props) {
     calling_window: homestay.calling_window,
     youtube_video_id: homestay.youtube_video_id ?? null,
     title: homestay.title,
+    place: placeName(homestay),   // "Village, District", for the photo descriptions
     tags,
   }
 
